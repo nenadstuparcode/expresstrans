@@ -315,7 +315,7 @@ exports.ticketPrint = [
 
 			const browser = await puppeteer.launch({
 				headless: true,
-				args: ["--use-gl=egl"],
+				args: ["--no-sandbox"],
 			});
 			const page = await browser.newPage();
 			await page.setContent(finalHtml);
@@ -377,7 +377,7 @@ exports.sendToMail = [
 
 			const browser = await puppeteer.launch({
 				headless: true,
-				args: ["--use-gl=egl"],
+				args: ["--no-sandbox"],
 			});
 			const page = await browser.newPage();
 			await page.setContent(finalHtml);
