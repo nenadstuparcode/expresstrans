@@ -313,7 +313,7 @@ exports.ticketPrint = [
 				path: "karte/generisani_2.pdf"
 			};
 
-			const browser = await puppeteer.launch({headless: false, executablePath: "/usr/bin/chromium-browser", args: ["--no-sandbox"]});
+			const browser = await puppeteer.launch({headless: true, args: ["--no-sandbox"]});
 			const page = await browser.newPage();
 			await page.setContent(finalHtml);
 			await page.setViewport({ width: 1366, height: 768});
