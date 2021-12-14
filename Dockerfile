@@ -1,5 +1,11 @@
 FROM ubuntu:18.04
 RUN apt-get update
+RUN apt-get update && apt-get install -y \
+    python-qt4 \
+    python-pyside \
+    python-pip \
+    python3-pip \
+    python3-pyqt5
 RUN apt-get install -y chromium-browser
 RUN apt-get install -y libgtk2.0-0 libgtk-3-0 libnotify-dev
 RUN apt-get install -y libgconf-2-4 libnss3 libxss1
