@@ -316,6 +316,7 @@ exports.ticketPrint = [
 			const browser = await puppeteer.launch({
 				headless: true,
 				args: ["--no-sandbox"],
+				executablePath: "/app/node_modules/puppeteer/.local-chromium/linux-818858",
 			});
 			const page = await browser.newPage();
 			await page.setContent(finalHtml);
@@ -378,6 +379,7 @@ exports.sendToMail = [
 			const browser = await puppeteer.launch({
 				headless: true,
 				args: ["--no-sandbox"],
+				executablePath: "/app/node_modules/puppeteer/.local-chromium/linux-818858"
 			});
 			const page = await browser.newPage();
 			await page.setContent(finalHtml);
