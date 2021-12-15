@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 RUN apt-get update
-RUN apt install -y chromium
+RUN apt install -y chromium-bsu
 RUN apt install -y chromium-driver
 RUN apt install -y libcanberra-gtk3
 RUN apt install -y chromium-browser
