@@ -11,6 +11,8 @@ var TicketSchema = new Schema({
 	ticketBusLineId: {type: Schema.ObjectId, ref: "BusLine", required: true},
 	ticketRoundTrip: {type: Boolean, required: true},
 	ticketStartDate: {type: String, required: true},
+	ticketStartTime: {type: String, required: true},
+	ticketId: { type: String },
 	user: { type: Schema.ObjectId, ref: "User", required: true },
 }, {timestamps: true});
 

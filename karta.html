@@ -1,62 +1,132 @@
 
-
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Play&family=Saira+Condensed:wght@100&display=swap" rel="stylesheet">
 <style>
     .invoice-box {
-        max-width: 800px;
-        margin: auto;
-        padding: 30px;
+        font-family: 'Play', sans-serif;
+        max-width: 1010px;
+        margin: 0;
         border: 1px solid #eee;
-        box-shadow: 0 0 10px rgba(0, 0, 0, .15);
+        /*box-shadow: 0 0 10px rgba(0, 0, 0, .15);*/
         font-size: 16px;
         line-height: 24px;
-        font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
         color: #555;
     }
 
-    .ticket-data {
+    .ticket-on-name {
         position: absolute;
-        top: 360px;
-        left: 0px;
-        width: calc(100% - 30px);
-        display: flex;
-        justify-content: space-between;
-        font-size: 16px;
+        top: 105px;
+        left: 20px;
+    }
+    .ticket-unique-id {
+        position: absolute;
+        top: 41px;
+        left: 460px;
+        font-size: 12px;
+        color: #fcfcfc;
+    }
+    .ticket-city-start {
+        position: absolute;
+        top: 163px;
+        left: 20px;
+    }
+    .ticket-city-end {
+        position: absolute;
+        top: 163px;
+        left: 145px;
+    }
+    .ticket-valid {
+        position: absolute;
+        top: 228px;
+        left: 20px;
+    }
+    .ticket-discount {
+        position: absolute;
+        top: 228px;
+        left: 147px;
+    }
+    .ticket-start-date {
+        position: absolute;
+        top: 105px;
+        left: 290px;
+    }
+    .ticket-start-time {
+        position: absolute;
+        top: 105px;
+        left: 480px;
+    }
+    .ticket-notes {
+        position: absolute;
+        top: 228px;
+        left: 290px;
+    }
+    .ticket-price {
+        position: absolute;
+        top: 140px;
+        right: 200px;
+        font-size: 24px;
         font-weight: bold;
     }
+    .ticket-tax {
+        position: absolute;
+        top: 190px;
+        right: 180px;
+        color: #fcfcfc;
+        font-size: 15px;
+    }
+    .ticket-summary {
+        position: absolute;
+        right: 20px;
+        top:80px;
+        text-align: center;
+        font-size: 8px;
+        color: #fcfcfc;
+        line-height: 1;
+    }
 
-    .left-side {
-        width: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-    }
-    .right-side {
-        width: 50%;
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-        align-items: center;
-    }
 </style>
 
 <div>
     <div class="invoice-box">
-        <div style="position: relative; height: 990px; width: 100%; background: url('https://i.postimg.cc/9QPgV4s5/karta.png') no-repeat; background-size: contain;">
+        <div style="position: relative; height: 325px; width: 1000px; background: url('http://localhost:3000/images/express-trans-karta2.png') no-repeat; background-size: contain;">
             {{#if ticketData}}
-            <div class="ticket-data">
+            <p class="ticket-on-name">{{ticketData.ticketOnName}}</p>
+            <p class="ticket-city-start">{{ticketData.busLineData.lineCityStart}}</p>
+            <p class="ticket-city-end">{{ticketData.busLineData.lineCityEnd}}</p>
+            <p class="ticket-valid">{{ticketData.ticketValid}} mjeseci</p>
+            <p class="ticket-discount"></p>
+            <p class="ticket-start-date">{{ticketData.ticketStartDate}}</p>
+            <p class="ticket-start-time">{{ticketData.ticketStartTime}}</p>
+            <p class="ticket-notes">{{ticketData.ticketNote}}</p>
+            <p class="ticket-tax">* u cijenu je uključen PDV</p>
+            <p class="ticket-unique-id">{{ticketData.ticketId}}</p>
+            {{#if ticketData.ticketRoundTrip}}
+                <p class="ticket-price">{{ticketData.busLineData.linePriceRoundTrip}}</p>
+            {{else}}
+                <p class="ticket-price">{{ticketData.busLineData.linePriceOneWay}}</p>
+            {{/if}}
 
-              <div class="left-side">
-                  <p>Karta na ime: {{ticketData.ticketOnName}}</p>
-                  <p>Kontakt telefon: {{ticketData.ticketPhone}}</p>
-                  <p>Email adresa: {{ticketData.ticketEmail}}</p>
-                  <p>Napomena: {{ticketData.ticketNote}}</p>
-              </div>
 
-              <div class="right-side">
-                  Linija: {{ticketData.busLineData.lineCityStart }} - {{ticketData.busLineData.lineCityStart}}
-                  Datum i vrijeme polaska: {{ ticketData.ticketStartDate }} +
-              </div>
+            <div class="ticket-summary">
+             <p>Broj internet karte: {{ticketData.ticketId}}</p>
+             <p>{{ticketData.ticketOnName}}</p>
+             <p>{{ticketData.busLineData.lineCityStart}} - {{ticketData.busLineData.lineCityEnd}}</p>
+             <p>{{ticketData.ticketStartDate}} - {{ticketData.ticketStartTime}}</p>
+             <p>Karta validna: {{ticketData.ticketValid}} MJESECI</p>
+             <p>Popust: 0%</p>
+             {{#if ticketData.ticketRoundTrip}}
+                <p>Cijena: {{ticketData.busLineData.linePriceRoundTrip}}</p>
+             {{else}}
+                <p>Cijena: {{ticketData.busLineData.linePriceOneWay}}</p>
+             {{/if}}
+             {{#if ticketData.ticketRoundTrip}}
+                <p>Povratna karta: DA</p>
+             {{else}}
+                <p>Povratna karta: NE</p>
+             {{/if}}
+             <p>Broj telefona: {{ticketData.ticketPhone}}</p>
+             <p>Email: {{ticketData.ticketEmail}}</p>
             </div>
             {{/if}}
         </div>

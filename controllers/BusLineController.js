@@ -1,6 +1,5 @@
 const Busline = require("../models/BusLineModel");
 const { body,validationResult } = require("express-validator");
-const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 const auth = require("../middlewares/jwt");
 var mongoose = require("mongoose");
@@ -15,9 +14,7 @@ function BusLineData(data) {
 	this.linePriceRoundTrip = data.linePriceRoundTrip;
 	this.createdAt = data.createdAt;
 	this.lineCountryStart = data.lineCountryStart;
-	this.lineStartDay1 = data.lineStartDay1;
-	this.lineStartDay2 = data.lineStartDay2;
-	this.lineStartTime = data.lineStartTime;
+	this.lineArray = data.lineArray;
 }
 
 
@@ -30,7 +27,7 @@ exports.busLineList = [
 	auth,
 	function (req, res) {
 		try {
-			Busline.find({user: req.user._id},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineStartDay1 lineStartDay2 lineStartTime createdAt modifiedAt").then((busLines)=>{
+			Busline.find({user: req.user._id},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt").then((busLines)=>{
 				if(busLines.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", busLines);
 				}else{
@@ -60,7 +57,7 @@ exports.busLineSearch = [
 						{ "lineCityStart" : { "$regex": searchTerm + ".*", "$options": "i"}},
 						{ "lineCityEnd" : { "$regex": searchTerm + ".*", "$options": "i"}},
 					]
-				},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineStartDay1 lineStartDay2 lineStartTime createdAt modifiedAt").sort({createdAt:-1}).skip((+searchLimit - 10)).limit(searchLimit).then((busLines)=>{
+				},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart createdAt modifiedAt lineArray").sort({createdAt:-1}).skip((+searchLimit - 10)).limit(searchLimit).then((busLines)=>{
 					if(busLines.length > 0){
 						return apiResponse.successResponseWithData(res, "Operation success", busLines);
 					}else{
@@ -89,7 +86,7 @@ exports.busLineDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Busline.findOne({_id: req.params.id,user: req.user._id},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineStartDay1 lineStartDay2 lineStartTime createdAt").then((busLine)=>{
+			Busline.findOne({_id: req.params.id,user: req.user._id},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt").then((busLine)=>{
 				if(busLine !== null){
 					let busLineData = new BusLineData(busLine);
 					return apiResponse.successResponseWithData(res, "Operation success", busLineData);
@@ -120,25 +117,24 @@ exports.busLineStore = [
 	body("linePriceOneWay", "Line price one way end must not be empty.").isLength({ min: 1 }).trim(),
 	body("linePriceRoundTrip", "Line price round trip must not be empty.").isLength({ min: 1 }).trim(),
 	body("lineCountryStart", "lineCountryStart trip must not be empty.").isLength({ min: 1 }).trim(),
-	body("lineStartDay1", "Line price round trip must not be empty.").isLength({ min: 1 }).trim(),
-	body("lineStartDay2", "Line price round trip must not be empty.").isLength({ min: 1 }).trim(),
-	body("lineStartTime", "Line start time must not be empty.").isLength({ min: 1 }).trim(),
-	sanitizeBody("*").escape(),
+	body("lineArray", "Line array must not be empty").isLength({min: 1}),
+	// sanitizeBody("*").escape(),
 	(req, res) => {
 		try {
 
 			const errors = validationResult(req);
+
 			var busLine = new Busline({
 				lineCityStart: req.body.lineCityStart,
 				lineCityEnd: req.body.lineCityEnd,
 				linePriceOneWay: req.body.linePriceOneWay,
 				linePriceRoundTrip: req.body.linePriceRoundTrip,
 				lineCountryStart: req.body.lineCountryStart,
-				lineStartDay1: req.body.lineStartDay1,
-				lineStartDay2: req.body.lineStartDay2,
-				lineStartTime: req.body.lineStartTime,
+				lineArray: [...req.body.lineArray],
 				user: req.user,
 			});
+
+
 
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
@@ -174,10 +170,8 @@ exports.busLineUpdate = [
 	body("lineCityEnd", "Line price one way must not be empty.").isLength({ min: 1 }).trim(),
 	body("linePriceRoundTrip", "Line price round trip must not be empty.").isLength({ min: 1 }).trim(),
 	body("lineCountryStart", "lineCountryStart trip must not be empty.").isLength({ min: 1 }).trim(),
-	body("lineStartDay1", "Line price round trip must not be empty.").isLength({ min: 1 }).trim(),
-	body("lineStartDay2", "Line start day must not be empty.").isLength({ min: 1 }).trim(),
-	body("lineStartTime", "Line start time must not be empty.").isLength({ min: 1 }).trim(),
-	sanitizeBody("*").escape(),
+	body("lineArray", "Line array must not be empty").isLength({min: 1}),
+	// sanitizeBody("*").escape(),
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
@@ -187,9 +181,7 @@ exports.busLineUpdate = [
 				linePriceOneWay: req.body.linePriceOneWay,
 				linePriceRoundTrip: req.body.linePriceRoundTrip,
 				lineCountryStart: req.body.lineCountryStart,
-				lineStartDay1: req.body.lineStartDay1,
-				lineStartDay2: req.body.lineStartDay2,
-				lineStartTime: req.body.lineStartTime,
+				lineArray: [...req.body.lineArray],
 				_id:req.params.id
 			});
 

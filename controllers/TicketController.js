@@ -1,4 +1,5 @@
 const Ticket = require("../models/TicketModel");
+const Counter = require("../models/CounterModel");
 const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
@@ -11,7 +12,10 @@ const path = require("path");
 const puppeteer = require("puppeteer");
 const handlebars = require("handlebars");
 const {constants} = require("../helpers/constants");
+
 mongoose.set("useFindAndModify", false);
+
+var moment = require("moment");
 
 // BusLine Schema
 function TicketData(data) {
@@ -24,6 +28,7 @@ function TicketData(data) {
 	this.ticketBusLineId = data.ticketBusLineId;
 	this.ticketRoundTrip = data.ticketRoundTrip;
 	this.ticketStartDate = data.ticketStartDate;
+	this.ticketStartTime = data.ticketStartTime;
 	this.createdAt = data.createdAt;
 }
 
@@ -37,7 +42,7 @@ exports.ticketList = [
 	auth,
 	function (req, res) {
 		try {
-			Ticket.find({user: req.user._id},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate createdAt modifiedAt").then((tickets)=>{
+			Ticket.find({user: req.user._id},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId createdAt modifiedAt").then((tickets)=>{
 				if(tickets.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", tickets);
 				}else{
@@ -63,7 +68,7 @@ exports.ticketSearch = [
 
 
 				Ticket.find(
-					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate createdAt modifiedAt").sort({createdAt:-1}).skip((+searchLimit - 10)).limit(searchLimit).then((tickets)=>{
+					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId createdAt modifiedAt").sort({createdAt:-1}).skip((+searchLimit - 10)).limit(searchLimit).then((tickets)=>{
 					if(tickets.length > 0){
 						return apiResponse.successResponseWithData(res, "Operation success", tickets);
 					}else{
@@ -92,7 +97,7 @@ exports.ticketDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Ticket.findOne({_id: req.params.id,user: req.user._id},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate createdAt modifiedAt").then((ticket)=>{
+			Ticket.findOne({_id: req.params.id,user: req.user._id},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId createdAt modifiedAt").then((ticket)=>{
 				if(ticket !== null){
 					let ticketData = new TicketData(ticket);
 					return apiResponse.successResponseWithData(res, "Operation success", ticketData);
@@ -125,35 +130,43 @@ exports.ticketStore = [
 	body("ticketBusLineId", "ticketBusLineId must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketRoundTrip", "ticketRoundTrip must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketStartDate", "ticketStartDate must not be empty.").isLength({ min: 1 }).trim(),
+	body("ticketStartTime", "ticketStartTime must not be empty.").isLength({ min: 1 }).trim(),
 	sanitizeBody("*").escape(),
 	(req, res) => {
 		try {
+			Counter.findOneAndUpdate({name: "ticketCounter"}, {$inc: {count: 1}}, {new: true}, (err, doc) => {
+				if (err) {
+					console.log("Something wrong when updating data!");
+				}
 
-			const errors = validationResult(req);
-			var ticket = new Ticket({
-				ticketOnName: req.body.ticketOnName,
-				ticketPhone: req.body.ticketPhone,
-				ticketEmail: req.body.ticketEmail,
-				ticketNote: req.body.ticketNote,
-				ticketValid: req.body.ticketValid,
-				ticketBusLineId: req.body.ticketBusLineId,
-				ticketRoundTrip: req.body.ticketRoundTrip,
-				ticketStartDate: req.body.ticketStartDate,
-				user: req.user,
-			});
-
-			if (!errors.isEmpty()) {
-				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
-			} else {
-				//Save Bus Line.
-				ticket.save(function (err) {
-					if (err) { return apiResponse.ErrorResponse(res, err); }
-					let ticketData = new TicketData(ticket);
-					return apiResponse.successResponseWithData(res,"BusLine add Success.", ticketData);
+				const errors = validationResult(req);
+				var ticket = new Ticket({
+					ticketOnName: req.body.ticketOnName,
+					ticketPhone: req.body.ticketPhone,
+					ticketEmail: req.body.ticketEmail,
+					ticketNote: req.body.ticketNote,
+					ticketValid: req.body.ticketValid,
+					ticketBusLineId: req.body.ticketBusLineId,
+					ticketRoundTrip: req.body.ticketRoundTrip,
+					ticketStartDate: req.body.ticketStartDate,
+					ticketStartTime: req.body.ticketStartTime,
+					ticketId: `EXTR${doc.count}`,
+					user: req.user,
 				});
-			}
+
+				if (!errors.isEmpty()) {
+					return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
+				} else {
+					//Save Bus Line.
+					ticket.save(function (err) {
+						if (err) { return apiResponse.ErrorResponse(res, err); }
+						let ticketData = new TicketData(ticket);
+						return apiResponse.successResponseWithData(res,"BusLine add Success.", ticketData);
+					});
+				}
+			});
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -177,6 +190,7 @@ exports.ticketUpdate = [
 	body("ticketBusLineId", "ticketBusLineId must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketRoundTrip", "ticketRoundTrip must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketStartDate", "ticketStartDate must not be empty.").isLength({ min: 1 }).trim(),
+	body("ticketStartTime", "ticketStartTime must not be empty.").isLength({ min: 1 }).trim(),
 	sanitizeBody("*").escape(),
 	(req, res) => {
 		try {
@@ -191,6 +205,7 @@ exports.ticketUpdate = [
 				ticketBusLineId: req.body.ticketBusLineId,
 				ticketRoundTrip: req.body.ticketRoundTrip,
 				ticketStartDate: req.body.ticketStartDate,
+				ticketStartTime: req.body.ticketStartTime,
 				_id:req.params.id
 			});
 
@@ -292,10 +307,22 @@ exports.ticketPrint = [
 					ticketValid: req.body.ticketValid,
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
-					ticketStartDate: req.body.ticketStartDate,
+					ticketId: req.body.ticketId,
+					ticketStartDate: moment(req.body.ticketStartDate).format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime).format("HH:mm"),
 					busLineData: req.body.busLineData,
 				},
 			};
+
+			dataBinding.ticketData.busLineData.linePriceOneWay = dataBinding.ticketData.busLineData.linePriceOneWay.toLocaleString("de", {
+				style: "currency",
+				currency: "EUR",
+			});
+
+			dataBinding.ticketData.busLineData.linePriceRoundTrip = dataBinding.ticketData.busLineData.linePriceRoundTrip.toLocaleString("de", {
+				style: "currency",
+				currency: "EUR",
+			});
 
 			var templateHtml = fs.readFileSync(path.join(process.cwd(), "karta.html"), "utf8");
 			var template = handlebars.compile(templateHtml);
@@ -306,8 +333,8 @@ exports.ticketPrint = [
 				footerTemplate: "<p></p>",
 				displayHeaderFooter: false,
 				margin: {
-					top: "10px",
-					bottom: "10px"
+					top: "0px",
+					bottom: "0px"
 				},
 				printBackground: true,
 				path: "karte/generisani_2.pdf"
@@ -354,10 +381,22 @@ exports.sendToMail = [
 					ticketValid: req.body.ticketValid,
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
-					ticketStartDate: req.body.ticketStartDate,
+					ticketId: req.body.ticketId,
+					ticketStartDate: moment(req.body.ticketStartDate).format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime).format("HH:mm"),
 					busLineData: req.body.busLineData,
 				},
 			};
+
+			dataBinding.ticketData.busLineData.linePriceOneWay = dataBinding.ticketData.busLineData.linePriceOneWay.toLocaleString("de", {
+				style: "currency",
+				currency: "EUR",
+			});
+
+			dataBinding.ticketData.busLineData.linePriceRoundTrip = dataBinding.ticketData.busLineData.linePriceRoundTrip.toLocaleString("de", {
+				style: "currency",
+				currency: "EUR",
+			});
 
 			var templateHtml = fs.readFileSync(path.join(process.cwd(), "karta.html"), "utf8");
 			var template = handlebars.compile(templateHtml);
