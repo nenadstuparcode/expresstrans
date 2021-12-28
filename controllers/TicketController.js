@@ -17,9 +17,10 @@ mongoose.set("useFindAndModify", false);
 
 var moment = require("moment");
 
-// BusLine Schema
+// Ticket Schema
 function TicketData(data) {
 	this.id = data._id;
+	this.ticketId = data.ticketId;
 	this.ticketOnName = data.ticketOnName;
 	this.ticketPhone = data.ticketPhone;
 	this.ticketEmail = data.ticketEmail;
