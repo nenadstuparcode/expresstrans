@@ -62,14 +62,13 @@ exports.ticketSearch = [
 	function (req,res) {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
+		const searchSkip = req.body.searchSkip;
 
 		Ticket.count((err, count) => {
 			res.count = count;
 			try {
-
-
 				Ticket.find(
-					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId createdAt modifiedAt").sort({createdAt:-1}).skip((+searchLimit - 10)).limit(searchLimit).then((tickets)=>{
+					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId createdAt modifiedAt").sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((tickets)=>{
 					if(tickets.length > 0){
 						return apiResponse.successResponseWithData(res, "Operation success", tickets);
 					}else{

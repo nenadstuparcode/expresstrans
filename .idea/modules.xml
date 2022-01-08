@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/backend boilerplate.iml" filepath="$PROJECT_DIR$/.idea/backend boilerplate.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../expresstrans-angular/.idea/expresstrans-angular.iml" filepath="$PROJECT_DIR$/../expresstrans-angular/.idea/expresstrans-angular.iml" />
     </modules>
   </component>
 </project>

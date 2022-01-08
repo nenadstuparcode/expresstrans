@@ -27,7 +27,7 @@ exports.busLineList = [
 	auth,
 	function (req, res) {
 		try {
-			Busline.find({user: req.user._id},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt").then((busLines)=>{
+			Busline.find({},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt").then((busLines)=>{
 				if(busLines.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", busLines);
 				}else{
@@ -46,18 +46,17 @@ exports.busLineSearch = [
 	function (req,res) {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
+		const searchSkip = req.body.searchSkip;
 
 		Busline.count((err, count) => {
 			res.count = count;
 			try {
-
-
 				Busline.find({
 					$or: [
 						{ "lineCityStart" : { "$regex": searchTerm + ".*", "$options": "i"}},
 						{ "lineCityEnd" : { "$regex": searchTerm + ".*", "$options": "i"}},
 					]
-				},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart createdAt modifiedAt lineArray").sort({createdAt:-1}).skip((+searchLimit - 10)).limit(searchLimit).then((busLines)=>{
+				},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart createdAt modifiedAt lineArray").sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((busLines)=>{
 					if(busLines.length > 0){
 						return apiResponse.successResponseWithData(res, "Operation success", busLines);
 					}else{
@@ -86,7 +85,7 @@ exports.busLineDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Busline.findOne({_id: req.params.id,user: req.user._id},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt").then((busLine)=>{
+			Busline.findOne({_id: req.params.id},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt").then((busLine)=>{
 				if(busLine !== null){
 					let busLineData = new BusLineData(busLine);
 					return apiResponse.successResponseWithData(res, "Operation success", busLineData);
