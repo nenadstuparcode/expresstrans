@@ -308,8 +308,8 @@ exports.ticketPrint = [
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
 					ticketId: req.body.ticketId,
-					ticketStartDate: moment(req.body.ticketStartDate).local().format("DD.MM.YYYY"),
-					ticketStartTime: moment(req.body.ticketStartTime).local().format("HH:mm"),
+					ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
 					busLineData: req.body.busLineData,
 				},
 			};
@@ -383,8 +383,8 @@ exports.sendToMail = [
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
 					ticketId: req.body.ticketId,
-					ticketStartDate: moment(req.body.ticketStartDate).local().format("DD.MM.YYYY"),
-					ticketStartTime: moment(req.body.ticketStartTime).local().format("HH:mm"),
+					ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
 					busLineData: req.body.busLineData,
 				},
 			};
@@ -468,8 +468,8 @@ exports.sendToMailCustom = [
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
 					ticketId: req.body.ticketId,
-					ticketStartDate: moment(req.body.ticketStartDate).local().format("DD.MM.YYYY"),
-					ticketStartTime: moment(req.body.ticketStartTime).local().format("HH:mm"),
+					ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
 					busLineData: req.body.busLineData,
 				},
 			};
