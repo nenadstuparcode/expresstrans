@@ -10,6 +10,7 @@ router.post("/", TicketController.ticketStore);
 router.put("/:id", TicketController.ticketUpdate);
 router.delete("/:id", TicketController.ticketDelete);
 router.post("/search", TicketController.ticketSearch);
+router.post("/email/:email", TicketController.sendToMailCustom);
 
 
 module.exports = router;

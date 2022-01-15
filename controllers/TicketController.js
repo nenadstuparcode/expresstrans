@@ -308,8 +308,8 @@ exports.ticketPrint = [
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
 					ticketId: req.body.ticketId,
-					ticketStartDate: moment(req.body.ticketStartDate).format("DD.MM.YYYY"),
-					ticketStartTime: moment(req.body.ticketStartTime).format("HH:mm"),
+					ticketStartDate: moment(req.body.ticketStartDate).local().format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime).local().format("HH:mm"),
 					busLineData: req.body.busLineData,
 				},
 			};
@@ -371,6 +371,7 @@ exports.sendToMail = [
 	auth,
 	async function (req, res) {
 		try {
+			console.log(req.body.ticketStartDate);
 			var dataBinding = {
 				isWatermark: true,
 				ticketData : {
@@ -382,8 +383,8 @@ exports.sendToMail = [
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
 					ticketId: req.body.ticketId,
-					ticketStartDate: moment(req.body.ticketStartDate).format("DD.MM.YYYY"),
-					ticketStartTime: moment(req.body.ticketStartTime).format("HH:mm"),
+					ticketStartDate: moment(req.body.ticketStartDate).local().format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime).local().format("HH:mm"),
 					busLineData: req.body.busLineData,
 				},
 			};
@@ -407,8 +408,8 @@ exports.sendToMail = [
 				footerTemplate: "<p></p>",
 				displayHeaderFooter: false,
 				margin: {
-					top: "10px",
-					bottom: "10px"
+					top: "0px",
+					bottom: "0px"
 				},
 				printBackground: true,
 				path: "karte/generisani_2.pdf"
@@ -434,6 +435,91 @@ exports.sendToMail = [
 			await mailer.send(
 				constants.confirmEmails.from,
 				dataBinding.ticketData.ticketEmail,
+				`Rezervisano - Express Trans autobuska karta na ime ${dataBinding.ticketData.ticketOnName}`,
+				html,
+				`karta-${dataBinding.ticketData.ticketOnName}.pdf`,
+				pdfBuffer
+			);
+
+			return apiResponse.successResponseWithData(res,"Karta je poslana na korisnikom email.", true);
+
+
+
+		} catch (err) {
+			//throw error in json response with status 500.
+			return apiResponse.ErrorResponse(res, err);
+		}
+	}
+];
+
+exports.sendToMailCustom = [
+	auth,
+	async function (req, res) {
+		try {
+			var emailToSend = req.params.email;
+			var dataBinding = {
+				isWatermark: true,
+				ticketData : {
+					ticketOnName: req.body.ticketOnName,
+					ticketPhone: req.body.ticketPhone,
+					ticketEmail: req.body.ticketEmail,
+					ticketNote: req.body.ticketNote,
+					ticketValid: req.body.ticketValid,
+					ticketBusLineId: req.body.ticketBusLineId,
+					ticketRoundTrip: req.body.ticketRoundTrip,
+					ticketId: req.body.ticketId,
+					ticketStartDate: moment(req.body.ticketStartDate).local().format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime).local().format("HH:mm"),
+					busLineData: req.body.busLineData,
+				},
+			};
+
+			dataBinding.ticketData.busLineData.linePriceOneWay = dataBinding.ticketData.busLineData.linePriceOneWay.toLocaleString("de", {
+				style: "currency",
+				currency: "EUR",
+			});
+
+			dataBinding.ticketData.busLineData.linePriceRoundTrip = dataBinding.ticketData.busLineData.linePriceRoundTrip.toLocaleString("de", {
+				style: "currency",
+				currency: "EUR",
+			});
+
+			var templateHtml = fs.readFileSync(path.join(process.cwd(), "karta.html"), "utf8");
+			var template = handlebars.compile(templateHtml);
+			var finalHtml = encodeURIComponent(template(dataBinding));
+			var options = {
+				format: "A4",
+				headerTemplate: "<p></p>",
+				footerTemplate: "<p></p>",
+				displayHeaderFooter: false,
+				margin: {
+					top: "0px",
+					bottom: "0px"
+				},
+				printBackground: true,
+				path: "karte/generisani_2.pdf"
+			};
+
+			const browser = await puppeteer.launch({
+				headless: true,
+				args: ["--no-sandbox", "--use-gl=egl"],
+			});
+			const page = await browser.newPage();
+			await page.setContent(finalHtml);
+			await page.setViewport({ width: 1366, height: 768});
+			await page.goto(`data:text/html;charset=UTF-8,${finalHtml}`, {
+				waitUntil: "networkidle0"
+			});
+			const pdfBuffer = await page.pdf(options);
+
+			await page.close();
+			await browser.close();
+
+			let html = "<p>Vašu kartu može preuzeti u priloženim datotekama na dnu email-a.</p><p> Ugodno putovanje želi vam Express Trans</p>";
+
+			await mailer.send(
+				constants.confirmEmails.from,
+				emailToSend,
 				`Rezervisano - Express Trans autobuska karta na ime ${dataBinding.ticketData.ticketOnName}`,
 				html,
 				`karta-${dataBinding.ticketData.ticketOnName}.pdf`,
