@@ -13,6 +13,7 @@ var TicketSchema = new Schema({
 	ticketStartDate: {type: Date, required: true},
 	ticketStartTime: {type: Date, required: true},
 	ticketId: { type: String },
+	ticketQR: { type: String},
 	user: { type: Schema.ObjectId, ref: "User", required: true },
 }, {timestamps: true});
 

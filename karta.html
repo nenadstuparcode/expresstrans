@@ -151,7 +151,9 @@
             {{/if}}
         </div>
         <div class="invoice-ads">
-
+            {{#if ticketData.ticketQR}}
+            <img src="{{ticketData.ticketQR}}" width="150px" height="150px"/>
+            {{/if}}
         </div>
     </div>
 </div>

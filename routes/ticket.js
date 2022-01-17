@@ -11,6 +11,7 @@ router.put("/:id", TicketController.ticketUpdate);
 router.delete("/:id", TicketController.ticketDelete);
 router.post("/search", TicketController.ticketSearch);
 router.post("/email/:email", TicketController.sendToMailCustom);
+router.get("/scan/:ticketId", TicketController.ticketQRCode);
 
 
 module.exports = router;
