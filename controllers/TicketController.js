@@ -581,9 +581,6 @@ exports.sendToMailCustom = [
  */
 exports.ticketQRCode = [
 	function (req, res) {
-		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
-			return apiResponse.successResponseWithData(res, "Operation success", {});
-		}
 		try {
 			Ticket.findOne({ticketId: req.params.ticketId},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId createdAt modifiedAt").then((ticket)=>{
 				if(ticket !== null){
