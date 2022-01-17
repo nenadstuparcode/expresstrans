@@ -14,8 +14,7 @@ const handlebars = require("handlebars");
 const {constants} = require("../helpers/constants");
 
 mongoose.set("useFindAndModify", false);
-
-var moment = require("moment");
+var moment = require("moment-timezone");
 
 // Ticket Schema
 function TicketData(data) {
@@ -150,7 +149,7 @@ exports.ticketStore = [
 					ticketRoundTrip: req.body.ticketRoundTrip,
 					ticketStartDate: req.body.ticketStartDate,
 					ticketStartTime: req.body.ticketStartTime,
-					ticketId: `EXTR${doc.count}`,
+					ticketId: `EXTR0${doc.count}`,
 					user: req.user,
 				});
 
@@ -308,8 +307,11 @@ exports.ticketPrint = [
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
 					ticketId: req.body.ticketId,
-					ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
-					ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
+					// ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
+					// ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
+
+					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 					busLineData: req.body.busLineData,
 				},
 			};
@@ -383,8 +385,11 @@ exports.sendToMail = [
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
 					ticketId: req.body.ticketId,
-					ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
-					ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
+					// ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
+					// ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
+
+					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 					busLineData: req.body.busLineData,
 				},
 			};
@@ -468,8 +473,11 @@ exports.sendToMailCustom = [
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
 					ticketId: req.body.ticketId,
-					ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
-					ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
+					// ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
+					// ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
+
+					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 					busLineData: req.body.busLineData,
 				},
 			};
