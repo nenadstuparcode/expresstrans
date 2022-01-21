@@ -15,6 +15,8 @@ function BusLineData(data) {
 	this.createdAt = data.createdAt;
 	this.lineCountryStart = data.lineCountryStart;
 	this.lineArray = data.lineArray;
+	this.bihKilometers = data.bihKilometers;
+	this.deKilometers = data.deKilometers;
 }
 
 
@@ -27,7 +29,7 @@ exports.busLineList = [
 	auth,
 	function (req, res) {
 		try {
-			Busline.find({},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt").then((busLines)=>{
+			Busline.find({},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt bihKilometers deKilometers modifiedAt").then((busLines)=>{
 				if(busLines.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", busLines);
 				}else{
@@ -56,7 +58,7 @@ exports.busLineSearch = [
 						{ "lineCityStart" : { "$regex": searchTerm + ".*", "$options": "i"}},
 						{ "lineCityEnd" : { "$regex": searchTerm + ".*", "$options": "i"}},
 					]
-				},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart createdAt modifiedAt lineArray").sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((busLines)=>{
+				},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart bihKilometers deKilometers createdAt modifiedAt lineArray").sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((busLines)=>{
 					if(busLines.length > 0){
 						return apiResponse.successResponseWithData(res, "Operation success", busLines);
 					}else{
@@ -85,7 +87,7 @@ exports.busLineDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Busline.findOne({_id: req.params.id},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt").then((busLine)=>{
+			Busline.findOne({_id: req.params.id},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart bihKilometers deKilometers lineArray createdAt modifiedAt").then((busLine)=>{
 				if(busLine !== null){
 					let busLineData = new BusLineData(busLine);
 					return apiResponse.successResponseWithData(res, "Operation success", busLineData);
@@ -117,6 +119,8 @@ exports.busLineStore = [
 	body("linePriceRoundTrip", "Line price round trip must not be empty.").isLength({ min: 1 }).trim(),
 	body("lineCountryStart", "lineCountryStart trip must not be empty.").isLength({ min: 1 }).trim(),
 	body("lineArray", "Line array must not be empty").isLength({min: 1}),
+	body("bihKilometers", "Line array must not be empty").isLength({min: 1}),
+	body("deKilometers", "Line array must not be empty").isLength({min: 1}),
 	// sanitizeBody("*").escape(),
 	(req, res) => {
 		try {
@@ -130,6 +134,8 @@ exports.busLineStore = [
 				linePriceRoundTrip: req.body.linePriceRoundTrip,
 				lineCountryStart: req.body.lineCountryStart,
 				lineArray: [...req.body.lineArray],
+				bihKilometers: req.body.bihKilometers,
+				deKilometers: req.body.deKilometers,
 				user: req.user,
 			});
 
@@ -170,6 +176,8 @@ exports.busLineUpdate = [
 	body("linePriceRoundTrip", "Line price round trip must not be empty.").isLength({ min: 1 }).trim(),
 	body("lineCountryStart", "lineCountryStart trip must not be empty.").isLength({ min: 1 }).trim(),
 	body("lineArray", "Line array must not be empty").isLength({min: 1}),
+	body("bihKilometers", "Line array must not be empty").isLength({min: 1}),
+	body("deKilometers", "Line array must not be empty").isLength({min: 1}),
 	// sanitizeBody("*").escape(),
 	(req, res) => {
 		try {
@@ -181,6 +189,8 @@ exports.busLineUpdate = [
 				linePriceRoundTrip: req.body.linePriceRoundTrip,
 				lineCountryStart: req.body.lineCountryStart,
 				lineArray: [...req.body.lineArray],
+				bihKilometers: req.body.bihKilometers,
+				deKilometers: req.body.deKilometers,
 				_id:req.params.id
 			});
 

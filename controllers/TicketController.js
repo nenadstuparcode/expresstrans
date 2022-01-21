@@ -76,7 +76,7 @@ exports.ticketSearch = [
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 
-		Ticket.count((err, count) => {
+		Ticket.find({ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}}).count((err, count) => {
 			res.count = count;
 			try {
 				Ticket.find(
@@ -623,43 +623,10 @@ exports.ticketQRCode = [
 											currency: "EUR",
 										});
 
-										var templateHtml = fs.readFileSync(path.join(process.cwd(), "karta.html"), "utf8");
+										var templateHtml = fs.readFileSync(path.join(process.cwd(), "qrcode.html"), "utf8");
 										var template = handlebars.compile(templateHtml);
-										var finalHtml = encodeURIComponent(template(dataBinding));
-
-										var options = {
-											format: "A4",
-											headerTemplate: "<p>Potvrda karte QR kodom.</p>",
-											footerTemplate: "<p></p>",
-											displayHeaderFooter: false,
-											margin: {
-												top: "0px",
-												bottom: "0px"
-											},
-											printBackground: true,
-											path: "karte/generisani_2.pdf"
-										};
-
-										let browser = await puppeteer.launch({
-											headless: true,
-											args: ["--no-sandbox", "--use-gl=egl"],
-										});
-										const page = await browser.newPage();
-										await page.setContent(finalHtml);
-										await page.setViewport({ width: 1366, height: 768});
-										await page.goto(`data:text/html;charset=UTF-8,${finalHtml}`, {
-											waitUntil: "networkidle0"
-										});
-										const pdfBuffer = await page.pdf(options);
-
-										await page.close();
-										await browser.close();
-
-										res.setHeader("Content-Length",pdfBuffer.length);
-										res.setHeader("Content-type", "application/pdf");
-										res.setHeader("Content-Disposition", "attachment; filename=karta.pdf");
-
-										res.send(pdfBuffer);
+										var finalHtml = template(dataBinding);
+										res.end(finalHtml);
 									})().catch(err => {
 										console.error(err);
 									});
@@ -684,4 +651,35 @@ exports.ticketQRCode = [
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
+];
+
+exports.reportSearch = [
+	auth,
+	function (req,res) {
+
+		const pageNumber = req.body.pageNumber;
+		const resultPerPage = req.body.resultPerPage;
+		const searchTerm = req.body.searchTerm;
+
+		Ticket.find({ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}}).count((err, count) => {
+			res.count = count;
+			try {
+				Ticket.find(
+					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketQR createdAt modifiedAt")
+					.sort({createdAt:-1})
+					.skip( pageNumber > 0 ? ( ( pageNumber ) * resultPerPage ) : 0 )
+					.limit( resultPerPage )
+					.then((tickets)=>{
+						if(tickets.length > 0){
+							return apiResponse.successResponseWithData(res, "Operation success", tickets);
+						}else{
+							return apiResponse.successResponseWithData(res, "Operation success", []);
+						}
+					});
+			} catch (err) {
+				return apiResponse.ErrorResponse(res, err);
+			}
+		});
+	}
+
 ];

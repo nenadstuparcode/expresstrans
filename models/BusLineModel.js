@@ -14,6 +14,8 @@ var BusLineSchema = new Schema({
 	linePriceOneWay: { type: Number, required: true },
 	linePriceRoundTrip: { type: Number, required: true },
 	lineCountryStart: { type: String, required: true },
+	bihKilometers: { type: Number},
+	deKilometers: { type: Number},
 	lineArray: [LineDay],
 	user: { type: Schema.ObjectId, ref: "User", required: true },
 }, { timestamps: true });
