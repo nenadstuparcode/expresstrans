@@ -50,7 +50,12 @@ exports.busLineSearch = [
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 
-		Busline.count((err, count) => {
+		Busline.find({
+			$or: [
+				{ "lineCityStart" : { "$regex": searchTerm + ".*", "$options": "i"}},
+				{ "lineCityEnd" : { "$regex": searchTerm + ".*", "$options": "i"}},
+			]
+		}).count((err, count) => {
 			res.count = count;
 			try {
 				Busline.find({
@@ -205,20 +210,15 @@ exports.busLineUpdate = [
 						if(foundBusLine === null){
 							return apiResponse.notFoundResponse(res,"BusLine not exists with this id");
 						}else{
-							//Check authorized user
-							if(foundBusLine.user.toString() !== req.user._id){
-								return apiResponse.unauthorizedResponse(res, "You are not authorized to do this operation.");
-							}else{
-								//update BusLine.
-								Busline.findByIdAndUpdate(req.params.id, busLine, {},function (err) {
-									if (err) {
-										return apiResponse.ErrorResponse(res, err);
-									}else{
-										let busLineData = new BusLineData(busLine);
-										return apiResponse.successResponseWithData(res,"BusLine update Success.", busLineData);
-									}
-								});
-							}
+							//update BusLine.
+							Busline.findByIdAndUpdate(req.params.id, busLine, {},function (err) {
+								if (err) {
+									return apiResponse.ErrorResponse(res, err);
+								}else{
+									let busLineData = new BusLineData(busLine);
+									return apiResponse.successResponseWithData(res,"BusLine update Success.", busLineData);
+								}
+							});
 						}
 					});
 				}
@@ -248,19 +248,14 @@ exports.busLineDelete = [
 				if(foundBusLine === null){
 					return apiResponse.notFoundResponse(res,"BusLine not exists with this id");
 				}else{
-					//Check authorized user
-					if(foundBusLine.user.toString() !== req.user._id){
-						return apiResponse.unauthorizedResponse(res, "You are not authorized to do this operation.");
-					}else{
-						//delete BusLine.
-						Busline.findByIdAndRemove(req.params.id,function (err) {
-							if (err) {
-								return apiResponse.ErrorResponse(res, err);
-							}else{
-								return apiResponse.successResponse(res,"BusLine delete Success.");
-							}
-						});
-					}
+					//delete BusLine.
+					Busline.findByIdAndRemove(req.params.id,function (err) {
+						if (err) {
+							return apiResponse.ErrorResponse(res, err);
+						}else{
+							return apiResponse.successResponse(res,"BusLine delete Success.");
+						}
+					});
 				}
 			});
 		} catch (err) {

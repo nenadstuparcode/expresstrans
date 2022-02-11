@@ -31,7 +31,11 @@ function TicketData(data) {
 	this.ticketRoundTrip = data.ticketRoundTrip;
 	this.ticketStartDate = data.ticketStartDate;
 	this.ticketStartTime = data.ticketStartTime;
+	this.ticketType = data.ticketType;
 	this.createdAt = data.createdAt;
+	this.ticketClassicId = data.ticketClassicId;
+	this.ticketInvoiceNumber = data.ticketInvoiceNumber;
+	this.ticketPrice = data.ticketPrice;
 }
 
 // BusLine Schema
@@ -55,10 +59,10 @@ exports.ticketList = [
 	auth,
 	function (req, res) {
 		try {
-			Ticket.find({user: req.user._id},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketQR createdAt modifiedAt").then((tickets)=>{
-				if(tickets.length > 0){
+			Ticket.find({user: req.user._id},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketClassicId ticketInvoiceNumber ticketQR ticketPrice createdAt modifiedAt").then((tickets)=>{
+				if(tickets.length > 0) {
 					return apiResponse.successResponseWithData(res, "Operation success", tickets);
-				}else{
+				} else {
 					return apiResponse.successResponseWithData(res, "Operation success", []);
 				}
 			});
@@ -80,7 +84,7 @@ exports.ticketSearch = [
 			res.count = count;
 			try {
 				Ticket.find(
-					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketQR createdAt modifiedAt").sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((tickets)=>{
+					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((tickets)=>{
 					if(tickets.length > 0){
 						return apiResponse.successResponseWithData(res, "Operation success", tickets);
 					}else{
@@ -109,7 +113,7 @@ exports.ticketDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Ticket.findOne({_id: req.params.id,user: req.user._id},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketQR createdAt modifiedAt").then((ticket)=>{
+			Ticket.findOne({_id: req.params.id,user: req.user._id},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").then((ticket)=>{
 				if(ticket !== null){
 					let ticketData = new TicketData(ticket);
 					return apiResponse.successResponseWithData(res, "Operation success", ticketData);
@@ -137,12 +141,14 @@ exports.ticketStore = [
 	auth,
 	body("ticketOnName", "ticketOnName must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketPhone", "ticketPhone must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketEmail", "ticketEmail must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketValid", "lineCountryStart trip must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketBusLineId", "ticketBusLineId must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketRoundTrip", "ticketRoundTrip must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketStartDate", "ticketStartDate must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketStartTime", "ticketStartTime must not be empty.").isLength({ min: 1 }).trim(),
+	body("ticketType", "ticketType must not be empty.").isLength({ min: 1 }).trim(),
+	body("ticketPrice", "ticketPrice must not be empty.").isLength({ min: 1 }).trim(),
+	body("ticketInvoiceNumber", "ticketInvoiceNumber must not be empty.").isLength({ min: 1 }).trim(),
 	sanitizeBody("*").escape(),
 	(req, res) => {
 		try {
@@ -165,9 +171,13 @@ exports.ticketStore = [
 							ticketValid: req.body.ticketValid,
 							ticketBusLineId: req.body.ticketBusLineId,
 							ticketRoundTrip: req.body.ticketRoundTrip,
+							ticketClassicId: req.body.ticketClassicId,
 							ticketStartDate: req.body.ticketStartDate,
+							ticketType: req.body.ticketType,
 							ticketStartTime: req.body.ticketStartTime,
+							ticketInvoiceNumber: req.body.ticketInvoiceNumber,
 							ticketQR: urlQR,
+							ticketPrice: req.body.ticketPrice,
 							ticketId: `EXTR0${doc.count}`,
 							user: req.user,
 						});
@@ -207,12 +217,14 @@ exports.ticketUpdate = [
 	auth,
 	body("ticketOnName", "ticketOnName must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketPhone", "ticketPhone must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketEmail", "ticketEmail must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketValid", "lineCountryStart trip must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketBusLineId", "ticketBusLineId must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketRoundTrip", "ticketRoundTrip must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketStartDate", "ticketStartDate must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketStartTime", "ticketStartTime must not be empty.").isLength({ min: 1 }).trim(),
+	body("ticketType", "ticketType must not be empty.").isLength({ min: 1 }).trim(),
+	body("ticketPrice", "ticketPrice must not be empty.").isLength({ min: 1 }).trim(),
+	body("ticketInvoiceNumber", "ticketInvoiceNumber must not be empty.").isLength({ min: 1 }).trim(),
 	sanitizeBody("*").escape(),
 	(req, res) => {
 		try {
@@ -224,10 +236,14 @@ exports.ticketUpdate = [
 				ticketEmail: req.body.ticketEmail,
 				ticketNote: req.body.ticketNote,
 				ticketValid: req.body.ticketValid,
+				ticketType: req.body.ticketType,
 				ticketBusLineId: req.body.ticketBusLineId,
 				ticketRoundTrip: req.body.ticketRoundTrip,
 				ticketStartDate: req.body.ticketStartDate,
 				ticketStartTime: req.body.ticketStartTime,
+				ticketInvoiceNumber: req.body.ticketInvoiceNumber,
+				ticketClassicId: req.body.ticketClassicId,
+				ticketPrice: req.body.ticketPrice,
 				_id:req.params.id
 			});
 
@@ -240,22 +256,17 @@ exports.ticketUpdate = [
 				}else{
 					Ticket.findById(req.params.id, function (err, foundTicket) {
 						if(foundTicket === null){
-							return apiResponse.notFoundResponse(res,"BusLine not exists with this id");
+							return apiResponse.notFoundResponse(res,"Ticket not exists with this id");
 						}else{
-							//Check authorized user
-							if(foundTicket.user.toString() !== req.user._id){
-								return apiResponse.unauthorizedResponse(res, "You are not authorized to do this operation.");
-							}else{
-								//update BusLine.
-								Ticket.findByIdAndUpdate(req.params.id, ticket, {},function (err) {
-									if (err) {
-										return apiResponse.ErrorResponse(res, err);
-									}else{
-										let ticketData = new TicketData(ticket);
-										return apiResponse.successResponseWithData(res,"BusLine update Success.", ticketData);
-									}
-								});
-							}
+							//update BusLine.
+							Ticket.findByIdAndUpdate(req.params.id, ticket, {},function (err) {
+								if (err) {
+									return apiResponse.ErrorResponse(res, err);
+								}else{
+									let ticketData = new TicketData(ticket);
+									return apiResponse.successResponseWithData(res,"Ticket update Success.", ticketData);
+								}
+							});
 						}
 					});
 				}
@@ -283,21 +294,16 @@ exports.ticketDelete = [
 		try {
 			Ticket.findById(req.params.id, function (err, foundTicket) {
 				if(foundTicket === null){
-					return apiResponse.notFoundResponse(res,"BusLine not exists with this id");
+					return apiResponse.notFoundResponse(res,"Ticket not exists with this id");
 				}else{
-					//Check authorized user
-					if(foundTicket.user.toString() !== req.user._id){
-						return apiResponse.unauthorizedResponse(res, "You are not authorized to do this operation.");
-					}else{
-						//delete BusLine.
-						Ticket.findByIdAndRemove(req.params.id,function (err) {
-							if (err) {
-								return apiResponse.ErrorResponse(res, err);
-							}else{
-								return apiResponse.successResponseWithData(res,"BusLine delete Success.");
-							}
-						});
-					}
+					//delete BusLine.
+					Ticket.findByIdAndRemove(req.params.id,function (err) {
+						if (err) {
+							return apiResponse.ErrorResponse(res, err);
+						}else{
+							return apiResponse.successResponseWithData(res,"Ticket delete Success.");
+						}
+					});
 				}
 			});
 		} catch (err) {
@@ -329,14 +335,18 @@ exports.ticketPrint = [
 					ticketValid: req.body.ticketValid,
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
+					ticketType: req.body.ticketType,
 					ticketId: req.body.ticketId,
 					ticketQR: req.body.ticketQR,
+					ticketClassicId: req.body.ticketClassicId,
+					ticketInvoiceNumber: req.body.ticketInvoiceNumber,
 					// ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
 					// ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
 
 					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
 					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 					busLineData: req.body.busLineData,
+					ticketPrice: req.body.ticketPrice,
 				},
 			};
 
@@ -408,14 +418,18 @@ exports.sendToMail = [
 					ticketValid: req.body.ticketValid,
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
+					ticketType: req.body.ticketType,
+					ticketInvoiceNumber: req.body.ticketInvoiceNumber,
 					ticketId: req.body.ticketId,
 					ticketQR: req.body.ticketQR,
+					ticketClassicId: req.body.ticketClassicId,
 					// ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
 					// ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
 
 					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
 					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 					busLineData: req.body.busLineData,
+					ticketPrice: req.body.ticketPrice,
 				},
 			};
 
@@ -497,14 +511,18 @@ exports.sendToMailCustom = [
 					ticketValid: req.body.ticketValid,
 					ticketBusLineId: req.body.ticketBusLineId,
 					ticketRoundTrip: req.body.ticketRoundTrip,
+					ticketType: req.body.ticketType,
+					ticketInvoiceNumber: req.body.ticketInvoiceNumber,
 					ticketId: req.body.ticketId,
 					ticketQR: req.body.ticketQR,
+					ticketClassicId: req.body.ticketClassicId,
 					// ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
 					// ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
 
 					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
 					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 					busLineData: req.body.busLineData,
+					ticketPrice: req.body.ticketPrice,
 				},
 			};
 
@@ -582,7 +600,7 @@ exports.sendToMailCustom = [
 exports.ticketQRCode = [
 	function (req, res) {
 		try {
-			Ticket.findOne({ticketId: req.params.ticketId},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId createdAt modifiedAt").then((ticket)=>{
+			Ticket.findOne({ticketId: req.params.ticketId},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketInvoiceNumber ticketClassicId ticketType ticketStartTime ticketId ticketPrice createdAt modifiedAt").then((ticket)=>{
 				if(ticket !== null){
 
 					let ticketDataQR = new TicketData(ticket);
@@ -602,14 +620,15 @@ exports.ticketQRCode = [
 												ticketValid: ticketDataQR.ticketValid,
 												ticketBusLineId: ticketDataQR.ticketBusLineId,
 												ticketRoundTrip: ticketDataQR.ticketRoundTrip,
+												ticketType: ticketDataQR.ticketType,
+												ticketInvoiceNumber: ticketDataQR.ticketInvoiceNumber,
 												ticketId: ticketDataQR.ticketId,
 												ticketQR: req.body.ticketQR,
-												// ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
-												// ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
-
+												ticketClassicId: req.body.ticketClassicId,
 												ticketStartDate: moment(ticketDataQR.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
 												ticketStartTime: moment(ticketDataQR.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 												busLineData: ticketDataQR.busLineData,
+												ticketPrice: ticketDataQR.ticketPrice,
 											},
 										};
 
@@ -660,13 +679,30 @@ exports.reportSearch = [
 		const pageNumber = req.body.pageNumber;
 		const resultPerPage = req.body.resultPerPage;
 		const searchTerm = req.body.searchTerm;
+		const startDate = req.body.startDate;
+		const endDate = req.body.endDate;
+		// can be sorted by ticketOnName ticketRoundTrip ticketStartDate
+		const sortByProp = req.body.sortByProp ? req.body.sortByProp : "ticketOnName";
+		const sortOption = req.body.sortOption ? req.body.sortOption : -1;
 
-		Ticket.find({ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}}).count((err, count) => {
+		Ticket.find(
+			{
+				$and : [
+					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},
+					{ "ticketStartDate" : { "$gte" : startDate, "$lt" : endDate}},
+				]
+			}).count((err, count) => {
 			res.count = count;
 			try {
 				Ticket.find(
-					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketQR createdAt modifiedAt")
-					.sort({createdAt:-1})
+					{
+						$and : [
+							{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},
+							{ "ticketStartDate" : { "$gte" : startDate, "$lt" : endDate}},
+						]
+						,
+					}, "_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketClassicId ticketInvoiceNumber ticketType ticketId ticketQR ticketPrice createdAt modifiedAt")
+					.sort({[sortByProp]: sortOption})
 					.skip( pageNumber > 0 ? ( ( pageNumber ) * resultPerPage ) : 0 )
 					.limit( resultPerPage )
 					.then((tickets)=>{
