@@ -1,0 +1,70 @@
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Play&family=Saira+Condensed:wght@100&display=swap" rel="stylesheet">
+<style>
+    body {
+        margin:0;
+        padding:0;
+        font-size: 10px;
+    }
+    .invoice-box {
+        font-family: 'Play', sans-serif;
+        margin: 0;
+        font-size: 10px;
+        color: #333;
+        width: 1200px;
+        height: auto;
+    }
+
+    table, th, td {
+        border:1px solid black;
+        font-size: 10px;
+    }
+
+</style>
+
+<div>
+    <div class="invoice-box">
+        {{#if tickets}}
+        <table style="width: 100%">
+            <tr>
+                {{#each columns}}
+                <th>{{ this }}</th>
+                {{/each}}
+            </tr>
+            {{#each tickets}}
+            <tr>
+                <td>{{ticketInvoiceNumber}}</td>
+                <td>{{ticketStartDate}}</td>
+                <td>{{busLineData.lineCountryStart}}</td>
+                <td>{{ticketOnName}}</td>
+                <td>{{busLineData.lineCityStart}} - {{busLineData.lineCityEnd}}</td>
+                <td>{{ticketPrice}}</td>
+                <td>
+                    {{#if ticketRoundTrip}}
+                       Povratna
+                    {{else}}
+                       Jedan Smjer
+                    {{/if}}
+                </td>
+                <td>{{ticketIdToShow}}</td>
+                <td>{{busLineData.bihKilometers}}</td>
+                <td>579</td>
+                <td>{{busLineData.deKilometers}}</td>
+                <td>{{totalKilometers}}</td>
+                <td>{{taxInDE}}</td>
+                <td>{{taxCalculatedOne}}</td>
+                <td>{{taxCalculatedTwo}}</td>
+                <td>{{returnTaxDE}}</td>
+            </tr>
+            {{/each}}
+        </table>
+        {{else}}
+        <h3>Nema rezultata!</h3>
+        {{/if}}
+    </div>
+</div>
+
+
+

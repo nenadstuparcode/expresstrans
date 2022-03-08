@@ -18,7 +18,7 @@ function InvoiceData(data) {
 
 
 /**
- * Invoice Search.
+ * Invoice List.
  *
  * @returns {Object}
  */
@@ -40,9 +40,15 @@ exports.invoiceList = [
 	}
 ];
 
+/**
+ * Invoice Search.
+ *
+ * @returns {Object}
+ */
 exports.invoiceSearch = [
 	auth,
 	function (req,res) {
+
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;

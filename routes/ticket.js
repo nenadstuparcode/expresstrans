@@ -13,6 +13,7 @@ router.post("/search", TicketController.ticketSearch);
 router.post("/email/:email", TicketController.sendToMailCustom);
 router.get("/scan/:ticketId", TicketController.ticketQRCode);
 router.post("/report", TicketController.reportSearch);
+router.post("/report-print", TicketController.ticketReportClassic);
 
 
 module.exports = router;

@@ -51,7 +51,7 @@ function BusLineData(data) {
 }
 
 /**
- * BusLine List.
+ * Ticket List.
  *
  * @returns {Object}
  */
@@ -100,7 +100,7 @@ exports.ticketSearch = [
 ];
 
 /**
- * BusLine Detail.
+ * Ticket Detail.
  *
  * @param {string}      id
  *
@@ -129,7 +129,7 @@ exports.ticketDetail = [
 ];
 
 /**
- * BusLine store.
+ * Ticket store.
  *
  * @param {string}      title
  * @param {string}      description
@@ -205,7 +205,7 @@ exports.ticketStore = [
 ];
 
 /**
- * BusLine update.
+ * Ticket update.
  *
  * @param {string}      title
  * @param {string}      description
@@ -279,7 +279,7 @@ exports.ticketUpdate = [
 ];
 
 /**
- * BusLine Delete.
+ * Ticket Delete.
  *
  * @param {string}      id
  *
@@ -314,7 +314,7 @@ exports.ticketDelete = [
 ];
 
 /**
- * BusLine Print.
+ * Ticket Print.
  *
  * @param {string}      id
  *
@@ -340,27 +340,20 @@ exports.ticketPrint = [
 					ticketQR: req.body.ticketQR,
 					ticketClassicId: req.body.ticketClassicId,
 					ticketInvoiceNumber: req.body.ticketInvoiceNumber,
-					// ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
-					// ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
-
 					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
 					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 					busLineData: req.body.busLineData,
 					ticketPrice: req.body.ticketPrice,
+					isTicketInternet: req.body.ticketType === "internet",
+					isTicketReturn: req.body.ticketType === "return",
 				},
 			};
 
-			dataBinding.ticketData.busLineData.linePriceOneWay = dataBinding.ticketData.busLineData.linePriceOneWay.toLocaleString("de", {
-				style: "currency",
-				currency: "EUR",
-			});
+			let ticketTemplate;
 
-			dataBinding.ticketData.busLineData.linePriceRoundTrip = dataBinding.ticketData.busLineData.linePriceRoundTrip.toLocaleString("de", {
-				style: "currency",
-				currency: "EUR",
-			});
+			req.body.ticketRoundTrip ? ticketTemplate = "povratna.html" : ticketTemplate = "jedan-smijer.html";
 
-			var templateHtml = fs.readFileSync(path.join(process.cwd(), "karta.html"), "utf8");
+			var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
 			var template = handlebars.compile(templateHtml);
 			var finalHtml = encodeURIComponent(template(dataBinding));
 			var options = {
@@ -373,7 +366,6 @@ exports.ticketPrint = [
 					bottom: "0px"
 				},
 				printBackground: true,
-				path: "karte/generisani_2.pdf"
 			};
 
 			const browser = await puppeteer.launch({
@@ -382,7 +374,7 @@ exports.ticketPrint = [
 			});
 			const page = await browser.newPage();
 			await page.setContent(finalHtml);
-			await page.setViewport({ width: 1366, height: 768});
+			await page.setViewport({ width: 1000, height: 420});
 			await page.goto(`data:text/html;charset=UTF-8,${finalHtml}`, {
 				waitUntil: "networkidle0"
 			});
@@ -407,7 +399,6 @@ exports.sendToMail = [
 	auth,
 	async function (req, res) {
 		try {
-			console.log(req.body.ticketStartDate);
 			var dataBinding = {
 				isWatermark: true,
 				ticketData : {
@@ -423,27 +414,20 @@ exports.sendToMail = [
 					ticketId: req.body.ticketId,
 					ticketQR: req.body.ticketQR,
 					ticketClassicId: req.body.ticketClassicId,
-					// ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
-					// ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
-
 					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
 					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 					busLineData: req.body.busLineData,
 					ticketPrice: req.body.ticketPrice,
+					isTicketInternet: req.body.ticketType === "internet",
+					isTicketReturn: req.body.ticketType === "return",
 				},
 			};
 
-			dataBinding.ticketData.busLineData.linePriceOneWay = dataBinding.ticketData.busLineData.linePriceOneWay.toLocaleString("de", {
-				style: "currency",
-				currency: "EUR",
-			});
+			let ticketTemplate;
 
-			dataBinding.ticketData.busLineData.linePriceRoundTrip = dataBinding.ticketData.busLineData.linePriceRoundTrip.toLocaleString("de", {
-				style: "currency",
-				currency: "EUR",
-			});
+			req.body.ticketRoundTrip ? ticketTemplate = "povratna.html" : ticketTemplate = "jedan-smijer.html";
 
-			var templateHtml = fs.readFileSync(path.join(process.cwd(), "karta.html"), "utf8");
+			var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
 			var template = handlebars.compile(templateHtml);
 			var finalHtml = encodeURIComponent(template(dataBinding));
 			var options = {
@@ -456,7 +440,6 @@ exports.sendToMail = [
 					bottom: "0px"
 				},
 				printBackground: true,
-				path: "karte/generisani_2.pdf"
 			};
 
 			const browser = await puppeteer.launch({
@@ -516,27 +499,20 @@ exports.sendToMailCustom = [
 					ticketId: req.body.ticketId,
 					ticketQR: req.body.ticketQR,
 					ticketClassicId: req.body.ticketClassicId,
-					// ticketStartDate: moment(req.body.ticketStartDate).local().add(1, "days").format("DD.MM.YYYY"),
-					// ticketStartTime: moment(req.body.ticketStartTime).local().add(1, "hours").format("HH:mm"),
-
 					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
 					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 					busLineData: req.body.busLineData,
 					ticketPrice: req.body.ticketPrice,
+					isTicketInternet: req.body.ticketType === "internet",
+					isTicketReturn: req.body.ticketType === "return",
 				},
 			};
 
-			dataBinding.ticketData.busLineData.linePriceOneWay = dataBinding.ticketData.busLineData.linePriceOneWay.toLocaleString("de", {
-				style: "currency",
-				currency: "EUR",
-			});
+			let ticketTemplate;
 
-			dataBinding.ticketData.busLineData.linePriceRoundTrip = dataBinding.ticketData.busLineData.linePriceRoundTrip.toLocaleString("de", {
-				style: "currency",
-				currency: "EUR",
-			});
+			req.body.ticketRoundTrip ? ticketTemplate = "povratna.html" : ticketTemplate = "jedan-smijer.html";
 
-			var templateHtml = fs.readFileSync(path.join(process.cwd(), "karta.html"), "utf8");
+			var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
 			var template = handlebars.compile(templateHtml);
 			var finalHtml = encodeURIComponent(template(dataBinding));
 			var options = {
@@ -549,7 +525,6 @@ exports.sendToMailCustom = [
 					bottom: "0px"
 				},
 				printBackground: true,
-				path: "karte/generisani_2.pdf"
 			};
 
 			const browser = await puppeteer.launch({
@@ -591,7 +566,7 @@ exports.sendToMailCustom = [
 
 
 /**
- * BusLine Detail.
+ * Ticket QR Code confirmation.
  *
  * @param {string}      id
  *
@@ -629,20 +604,15 @@ exports.ticketQRCode = [
 												ticketStartTime: moment(ticketDataQR.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 												busLineData: ticketDataQR.busLineData,
 												ticketPrice: ticketDataQR.ticketPrice,
+												isTicketInternet: req.body.ticketType === "internet",
+												isTicketReturn: req.body.ticketType === "return",
 											},
 										};
+										let ticketTemplate;
 
-										dataBinding.ticketData.busLineData.linePriceOneWay = dataBinding.ticketData.busLineData.linePriceOneWay.toLocaleString("de", {
-											style: "currency",
-											currency: "EUR",
-										});
+										req.body.ticketRoundTrip ? ticketTemplate = "qrcode-povratna.html" : ticketTemplate = "qrcode-jedan-smijer.html";
 
-										dataBinding.ticketData.busLineData.linePriceRoundTrip = dataBinding.ticketData.busLineData.linePriceRoundTrip.toLocaleString("de", {
-											style: "currency",
-											currency: "EUR",
-										});
-
-										var templateHtml = fs.readFileSync(path.join(process.cwd(), "qrcode.html"), "utf8");
+										var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
 										var template = handlebars.compile(templateHtml);
 										var finalHtml = template(dataBinding);
 										res.end(finalHtml);
@@ -681,7 +651,6 @@ exports.reportSearch = [
 		const searchTerm = req.body.searchTerm;
 		const startDate = req.body.startDate;
 		const endDate = req.body.endDate;
-		// can be sorted by ticketOnName ticketRoundTrip ticketStartDate
 		const sortByProp = req.body.sortByProp ? req.body.sortByProp : "ticketOnName";
 		const sortOption = req.body.sortOption ? req.body.sortOption : -1;
 
@@ -718,4 +687,59 @@ exports.reportSearch = [
 		});
 	}
 
+];
+
+exports.ticketReportClassic = [
+	auth,
+	async function (req,res) {
+		try {
+			console.log(req.body.tickets);
+
+			var dataBinding = {
+				isWatermark: true,
+				tickets: [...req.body.tickets],
+				columns: [...req.body.columns],
+			};
+
+			let ticketTemplate = "izvjestaj.html";
+
+			var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
+			var template = handlebars.compile(templateHtml);
+			var finalHtml = encodeURIComponent(template(dataBinding));
+			var options = {
+				format: "A4",
+				headerTemplate: "<p></p>",
+				footerTemplate: "<p></p>",
+				displayHeaderFooter: false,
+				margin: {
+					top: "0px",
+					bottom: "0px"
+				},
+				printBackground: true,
+			};
+
+			const browser = await puppeteer.launch({
+				headless: true,
+				args: ["--no-sandbox", "--use-gl=egl"],
+			});
+			const page = await browser.newPage();
+			await page.setContent(finalHtml);
+			await page.setViewport({ width: 1000, height: 420});
+			await page.goto(`data:text/html;charset=UTF-8,${finalHtml}`, {
+				waitUntil: "networkidle0"
+			});
+			const pdfBuffer = await page.pdf(options);
+
+			await page.close();
+			await browser.close();
+
+			res.setHeader("Content-Length",pdfBuffer.length);
+			res.setHeader("Content-type", "application/pdf");
+			res.setHeader("Content-Disposition", "attachment; filename=karta.pdf");
+
+			res.end(pdfBuffer);
+		} catch (err) {
+			console.log("ERROR:", err);
+		}
+	}
 ];

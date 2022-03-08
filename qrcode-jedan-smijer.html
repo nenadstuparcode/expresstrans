@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+       <link rel="preconnect" href="https://fonts.googleapis.com">
+       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+       <link href="https://fonts.googleapis.com/css2?family=Play&family=Saira+Condensed:wght@100&display=swap" rel="stylesheet">
+       <style>
+           body {
+               margin:0;
+               padding:0;
+           }
+           .invoice-box {
+               font-family: 'Play', sans-serif;
+               margin: 0;
+               /*border: 1px solid #000;*/
+               font-size: 16px;
+               line-height: 24px;
+               color: #555;
+           }
+
+           .invoice-data {
+               position: relative;
+               height: 420px;
+               width: 1000px;
+               background: url('http://localhost:3000/images/jedan-smjer.png') no-repeat;
+               background-size: contain;
+           }
+           .side-ticket {
+               position: absolute;
+               top: 94px;
+               width: 210px;
+           }
+           .side-ticket.right {
+               position: absolute;
+               left:unset;
+               padding-left: 7px;
+               right: 10px;
+           }
+           .side-ticket-item {
+               display: flex;
+               margin-bottom: 27px;
+               font-size: 13px;
+               margin-left: 5px;
+           }
+           .side-ticket-item .half {
+               width: 50%;
+               padding-top: 7px;
+           }
+           .side-ticket-item.center {
+               justify-content: center;
+               margin-top: -10px;
+               margin-left: -10px;
+           }
+           .side-ticket-item .half:nth-child(2) {
+               padding-left: 18px;
+           }
+           .ticket-qr-code {
+               position: absolute;
+               top: 24px;
+               left: 338px;
+               background: black;
+           }
+           .main-ticket {
+               position: absolute;
+               left: 0px;
+               top:0px;
+               width: 756px;
+               height: 415px;
+           }
+           .main-ticket-id {
+               top: 110px;
+               position: absolute;
+               left: 200px;
+               font-size: 12px;
+               width: 80px;
+               text-align: center;
+           }
+           .main-ticket-name {
+               top: 158px;
+               position: absolute;
+               left: 135px;
+               font-size: 12px;
+               width: 250px;
+           }
+           .main-ticket-from {
+               top: 197px;
+               position: absolute;
+               left: 135px;
+               font-size: 12px;
+               width: 250px;
+           }
+           .main-ticket-to {
+               top:243px;
+               position: absolute;
+               left: 135px;
+               font-size: 12px;
+               width: 250px;
+           }
+           .main-ticket-return {
+               top:233px;
+               position: absolute;
+               left: 100px;
+               font-size: 12px;
+               width: 250px;
+           }
+           .main-ticket-complaint {
+               top: 378px;
+               position: absolute;
+               left: 135px;
+               font-size: 9px;
+               width: 250px;
+           }
+           .main-ticket-valid {
+               position: absolute;
+               top: 361px;
+               width: 80px;
+               left: 22px;
+               text-align: center;
+               font-size: 12px;
+               font-weight: bold;
+               line-height: 1.1;
+           }
+           .main-ticket-bought-at {
+               position: absolute;
+               right: 58px;
+               top: 83px;
+               width: 190px;
+               text-align: center;
+           }
+           .main-ticket-start-date {
+               position: absolute;
+               right: 174px;
+               top: 187px;
+               width: 80px;
+               font-size: 12px;
+               text-align: center;
+           }
+           .main-ticket-start-time {
+               position: absolute;
+               right: 34px;
+               top: 187px;
+               width: 80px;
+               font-size: 12px;
+               text-align: center;
+           }
+           .main-ticket-price {
+               position: absolute;
+               right: 56px;
+               bottom: 28px;
+               width: 190px;
+               font-size: 12px;
+               text-align: center;
+           }
+
+       </style>
+   </head>
+   <body>
+   <div>
+       <div class="invoice-box">
+           <div class="invoice-data">
+               {{#if ticketData}}
+               <div class="main-ticket">
+                    <span class="main-ticket-id">
+                        {{#if ticketData.isTicketInternet}}
+                        {{ ticketData.ticketId }}
+                        {{else}}
+                        No.0{{ ticketData.ticketClassicId }}
+                        {{/if}}
+                    </span>
+                   <span class="main-ticket-name">{{ ticketData.ticketOnName }}</span>
+                   <span class="main-ticket-from">{{ ticketData.busLineData.lineCityStart }}</span>
+                   <span class="main-ticket-to">{{ ticketData.busLineData.lineCityEnd }}</span>
+                   <span class="main-ticket-complaint">{{ticketData.ticketNote }}</span>
+                   <span class="main-ticket-valid">
+                        {{ ticketData.ticketValid }} monate <br/>
+                       {{ ticketData.ticketValid }} mjeseci
+                    </span>
+                   <span class="main-ticket-bought-at">
+                        {{#if ticketData.isTicketInternet}}
+                       Internet
+                       {{else}}
+                       Bus
+                       {{/if}}
+                    </span>
+                   <span class="main-ticket-start-date">{{ ticketData.ticketStartDate }}</span>
+                   <span class="main-ticket-start-time">{{ ticketData.ticketStartTime }}</span>
+                   <span class="main-ticket-price">
+                        {{#if ticketData.isTicketReturn}}
+                       0 EUR
+                       {{else}}
+                       {{ticketData.ticketPrice }} EUR
+                       {{/if}}
+                   </span>
+               </div>
+               <div class="ticket-qr-code">
+                   <img src="{{ticketData.ticketQR}}" width="110px" height="110px"/>
+               </div>
+
+               <div class="side-ticket right">
+                    <span class="side-ticket-item">
+                        {{#if ticketData.isTicketInternet}}
+                        {{ ticketData.ticketId }}
+                        {{else}}
+                        No.0{{ ticketData.ticketClassicId }}
+                        {{/if}}
+                    </span>
+                   <span class="side-ticket-item">{{ ticketData.ticketOnName }}</span>
+                   <div class="side-ticket-item">
+                       <span class="half">{{ ticketData.busLineData.lineCityStart }}</span>
+                       <span class="half">{{ ticketData.busLineData.lineCityEnd }}</span>
+                   </div>
+                   <div class="side-ticket-item">
+                       <span class="half">{{ ticketData.ticketValid }} monate</span>
+                       <span class="half">
+                            {{#if ticketData.isTicketReturn}}
+                           0 EUR
+                           {{else}}
+                           {{ ticketData.ticketPrice }} EUR
+                           {{/if}}
+                        </span>
+                   </div>
+                   <div class="side-ticket-item center">
+                       <img src="{{ticketData.ticketQR}}" width="80px" height="80px"/>
+                   </div>
+               </div>
+               {{/if}}
+
+           </div>
+       </div>
+   </div>
+   </body>
+</html>
+
+
