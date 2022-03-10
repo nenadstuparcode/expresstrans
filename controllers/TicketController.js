@@ -32,6 +32,7 @@ function TicketData(data) {
 	this.ticketStartDate = data.ticketStartDate;
 	this.ticketStartTime = data.ticketStartTime;
 	this.ticketType = data.ticketType;
+	this.ticketQR = data.ticketQR;
 	this.createdAt = data.createdAt;
 	this.ticketClassicId = data.ticketClassicId;
 	this.ticketInvoiceNumber = data.ticketInvoiceNumber;
