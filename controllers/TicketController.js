@@ -610,7 +610,7 @@ exports.ticketQRCode = [
 										};
 										let ticketTemplate;
 
-										req.body.ticketRoundTrip ? ticketTemplate = "qrcode-povratna.html" : ticketTemplate = "qrcode-jedan-smijer.html";
+										req.body.ticketRoundTrip ? ticketTemplate = "povratna.html" : ticketTemplate = "jedan-smijer.html";
 
 										var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
 										var template = handlebars.compile(templateHtml);
