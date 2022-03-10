@@ -159,7 +159,7 @@ exports.ticketStore = [
 
 				// eslint-disable-next-line no-unused-vars
 
-
+				//app.express-trans.online
 				QRCode.toDataURL(`https://app.express-trans.online/api/ticket/scan/EXTR0${doc.count}`)
 					.then(urlQR => {
 						const errors = validationResult(req);
