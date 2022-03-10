@@ -604,8 +604,8 @@ exports.ticketQRCode = [
 												ticketStartTime: moment(ticketDataQR.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 												busLineData: ticketDataQR.busLineData,
 												ticketPrice: ticketDataQR.ticketPrice,
-												isTicketInternet: req.body.ticketType === "internet",
-												isTicketReturn: req.body.ticketType === "return",
+												isTicketInternet: ticketDataQR.ticketType === "internet",
+												isTicketReturn: ticketDataQR.ticketType === "return",
 											},
 										};
 										let ticketTemplate;
