@@ -608,10 +608,13 @@ exports.ticketQRCode = [
 												isTicketReturn: ticketDataQR.ticketType === "return",
 											},
 										};
+
+										console.log(dataBinding.ticketData.ticketQR);
 										let ticketTemplate;
 
-										req.body.ticketRoundTrip ? ticketTemplate = "qrcode-povratna.html" : ticketTemplate = "qrcode-jedan-smijer.html";
+										dataBinding.ticketData.ticketRoundTrip ? ticketTemplate = "qrcode-povratna.html" : ticketTemplate = "qrcode-jedan-smijer.html";
 
+										console.log(ticketTemplate);
 										var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
 										var template = handlebars.compile(templateHtml);
 										var finalHtml = template(dataBinding);
