@@ -575,7 +575,7 @@ exports.sendToMailCustom = [
 exports.ticketQRCode = [
 	function (req, res) {
 		try {
-			Ticket.findOne({ticketId: req.params.ticketId},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketInvoiceNumber ticketClassicId ticketType ticketStartTime ticketId ticketPrice createdAt modifiedAt").then((ticket)=>{
+			Ticket.findOne({ticketId: req.params.ticketId},"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketInvoiceNumber ticketClassicId ticketType ticketStartTime ticketId ticketQR ticketPrice createdAt modifiedAt").then((ticket)=>{
 				if(ticket !== null){
 
 					let ticketDataQR = new TicketData(ticket);
@@ -598,8 +598,8 @@ exports.ticketQRCode = [
 												ticketType: ticketDataQR.ticketType,
 												ticketInvoiceNumber: ticketDataQR.ticketInvoiceNumber,
 												ticketId: ticketDataQR.ticketId,
-												ticketQR: req.body.ticketQR,
-												ticketClassicId: req.body.ticketClassicId,
+												ticketQR: ticketDataQR.ticketQR,
+												ticketClassicId: ticketDataQR.ticketClassicId,
 												ticketStartDate: moment(ticketDataQR.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
 												ticketStartTime: moment(ticketDataQR.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
 												busLineData: ticketDataQR.busLineData,
