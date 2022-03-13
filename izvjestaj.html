@@ -2,6 +2,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Play&family=Saira+Condensed:wght@100&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 <style>
     body {
         margin:0;
@@ -10,61 +11,168 @@
     }
     .invoice-box {
         font-family: 'Play', sans-serif;
-        margin: 0;
+        margin: 0 auto;
         font-size: 10px;
         color: #333;
         width: 1200px;
         height: auto;
     }
+    .header {
+        display: flex;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: bold;
+        margin: 20px 0px;
+    }
 
-    table, th, td {
-        border:1px solid black;
-        font-size: 10px;
+    .table {
+        width: 100%;
+        font-size: 12px;
+    }
+    .table tr ,.table td ,.table th {
+        padding: 2px;
+        border:none;
+        text-align: center;
+    }
+
+    .border {
+        border: 2px solid #000 !important;
+    }
+
+    .table tr > td.bg-yellow {
+        background-color: #dede1b !important;
+        background: #dede1b !important;
+    }
+
+    .table tr > td.bg-red {
+        background-color: #e34b4b !important;
+        background: #e34b4b !important;
     }
 
 </style>
 
 <div>
     <div class="invoice-box">
-        {{#if tickets}}
-        <table style="width: 100%">
-            <tr>
-                {{#each columns}}
-                <th>{{ this }}</th>
-                {{/each}}
-            </tr>
-            {{#each tickets}}
-            <tr>
-                <td>{{ticketInvoiceNumber}}</td>
-                <td>{{ticketStartDate}}</td>
-                <td>{{busLineData.lineCountryStart}}</td>
-                <td>{{ticketOnName}}</td>
-                <td>{{busLineData.lineCityStart}} - {{busLineData.lineCityEnd}}</td>
-                <td>{{ticketPrice}}</td>
-                <td>
-                    {{#if ticketRoundTrip}}
-                       Povratna
-                    {{else}}
-                       Jedan Smjer
-                    {{/if}}
-                </td>
-                <td>{{ticketIdToShow}}</td>
-                <td>{{busLineData.bihKilometers}}</td>
-                <td>579</td>
-                <td>{{busLineData.deKilometers}}</td>
-                <td>{{totalKilometers}}</td>
-                <td>{{taxInDE}}</td>
-                <td>{{taxCalculatedOne}}</td>
-                <td>{{taxCalculatedTwo}}</td>
-                <td>{{returnTaxDE}}</td>
-            </tr>
+        <div class="invoice-container">
+            {{#each generalData}}
+                {{#if data.length}}
+                <div class="header">
+                    <span class="company-name">{{name}} {{month}}</span>
+                </div>
+                <table class="table" style="width: 100%">
+                    <tr>
+                        <th>Broj Fakture</th>
+                        <th>Datum</th>
+                        <th>Smijer</th>
+                        <th>Ime i Prezime</th>
+                        <th>Od</th>
+                        <th>Do</th>
+                        <th>Cijena</th>
+                        <th>Vrsta Karte</th>
+                        <th>Broj Karte</th>
+                        <th>BIH</th>
+                        <th>Tranzit</th>
+                        <th>DE</th>
+                        <th>Ukupno</th>
+                        <th>% DE</th>
+                        <th>Ukupno</th>
+                        <th>Osnovica DE</th>
+                        <th>Porez DE</th>
+                    </tr>
+                    {{#each data}}
+                    <tr>
+                        <td>{{ticketInvoiceNumber}}</td>
+                        <td>{{ticketStartDate}}</td>
+                        <td>{{busLineData.lineCountryStart}}</td>
+                        <td class="border">{{ticketOnName}}</td>
+                        <td class="border">{{busLineData.lineCityStart}}</td>
+                        <td class="border">{{busLineData.lineCityEnd}}</td>
+                        <td class="border">{{ticketPrice}} EUR</td>
+                        <td>
+                        {{#if ticketRoundTrip}}
+                           Povratna
+                        {{else}}
+                           Jedan Smjer
+                        {{/if}}
+                        </td>
+                        <td>{{ticketIdToShow}}</td>
+                        <td>{{busLineData.bihKilometers}}</td>
+                        <td>579</td>
+                        <td>{{busLineData.deKilometers}}</td>
+                        <td>{{totalKilometers}}</td>
+                        <td>{{taxInDE}}</td>
+                        <td>{{taxCalculatedOne}} EUR</td>
+                        <td>{{taxCalculatedTwo}} EUR</td>
+                        <td>{{returnTaxDE}} EUR</td>
+                    </tr>
+                    {{/each}}
+                    <tr>
+                        <td>{{data.length}}</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>Ukupno:</td>
+                        <td>{{priceTotal}} EUR</td>
+                        <td></td>
+                        <td></td>
+                        <td class="bg-yellow">{{bihTotal}}</td>
+                        <td class="bg-yellow">{{tranzitTotal}}</td>
+                        <td class="bg-yellow">{{deTotal}}</td>
+                        <td class="bg-yellow">{{kmTotal}}</td>
+                        <td></td>
+                        <td class="bg-yellow">{{taxCalculatedOne}} EUR</td>
+                        <td class="bg-yellow">{{taxCalculatedTwo}} EUR</td>
+                        <td class="bg-red">{{taxDeTotal}} EUR</td>
+                    </tr>
+                </table>
+                {{/if}}
             {{/each}}
-        </table>
-        {{else}}
-        <h3>Nema rezultata!</h3>
-        {{/if}}
+        </div>
+
+<!--        {{#if tickets}}-->
+<!--        <table class="table" style="width: 100%">-->
+<!--            <tr>-->
+<!--                {{#each columns}}-->
+<!--                <th>{{ this }}</th>-->
+<!--                {{/each}}-->
+<!--            </tr>-->
+<!--            {{#each tickets}}-->
+<!--            <tr>-->
+<!--                <td>{{ticketInvoiceNumber}}</td>-->
+<!--                <td>{{ticketStartDate}}</td>-->
+<!--                <td>{{busLineData.lineCountryStart}}</td>-->
+<!--                <td>{{ticketOnName}}</td>-->
+<!--                <td>{{busLineData.lineCityStart}} - {{busLineData.lineCityEnd}}</td>-->
+<!--                <td>{{ticketPrice}}</td>-->
+<!--                <td>-->
+<!--                    {{#if ticketRoundTrip}}-->
+<!--                       Povratna-->
+<!--                    {{else}}-->
+<!--                       Jedan Smjer-->
+<!--                    {{/if}}-->
+<!--                </td>-->
+<!--                <td>{{ticketIdToShow}}</td>-->
+<!--                <td>{{busLineData.bihKilometers}}</td>-->
+<!--                <td>579</td>-->
+<!--                <td>{{busLineData.deKilometers}}</td>-->
+<!--                <td>{{totalKilometers}}</td>-->
+<!--                <td>{{taxInDE}}</td>-->
+<!--                <td>{{taxCalculatedOne}}</td>-->
+<!--                <td>{{taxCalculatedTwo}}</td>-->
+<!--                <td>{{returnTaxDE}}</td>-->
+<!--            </tr>-->
+<!--            {{/each}}-->
+<!--        </table>-->
+<!--        {{else}}-->
+<!--        <h3>Nema rezultata!</h3>-->
+<!--        {{/if}}-->
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
 
 
 

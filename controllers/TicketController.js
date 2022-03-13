@@ -479,7 +479,6 @@ exports.sendToMail = [
 		}
 	}
 ];
-
 exports.sendToMailCustom = [
 	auth,
 	async function (req, res) {
@@ -564,8 +563,6 @@ exports.sendToMailCustom = [
 		}
 	}
 ];
-
-
 /**
  * Ticket QR Code confirmation.
  *
@@ -610,12 +607,10 @@ exports.ticketQRCode = [
 											},
 										};
 
-										console.log(dataBinding.ticketData.ticketQR);
 										let ticketTemplate;
 
 										dataBinding.ticketData.ticketRoundTrip ? ticketTemplate = "qrcode-povratna.html" : ticketTemplate = "qrcode-jedan-smijer.html";
 
-										console.log(ticketTemplate);
 										var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
 										var template = handlebars.compile(templateHtml);
 										var finalHtml = template(dataBinding);
@@ -697,12 +692,10 @@ exports.ticketReportClassic = [
 	auth,
 	async function (req,res) {
 		try {
-			console.log(req.body.tickets);
-
 			var dataBinding = {
 				isWatermark: true,
-				tickets: [...req.body.tickets],
-				columns: [...req.body.columns],
+				generalData: [...req.body.generalData],
+				month: req.body.month,
 			};
 
 			let ticketTemplate = "izvjestaj.html";
@@ -723,7 +716,7 @@ exports.ticketReportClassic = [
 			};
 
 			const browser = await puppeteer.launch({
-				headless: true,
+				headless: false,
 				args: ["--no-sandbox", "--use-gl=egl"],
 			});
 			const page = await browser.newPage();
