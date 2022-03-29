@@ -1,0 +1,269 @@
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Play&family=Saira+Condensed:wght@100&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+<style>
+    body {
+        -webkit-print-color-adjust: exact;
+        margin:0;
+        padding:0;
+        font-size: 10px;
+    }
+    .invoice-box {
+        font-family: 'Play', sans-serif;
+        margin: 0 auto;
+        font-size: 10px;
+        color: #333;
+        width: 1200px;
+        height: auto;
+    }
+    .header {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-size: 22px;
+        font-weight: bold;
+        margin: 40px 0px;
+    }
+
+    .margin-v20 {
+        margin: 40px 0 20px 0;
+    }
+
+    .table {
+        width: 100%;
+        font-size: 12px;
+    }
+    .table.total td {
+        min-width: 90px;
+        max-width: 90px;
+        width: 90px;
+    }
+    .table tr ,.table td ,.table th {
+        padding: 2px;
+        border:none;
+        text-align: center;
+    }
+
+    .border {
+        border: 2px solid #000 !important;
+    }
+
+    .table tr > td.bg-yellow {
+        background-color: #dede1b !important;
+        background: #dede1b !important;
+    }
+
+    .table tr > td.bg-red {
+        background-color: #e34b4b !important;
+        background: #e34b4b !important;
+    }
+
+</style>
+
+<div>
+    <div class="invoice-box">
+        <div class="invoice-container">
+            <div class="header">
+                <span class="company-name">Faktura br. {{ invoice.invoiceNumber }} - {{invoice.invoiceDateStart}}</span> <br>
+                <p class="company-name d-block">Vozači: {{ drivers }}</p>
+            </div>
+            <hr>
+            <div class="header">
+                <span class="company-name">BIH - DE</span>
+            </div>
+            <table class="table">
+                <tr>
+                    <th>No.</th>
+                    <th>Broj Fakture</th>
+                    <th>Broj Karte</th>
+                    <th>Datum</th>
+                    <th>Vrijeme</th>
+                    <th>Ime Prezime</th>
+                    <th>Vrsta Karte</th>
+                    <th>Relacija</th>
+                    <th>Cijena</th>
+                </tr>
+                {{#each bihTickets}}
+                <tr>
+                    <td>{{position}}</td>
+                    <td>{{ticketInvoiceNumber}}</td>
+                    <td>{{ticketIdToShow}}</td>
+                    <td>{{ticketStartDate}}</td>
+                    <td>{{ticketStartTime}}</td>
+                    <td>{{ticketOnName}}</td>
+                    <td>
+                        {{#if ticketRoundTrip}}
+                        Povratna
+                        {{else}}
+                        Jedan Smjer
+                        {{/if}}
+                    </td>
+                    <td>{{busLineData.lineCityStart}} - {{busLineData.lineCityEnd}}</td>
+                    <td>{{ticketPrice}} EUR</td>
+                </tr>
+                {{/each}}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="border">Ukupno BIH:</td>
+                    <td class="border">{{totalPriceBih}} EUR</td>
+                </tr>
+            </table>
+            <hr>
+            <div class="header">
+                <span class="company-name">DE - BIH</span>
+            </div>
+            <table class="table">
+                <tr>
+                    <th>No.</th>
+                    <th>Broj Fakture</th>
+                    <th>Broj Karte</th>
+                    <th>Datum</th>
+                    <th>Vrijeme</th>
+                    <th>Ime Prezime</th>
+                    <th>Vrsta Karte</th>
+                    <th>Relacija</th>
+                    <th>Cijena</th>
+                </tr>
+                {{#each deTickets}}
+                <tr>
+                    <td>{{position}}</td>
+                    <td>{{ticketInvoiceNumber}}</td>
+                    <td>{{ticketIdToShow}}</td>
+                    <td>{{ticketStartDate}}</td>
+                    <td>{{ticketStartTime}}</td>
+                    <td>{{ticketOnName}}</td>
+                    <td>
+                        {{#if ticketRoundTrip}}
+                        Povratna
+                        {{else}}
+                        Jedan Smjer
+                        {{/if}}
+                    </td>
+                    <td>{{busLineData.lineCityStart}} - {{busLineData.lineCityEnd}}</td>
+                    <td>{{ticketPrice}} EUR</td>
+                </tr>
+                {{/each}}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="border">Ukupno DE:</td>
+                    <td class="border">{{totalPriceDe}} EUR</td>
+                </tr>
+            </table>
+            <hr>
+            <div class="header">
+                <span class="company-name">TOTAL</span>
+            </div>
+            <table class="table total">
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="border">Ukupno:</td>
+                    <td class="border">
+                        {{total}} EUR <br>
+                        {{totalKM}} KM
+                    </td>
+                </tr>
+            </table>
+            {{# if showExpenses}}
+            <hr>
+            <div class="header">
+                <span class="company-name">Troškovi</span>
+            </div>
+            <table class="table">
+                <tr>
+                    <th>Hrvatska</th>
+                    <th>Slovenija</th>
+                    <th>Austrija</th>
+                    <th>Njemačka</th>
+                    <th>Zadužio</th>
+                    <th>Ostalo</th>
+                    <th>Naplatio</th>
+                    <th>Troškovi</th>
+                    <th>Za isplatiti</th>
+                </tr>
+                <tr>
+                    <td>{{invoice.invoiceExpCro}} EUR</td>
+                    <td>{{invoice.invoiceExpSlo}} EUR</td>
+                    <td>{{invoice.invoiceExpAus}} EUR</td>
+                    <td>{{invoice.invoiceExpGer}} EUR</td>
+                    <td>{{invoice.invoiceInitialExpenses}} EUR</td>
+                    <td>{{invoice.invoiceUnexpectedExpenses}} EUR</td>
+                    <td class="border">
+                        {{total}} EUR <br>
+                        {{totalKM}} KM
+                    </td>
+                    <td>
+                        {{expensesTotal}} EUR <br>
+                        {{expensesTotalKM}} KM
+                    </td>
+                    <td>
+                        {{toBillTotal}} EUR <br>
+                        {{toBillTotalKM}} KM
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>{{invoice.invoiceInitialExpensesDesc}}</td>
+                    <td>{{invoice.invoiceUnexpectedExpensesDesc}}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+            {{/if}}
+            <hr>
+            <div class="header">
+                <span class="company-name">PDV BiH</span>
+            </div>
+            <table class="table" style="width: 60%">
+                <tr>
+                    <th>Ukupno Kilometara</th>
+                    <th>Kilometri BIH</th>
+                    <th>Kilometri odnos</th>
+                    <th>Ukupno</th>
+                    <th>Osnovica</th>
+                    <th>PDV</th>
+
+                </tr>
+                <tr>
+                    <td>{{tax.totalKilometers}}</td>
+                    <td>{{tax.bihKilometers}}</td>
+                    <td>{{tax.diffKilometers}}</td>
+                    <td>{{tax.firstCalculation}} KM</td>
+                    <td>{{tax.secondCalculation}} KM</td>
+                    <td>{{tax.returnTaxBih}} KM</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+
+

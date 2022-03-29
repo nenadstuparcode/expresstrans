@@ -14,6 +14,7 @@ router.post("/email/:email", TicketController.sendToMailCustom);
 router.get("/scan/:ticketId", TicketController.ticketQRCode);
 router.post("/report", TicketController.reportSearch);
 router.post("/report-print", TicketController.ticketReportClassic);
+router.post("/invoice", TicketController.ticketByInvoiceId);
 
 
 module.exports = router;

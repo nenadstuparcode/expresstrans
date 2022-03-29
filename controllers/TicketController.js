@@ -20,7 +20,7 @@ var moment = require("moment-timezone");
 
 // Ticket Schema
 function TicketData(data) {
-	this.id = data._id;
+	this._id = data._id;
 	this.ticketId = data.ticketId;
 	this.ticketOnName = data.ticketOnName;
 	this.ticketPhone = data.ticketPhone;
@@ -71,6 +71,28 @@ exports.ticketList = [
 			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
+	}
+];
+
+exports.ticketByInvoiceId = [
+	auth,
+	function (req,res) {
+		const invoiceNr = req.body.invoiceNr;
+
+		Ticket.find({ ticketInvoiceNumber: invoiceNr }).count((err, count) => {
+			res.count = count;
+			try {
+				Ticket.find({ ticketInvoiceNumber: invoiceNr },"_id ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").sort({createdAt:-1}).then((tickets)=>{
+					if(tickets.length > 0) {
+						return apiResponse.successResponseWithData(res, "Operation success", tickets);
+					} else {
+						return apiResponse.successResponseWithData(res, "Operation success", []);
+					}
+				});
+			} catch (err) {
+				return apiResponse.ErrorResponse(res, err);
+			}
+		});
 	}
 ];
 
@@ -694,8 +716,11 @@ exports.ticketReportClassic = [
 		try {
 			var dataBinding = {
 				isWatermark: true,
-				generalData: [...req.body.generalData],
-				month: req.body.month,
+				general: [...req.body.general],
+				monthToShow: req.body.month,
+				yearToShow: req.body.year,
+				totals: req.body.totals,
+				finals: req.body.finals,
 			};
 
 			let ticketTemplate = "izvjestaj.html";
@@ -709,14 +734,16 @@ exports.ticketReportClassic = [
 				footerTemplate: "<p></p>",
 				displayHeaderFooter: false,
 				margin: {
-					top: "0px",
-					bottom: "0px"
+					top: "15px",
+					left: "15px",
+					right: "15px",
+					bottom: "15px",
 				},
 				printBackground: true,
 			};
 
 			const browser = await puppeteer.launch({
-				headless: false,
+				headless: true,
 				args: ["--no-sandbox", "--use-gl=egl"],
 			});
 			const page = await browser.newPage();
