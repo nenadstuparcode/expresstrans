@@ -1,10 +1,18 @@
 const nodemailer = require("nodemailer");
 
 let transporter = nodemailer.createTransport({
-	service: "Gmail",
+	host: process.env.EMAIL_SMTP_HOST,
+	secure: true,
+	secureConnection: false,
+	tls: {
+		ciphers:"SSLv3"
+	},
+	requireTLS:true,
+	port: process.env.EMAIL_SMTP_PORT,
+	debug: true,
 	auth: {
-		user: "karte.expresstrans@gmail.com",
-		pass: "Trans100!"
+		user: process.env.EMAIL_SMTP_USERNAME,
+		pass: process.env.EMAIL_SMTP_PASSWORD,
 	}
 });
 

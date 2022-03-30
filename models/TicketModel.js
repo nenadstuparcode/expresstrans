@@ -4,7 +4,7 @@ var Schema = mongoose.Schema;
 
 var TicketSchema = new Schema({
 	ticketOnName: {type: String, required: true},
-	ticketPhone: {type: String, required: true},
+	ticketPhone: {type: String},
 	ticketEmail: {type: String},
 	ticketNote: {type: String},
 	ticketValid: {type: Number, required: true},

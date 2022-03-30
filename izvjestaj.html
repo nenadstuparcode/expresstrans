@@ -149,49 +149,51 @@
                 </table>
                 {{/if}}
               {{/each}}
-                {{#if data.length}}
-                <table class="table margin-v20">
-                    <tr>
-                        <th>TOTAL</th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th></th>
-                        <th>Cijena Karte Total</th>
-                        <th></th>
-                        <th></th>
-                        <th>Km BIH</th>
-                        <th>Km Tranzit</th>
-                        <th>Km DE</th>
-                        <th>Km Total</th>
-                        <th></th>
-                        <th>Ukupno</th>
-                        <th>Osnovica DE</th>
-                        <th>Porez DE</th>
-                    </tr>
-                    <tr>
-                        <td>Ukupno po mjestu polaska</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td>{{priceTotal}} EUR</td>
-                        <td></td>
-                        <td></td>
-                        <td>{{bihTotal}}</td>
-                        <td>{{tranzitTotal}}</td>
-                        <td>{{deTotal}}</td>
-                        <td>{{kmTotal}}</td>
-                        <td></td>
-                        <td>{{taxCalculatedOne}} EUR</td>
-                        <td>{{taxCalculatedTwo}} EUR</td>
-                        <td>{{taxDeTotal}} EUR</td>
-                    </tr>
-                </table>
-                {{/if}}
+            {{#if toShow}}
+            <table class="table margin-v20">
+                <tr>
+                    <th>TOTAL</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th>Cijena Karte Total</th>
+                    <th></th>
+                    <th></th>
+                    <th>Km BIH</th>
+                    <th>Km Tranzit</th>
+                    <th>Km DE</th>
+                    <th>Km Total</th>
+                    <th></th>
+                    <th>Ukupno</th>
+                    <th>Osnovica DE</th>
+                    <th>Porez DE</th>
+                </tr>
+                <tr>
+                    <td>Ukupno po mjestu polaska</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>{{priceTotal}} EUR</td>
+                    <td></td>
+                    <td></td>
+                    <td>{{bihTotal}}</td>
+                    <td>{{tranzitTotal}}</td>
+                    <td>{{deTotal}}</td>
+                    <td>{{kmTotal}}</td>
+                    <td></td>
+                    <td>{{taxCalculatedOne}} EUR</td>
+                    <td>{{taxCalculatedTwo}} EUR</td>
+                    <td>{{taxDeTotal}} EUR</td>
+                </tr>
+            </table>
             <hr>
+            {{/if}}
+
+
             {{/each}}
 
             <div class="header">

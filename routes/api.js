@@ -6,6 +6,7 @@ var ticketRouter = require("./ticket");
 var driverRouter = require("./driver");
 var vehicleRouter = require("./vehicle");
 var invoiceRouter = require("./invoice");
+var reservationRouter = require("./reservation");
 
 var app = express();
 
@@ -16,5 +17,6 @@ app.use("/ticket/", ticketRouter);
 app.use("/driver/", driverRouter);
 app.use("/vehicle/", vehicleRouter);
 app.use("/invoice/", invoiceRouter);
+app.use("/reservation/", reservationRouter);
 
 module.exports = app;

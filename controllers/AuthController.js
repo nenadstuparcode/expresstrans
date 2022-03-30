@@ -63,12 +63,12 @@ exports.register = [
 						}
 					);
 					// Html email body
-					let html = "<p>Please Confirm your Account.</p><p>OTP: "+otp+"</p>";
+					let html = "<p>Vas kod za potvrdu.</p><p>OTP: "+otp+"</p>";
 					// Send confirmation email
 					mailer.send(
-						constants.confirmEmails.from, 
+						process.env.EMAIL_SMTP_USERNAME,
 						req.body.email,
-						"Confirm Account",
+						"Potvrdi Nalog",
 						html,
 						null,
 						null,
@@ -239,9 +239,9 @@ exports.resendConfirmOtp = [
 							let html = "<p>Please Confirm your Account.</p><p>OTP: "+otp+"</p>";
 							// Send confirmation email
 							mailer.send(
-								constants.confirmEmails.from, 
+								process.env.EMAIL_SMTP_USERNAME,
 								req.body.email,
-								"Confirm Account",
+								"Potvrdi Nalog",
 								html,
 								null,
 								null,

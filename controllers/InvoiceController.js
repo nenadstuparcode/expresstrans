@@ -209,6 +209,7 @@ exports.invoiceUpdate = [
 		try {
 			const errors = validationResult(req);
 			var invoice = new Invoice({
+				invoiceNumber: req.body.invoiceNumber,
 				invoiceDateStart: req.body.invoiceDateStart,
 				invoiceDateReturn: req.body.invoiceDateReturn,
 				invoiceVehicle: req.body.invoiceVehicle,

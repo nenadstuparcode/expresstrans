@@ -163,7 +163,6 @@ exports.ticketDetail = [
 exports.ticketStore = [
 	auth,
 	body("ticketOnName", "ticketOnName must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketPhone", "ticketPhone must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketValid", "lineCountryStart trip must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketBusLineId", "ticketBusLineId must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketRoundTrip", "ticketRoundTrip must not be empty.").isLength({ min: 1 }).trim(),
@@ -239,7 +238,6 @@ exports.ticketStore = [
 exports.ticketUpdate = [
 	auth,
 	body("ticketOnName", "ticketOnName must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketPhone", "ticketPhone must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketValid", "lineCountryStart trip must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketBusLineId", "ticketBusLineId must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketRoundTrip", "ticketRoundTrip must not be empty.").isLength({ min: 1 }).trim(),
@@ -483,7 +481,7 @@ exports.sendToMail = [
 			let html = "<p>Vašu kartu može preuzeti u priloženim datotekama na dnu email-a.</p><p> Ugodno putovanje želi vam Express Trans</p>";
 
 			await mailer.send(
-				constants.confirmEmails.from,
+				process.env.EMAIL_SMTP_USERNAME,
 				dataBinding.ticketData.ticketEmail,
 				`Rezervisano - Express Trans autobuska karta na ime ${dataBinding.ticketData.ticketOnName}`,
 				html,
@@ -567,7 +565,7 @@ exports.sendToMailCustom = [
 			let html = "<p>Vašu kartu može preuzeti u priloženim datotekama na dnu email-a.</p><p> Ugodno putovanje želi vam Express Trans</p>";
 
 			await mailer.send(
-				constants.confirmEmails.from,
+				process.env.EMAIL_SMTP_USERNAME,
 				emailToSend,
 				`Rezervisano - Express Trans autobuska karta na ime ${dataBinding.ticketData.ticketOnName}`,
 				html,
