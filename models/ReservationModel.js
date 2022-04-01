@@ -4,7 +4,7 @@ var Schema = mongoose.Schema;
 
 var ReservationSchema = new Schema({
 	reservationOnName: { type: String, required: true },
-	reservationPhone: { type: String, required: true },
+	reservationPhone: { type: String },
 	reservationDate: { type: Date, required: true },
 	reservationTime: { type: Date, required: true },
 	reservationNote: { type: String },

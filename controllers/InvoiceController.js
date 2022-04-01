@@ -34,6 +34,7 @@ function InvoiceData(data) {
 	this.secondCalculation = data.secondCalculation;
 	this.returnTaxBih = data.returnTaxBih;
 	this.createdAt = data.createdAt;
+	this.invoicePublicId = data.invoicePublicId;
 }
 
 /**
@@ -45,7 +46,7 @@ exports.invoiceList = [
 	auth,
 	function (req, res) {
 		try {
-			Invoice.find({},"_id invoiceNumber invoiceDateStart invoiceDateReturn invoiceVehicle invoiceDrivers invoiceExpCro invoiceExpSlo invoiceExpAus invoiceExpGer invoiceInitialExpenses invoiceInitialExpensesDesc invoiceUnexpectedExpenses invoiceUnexpectedExpensesDesc totalKilometers bihKilometers diffKilometers firstCalculation secondCalculation returnTaxBih createdAt user modifiedAt").then((invoices)=>{
+			Invoice.find({},"_id invoicePublicId invoiceNumber invoiceDateStart invoiceDateReturn invoiceVehicle invoiceDrivers invoiceExpCro invoiceExpSlo invoiceExpAus invoiceExpGer invoiceInitialExpenses invoiceInitialExpensesDesc invoiceUnexpectedExpenses invoiceUnexpectedExpensesDesc totalKilometers bihKilometers diffKilometers firstCalculation secondCalculation returnTaxBih createdAt user modifiedAt").then((invoices)=>{
 				if(invoices.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", invoices);
 				}else{
@@ -104,7 +105,7 @@ exports.invoiceDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Invoice.findOne({_id: req.params.id},"_id invoiceNumber invoiceDateStart invoiceDateReturn invoiceVehicle invoiceDrivers invoiceExpCro invoiceExpSlo invoiceExpAus invoiceExpGer invoiceTotalBill invoiceInitialExpenses invoiceInitialExpensesDesc invoiceUnexpectedExpenses invoiceUnexpectedExpensesDesc totalKilometers bihKilometers diffKilometers firstCalculation secondCalculation returnTaxBih createdAt user modifiedAt").then((invoice)=>{
+			Invoice.findOne({_id: req.params.id},"_id invoicePublicId invoiceNumber invoiceDateStart invoiceDateReturn invoiceVehicle invoiceDrivers invoiceExpCro invoiceExpSlo invoiceExpAus invoiceExpGer invoiceTotalBill invoiceInitialExpenses invoiceInitialExpensesDesc invoiceUnexpectedExpenses invoiceUnexpectedExpensesDesc totalKilometers bihKilometers diffKilometers firstCalculation secondCalculation returnTaxBih createdAt user modifiedAt").then((invoice)=>{
 				if(invoice !== null){
 					let invoiceData = new InvoiceData(invoice);
 					return apiResponse.successResponseWithData(res, "Operation success", invoiceData);
@@ -165,6 +166,7 @@ exports.invoiceStore = [
 						secondCalculation: req.body.secondCalculation,
 						returnTaxBih: req.body.returnTaxBih,
 						invoiceDrivers: [...req.body.invoiceDrivers],
+						invoicePublicId: req.body.invoicePublicId,
 					});
 
 
@@ -229,6 +231,7 @@ exports.invoiceUpdate = [
 				secondCalculation: req.body.secondCalculation,
 				returnTaxBih: req.body.returnTaxBih,
 				invoiceDrivers: [...req.body.invoiceDrivers],
+				invoicePublicId: req.body.invoicePublicId,
 				_id: req.params.id,
 			});
 

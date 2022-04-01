@@ -3,7 +3,6 @@ const { body,validationResult } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 const auth = require("../middlewares/jwt");
 var mongoose = require("mongoose");
-const Ticket = require("../models/TicketModel");
 mongoose.set("useFindAndModify", false);
 
 // Reservation Schema
@@ -166,7 +165,6 @@ exports.reservationStore = [
 exports.reservationUpdate = [
 	auth,
 	body("reservationOnName", "reservationOnName must not be empty.").isLength({ min: 1 }).trim(),
-	body("reservationPhone", "reservationPhone must not be empty.").isLength({ min: 1 }).trim(),
 	body("reservationTime", "reservationTime must not be empty.").isLength({ min: 1 }).trim(),
 	body("reservationDate", "reservationDate must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketBusLineId", "ticketBusLineId must not be empty.").isLength({ min: 1 }).trim(),

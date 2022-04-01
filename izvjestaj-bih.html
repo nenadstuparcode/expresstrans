@@ -28,12 +28,9 @@
         margin: 40px 0px;
     }
 
-    .margin-v20 {
-        margin: 40px 0 20px 0;
-    }
-
     .table {
-        width: 100%;
+        margin: 30px auto;
+        width: 80%;
         font-size: 12px;
     }
     .table.total td {
@@ -44,8 +41,18 @@
     .table tr ,.table td ,.table th {
         padding: 2px;
         border:none;
-        text-align: center;
+        text-align: left;
+        min-width: 90px;
+        max-width: 90px;
+        font-size: 14px;
     }
+
+    .sm-cell {
+        min-width: 40px;
+        max-width: 40px;
+        width: 40px;
+    }
+
 
     .border {
         border: 2px solid #000 !important;
@@ -61,55 +68,80 @@
         background: #e34b4b !important;
     }
 
+    .header-invoice {
+        width: 80%;
+        padding-top: 70px;
+        margin: 0 auto;
+        text-align: left;
+    }
+    .header-invoice p {
+        font-size: 18px;
+        line-height: 1;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    .header-invoice span {
+        display: block;
+        font-size: 14px;
+        line-height: 1;
+        margin-bottom: 5px;
+    }
+    hr {
+        margin: 0;
+        width: 80%;
+        text-align: center;
+    }
+
 </style>
 
 <div>
     <div class="invoice-box">
         <div class="invoice-container">
-            <div class="header">
-                <span class="company-name">Faktura br. {{ invoice.invoiceNumber }} - {{invoice.invoiceDateStart}}</span> <br>
-                <p class="company-name d-block">Vozači: {{ drivers }}</p>
+            <div class="header-invoice">
+                <p>Račun {{ invoice.invoicePublicId }}</p>
+                <span>{{ drivers }}</span>
             </div>
-            <hr>
-            <div class="header">
-                <span class="company-name">BIH - DE</span>
-            </div>
+
             <table class="table">
                 <tr>
-                    <th>No.</th>
-                    <th>Broj Fakture</th>
-                    <th>Broj Karte</th>
-                    <th>Datum</th>
-                    <th>Vrijeme</th>
-                    <th>Ime Prezime</th>
-                    <th>Vrsta Karte</th>
-                    <th>Relacija</th>
-                    <th>Cijena</th>
+                    <th class="sm-cell"></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th>
+                        <span class="font-weight-bold">Doboj-Wiesbaden</span>
+                    </th>
+                    <th>
+                        Datum <br>
+                        <span class="font-weight-bold">{{invoice.invoiceDateStart}}</span>
+                    </th>
+                </tr>
+                <tr>
+                    <th class="border sm-cell">R. broj</th>
+                    <th class="border">Broj Karte</th>
+                    <th class="border">Ime Prezime</th>
+                    <th class="border">Vrsta Karte</th>
+                    <th class="border">Relacija</th>
+                    <th class="border">Cijena</th>
                 </tr>
                 {{#each bihTickets}}
                 <tr>
-                    <td>{{position}}</td>
-                    <td>{{ticketInvoiceNumber}}</td>
-                    <td>{{ticketIdToShow}}</td>
-                    <td>{{ticketStartDate}}</td>
-                    <td>{{ticketStartTime}}</td>
-                    <td>{{ticketOnName}}</td>
-                    <td>
+                    <td class="border sm-cell">{{position}}</td>
+                    <td class="border">{{ticketIdToShow}}</td>
+                    <td class="border">{{ticketOnName}}</td>
+                    <td class="border">
                         {{#if ticketRoundTrip}}
                         Povratna
                         {{else}}
                         Jedan Smjer
                         {{/if}}
                     </td>
-                    <td>{{busLineData.lineCityStart}} - {{busLineData.lineCityEnd}}</td>
-                    <td>{{ticketPrice}} EUR</td>
+                    <td class="border">{{busLineData.lineCityStart}} - {{busLineData.lineCityEnd}}</td>
+                    <td class="border">{{ticketPrice}} EUR</td>
                 </tr>
                 {{/each}}
                 <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td class="sm-cell"></td>
                     <td></td>
                     <td></td>
                     <td></td>
@@ -117,46 +149,46 @@
                     <td class="border">{{totalPriceBih}} EUR</td>
                 </tr>
             </table>
-            <hr>
-            <div class="header">
-                <span class="company-name">DE - BIH</span>
-            </div>
             <table class="table">
                 <tr>
-                    <th>No.</th>
-                    <th>Broj Fakture</th>
-                    <th>Broj Karte</th>
-                    <th>Datum</th>
-                    <th>Vrijeme</th>
-                    <th>Ime Prezime</th>
-                    <th>Vrsta Karte</th>
-                    <th>Relacija</th>
-                    <th>Cijena</th>
+                    <th class="sm-cell"></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th>
+                        <span class="font-weight-bold">Wiesbaden-Doboj</span>
+                    </th>
+                    <th>
+                        Datum <br>
+                        <span class="font-weight-bold">{{invoice.invoiceDateReturn}}</span>
+                    </th>
+                </tr>
+                <tr>
+                    <th class="border sm-cell">R. broj</th>
+                    <th class="border">Broj Karte</th>
+                    <th class="border">Ime Prezime</th>
+                    <th class="border">Vrsta Karte</th>
+                    <th class="border">Relacija</th>
+                    <th class="border">Cijena</th>
                 </tr>
                 {{#each deTickets}}
                 <tr>
-                    <td>{{position}}</td>
-                    <td>{{ticketInvoiceNumber}}</td>
-                    <td>{{ticketIdToShow}}</td>
-                    <td>{{ticketStartDate}}</td>
-                    <td>{{ticketStartTime}}</td>
-                    <td>{{ticketOnName}}</td>
-                    <td>
+                    <td class="border sm-cell">{{position}}</td>
+                    <td class="border">{{ticketIdToShow}}</td>
+                    <td class="border">{{ticketOnName}}</td>
+                    <td class="border">
                         {{#if ticketRoundTrip}}
                         Povratna
                         {{else}}
                         Jedan Smjer
                         {{/if}}
                     </td>
-                    <td>{{busLineData.lineCityStart}} - {{busLineData.lineCityEnd}}</td>
-                    <td>{{ticketPrice}} EUR</td>
+                    <td class="border">{{busLineData.lineCityStart}} - {{busLineData.lineCityEnd}}</td>
+                    <td class="border">{{ticketPrice}} EUR</td>
                 </tr>
                 {{/each}}
                 <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td class="sm-cell"></td>
                     <td></td>
                     <td></td>
                     <td></td>
@@ -164,16 +196,9 @@
                     <td class="border">{{totalPriceDe}} EUR</td>
                 </tr>
             </table>
-            <hr>
-            <div class="header">
-                <span class="company-name">TOTAL</span>
-            </div>
-            <table class="table total">
+            <table class="table">
                 <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td class="sm-cell"></td>
                     <td></td>
                     <td></td>
                     <td></td>
@@ -185,38 +210,37 @@
                 </tr>
             </table>
             {{# if showExpenses}}
-            <hr>
             <div class="header">
                 <span class="company-name">Troškovi</span>
             </div>
             <table class="table">
                 <tr>
-                    <th>Hrvatska</th>
-                    <th>Slovenija</th>
-                    <th>Austrija</th>
-                    <th>Njemačka</th>
-                    <th>Zadužio</th>
-                    <th>Ostalo</th>
-                    <th>Naplatio</th>
-                    <th>Troškovi</th>
-                    <th>Za isplatiti</th>
+                    <th class="border">Hrvatska</th>
+                    <th class="border">Slovenija</th>
+                    <th class="border">Austrija</th>
+                    <th class="border">Njemačka</th>
+                    <th class="border">Zadužio</th>
+                    <th class="border">Ostalo</th>
+                    <th class="border">Naplatio</th>
+                    <th class="border">Troškovi</th>
+                    <th class="border">Za isplatiti</th>
                 </tr>
                 <tr>
-                    <td>{{invoice.invoiceExpCro}} EUR</td>
-                    <td>{{invoice.invoiceExpSlo}} EUR</td>
-                    <td>{{invoice.invoiceExpAus}} EUR</td>
-                    <td>{{invoice.invoiceExpGer}} EUR</td>
-                    <td>{{invoice.invoiceInitialExpenses}} EUR</td>
-                    <td>{{invoice.invoiceUnexpectedExpenses}} EUR</td>
+                    <td class="border">{{invoice.invoiceExpCro}} EUR</td>
+                    <td class="border">{{invoice.invoiceExpSlo}} EUR</td>
+                    <td class="border">{{invoice.invoiceExpAus}} EUR</td>
+                    <td class="border">{{invoice.invoiceExpGer}} EUR</td>
+                    <td class="border">{{invoice.invoiceInitialExpenses}} EUR</td>
+                    <td class="border">{{invoice.invoiceUnexpectedExpenses}} EUR</td>
                     <td class="border">
                         {{total}} EUR <br>
                         {{totalKM}} KM
                     </td>
-                    <td>
+                    <td class="border">
                         {{expensesTotal}} EUR <br>
                         {{expensesTotalKM}} KM
                     </td>
-                    <td>
+                    <td class="border">
                         {{toBillTotal}} EUR <br>
                         {{toBillTotalKM}} KM
                     </td>
@@ -226,35 +250,33 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td>{{invoice.invoiceInitialExpensesDesc}}</td>
-                    <td>{{invoice.invoiceUnexpectedExpensesDesc}}</td>
+                    <td class="border">{{invoice.invoiceInitialExpensesDesc}}</td>
+                    <td class="border">{{invoice.invoiceUnexpectedExpensesDesc}}</td>
                     <td></td>
                     <td></td>
                     <td></td>
                 </tr>
             </table>
             {{/if}}
-            <hr>
             <div class="header">
                 <span class="company-name">PDV BiH</span>
             </div>
             <table class="table" style="width: 60%">
                 <tr>
-                    <th>Ukupno Kilometara</th>
-                    <th>Kilometri BIH</th>
-                    <th>Kilometri odnos</th>
-                    <th>Ukupno</th>
-                    <th>Osnovica</th>
-                    <th>PDV</th>
-
+                    <th class="border">Ukupno Kilometara</th>
+                    <th class="border">Kilometri BIH</th>
+                    <th class="border">Kilometri odnos</th>
+                    <th class="border">Ukupno</th>
+                    <th class="border">Osnovica</th>
+                    <th class="border">PDV</th>
                 </tr>
                 <tr>
-                    <td>{{tax.totalKilometers}}</td>
-                    <td>{{tax.bihKilometers}}</td>
-                    <td>{{tax.diffKilometers}}</td>
-                    <td>{{tax.firstCalculation}} KM</td>
-                    <td>{{tax.secondCalculation}} KM</td>
-                    <td>{{tax.returnTaxBih}} KM</td>
+                    <td class="border">{{tax.totalKilometers}}</td>
+                    <td class="border">{{tax.bihKilometers}}</td>
+                    <td class="border">{{tax.diffKilometers}}</td>
+                    <td class="border">{{tax.firstCalculation}} KM</td>
+                    <td class="border">{{tax.secondCalculation}} KM</td>
+                    <td class="border">{{tax.returnTaxBih}} KM</td>
                 </tr>
             </table>
         </div>

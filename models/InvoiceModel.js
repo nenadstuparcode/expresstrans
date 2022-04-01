@@ -28,6 +28,7 @@ var InvoiceSchema = new Schema({
 	secondCalculation: { type: Number, required: true },
 	returnTaxBih: { type: Number, required: true },
 	invoiceDrivers: [Driver],
+	invoicePublicId: { type: Number },
 }, {timestamps: true});
 
 module.exports = mongoose.model("Invoice", InvoiceSchema);
