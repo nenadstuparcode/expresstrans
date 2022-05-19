@@ -1,7 +1,6 @@
 const Busline = require("../models/BusLineModel");
 const { body,validationResult } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
-const auth = require("../middlewares/jwt");
 var mongoose = require("mongoose");
 mongoose.set("useFindAndModify", false);
 
@@ -26,7 +25,6 @@ function BusLineData(data) {
  * @returns {Object}
  */
 exports.busLineList = [
-	auth,
 	function (req, res) {
 		try {
 			Busline.find({},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt bihKilometers deKilometers modifiedAt").then((busLines)=>{
@@ -44,7 +42,6 @@ exports.busLineList = [
 ];
 
 exports.busLineSearch = [
-	auth,
 	function (req,res) {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
@@ -86,7 +83,6 @@ exports.busLineSearch = [
  * @returns {Object}
  */
 exports.busLineDetail = [
-	auth,
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.successResponseWithData(res, "Operation success", {});
@@ -117,7 +113,6 @@ exports.busLineDetail = [
  * @returns {Object}
  */
 exports.busLineStore = [
-	auth,
 	body("lineCityStart", "Line city start must not be empty.").isLength({ min: 1 }).trim(),
 	body("lineCityEnd", "Line city end must not be empty.").isLength({ min: 1 }).trim(),
 	body("linePriceOneWay", "Line price one way end must not be empty.").isLength({ min: 1 }).trim(),
@@ -141,7 +136,6 @@ exports.busLineStore = [
 				lineArray: [...req.body.lineArray],
 				bihKilometers: req.body.bihKilometers,
 				deKilometers: req.body.deKilometers,
-				user: req.user,
 			});
 
 
@@ -173,7 +167,6 @@ exports.busLineStore = [
  * @returns {Object}
  */
 exports.busLineUpdate = [
-	auth,
 	body("lineCityStart", "Line city start must not be empty.").isLength({ min: 1 }).trim(),
 	body("lineCityEnd", "Line city end must not be empty.").isLength({ min: 1 }).trim(),
 	body("linePriceOneWay", "Line city end must not be empty.").isLength({ min: 1 }).trim(),
@@ -238,7 +231,6 @@ exports.busLineUpdate = [
  * @returns {Object}
  */
 exports.busLineDelete = [
-	auth,
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");

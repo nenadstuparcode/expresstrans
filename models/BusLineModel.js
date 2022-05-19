@@ -17,7 +17,6 @@ var BusLineSchema = new Schema({
 	bihKilometers: { type: Number},
 	deKilometers: { type: Number},
 	lineArray: [LineDay],
-	user: { type: Schema.ObjectId, ref: "User", required: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model("Busline", BusLineSchema);

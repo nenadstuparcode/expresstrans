@@ -12,13 +12,12 @@ var TicketSchema = new Schema({
 	ticketRoundTrip: {type: Boolean, required: true},
 	ticketStartDate: {type: Date, required: true},
 	ticketStartTime: {type: Date, required: true},
-	ticketInvoiceNumber: {type: Number, required: true},
+	ticketInvoiceNumber: {type: Number},
 	ticketType: {type: String, required: true},
 	ticketClassicId: { type: String },
 	ticketId: { type: String },
 	ticketQR: { type: String },
 	ticketPrice: { type: Number },
-	user: { type: Schema.ObjectId, ref: "User", required: true },
 }, {timestamps: true});
 
 module.exports = mongoose.model("Ticket", TicketSchema);

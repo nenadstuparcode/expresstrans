@@ -2,7 +2,6 @@ const Driver = require("../models/DriverModel");
 const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
-const auth = require("../middlewares/jwt");
 var mongoose = require("mongoose");
 mongoose.set("useFindAndModify", false);
 
@@ -18,7 +17,6 @@ function DriverData(data) {
  * @returns {Object}
  */
 exports.driverList = [
-	auth,
 	function (req, res) {
 		try {
 			Driver.find().then((drivers)=>{
@@ -43,7 +41,6 @@ exports.driverList = [
  * @returns {Object}
  */
 exports.driverDetail = [
-	auth,
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.successResponseWithData(res, "Operation success", {});
@@ -72,7 +69,6 @@ exports.driverDetail = [
  * @returns {Object}
  */
 exports.driverStore = [
-	auth,
 	body("name", "name must not be empty.").isLength({ min: 1 }).trim(),
 	sanitizeBody("*").escape(),
 	(req, res) => {
@@ -106,7 +102,6 @@ exports.driverStore = [
  * @returns {Object}
  */
 exports.driverUpdate = [
-	auth,
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
@@ -158,7 +153,6 @@ exports.driverUpdate = [
  * @returns {Object}
  */
 exports.driverDelete = [
-	auth,
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");

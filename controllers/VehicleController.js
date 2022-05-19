@@ -2,7 +2,6 @@ const Vehicle = require("../models/VehicleModel");
 const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
-const auth = require("../middlewares/jwt");
 var mongoose = require("mongoose");
 mongoose.set("useFindAndModify", false);
 
@@ -18,7 +17,6 @@ function VehicleData(data) {
  * @returns {Object}
  */
 exports.vehicleList = [
-	auth,
 	function (req, res) {
 		try {
 			Vehicle.find().then((vehicles)=>{
@@ -43,7 +41,6 @@ exports.vehicleList = [
  * @returns {Object}
  */
 exports.vehicleDetail = [
-	auth,
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.successResponseWithData(res, "Operation success", {});
@@ -72,7 +69,6 @@ exports.vehicleDetail = [
  * @returns {Object}
  */
 exports.vehicleStore = [
-	auth,
 	body("plateNumber", "plateNumber must not be empty.").isLength({ min: 1 }).trim(),
 	sanitizeBody("*").escape(),
 	(req, res) => {
@@ -106,7 +102,6 @@ exports.vehicleStore = [
  * @returns {Object}
  */
 exports.vehicleUpdate = [
-	auth,
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
@@ -158,7 +153,6 @@ exports.vehicleUpdate = [
  * @returns {Object}
  */
 exports.vehicleDelete = [
-	auth,
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");

@@ -1,7 +1,6 @@
 const Invoice = require("../models/InvoiceModel");
 const { body,validationResult } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
-const auth = require("../middlewares/jwt");
 var mongoose = require("mongoose");
 const Counter = require("../models/CounterModel");
 const fs = require("fs");
@@ -43,7 +42,6 @@ function InvoiceData(data) {
  * @returns {Object}
  */
 exports.invoiceList = [
-	auth,
 	function (req, res) {
 		try {
 			Invoice.find({},"_id invoicePublicId invoiceNumber invoiceDateStart invoiceDateReturn invoiceVehicle invoiceDrivers invoiceExpCro invoiceExpSlo invoiceExpAus invoiceExpGer invoiceInitialExpenses invoiceInitialExpensesDesc invoiceUnexpectedExpenses invoiceUnexpectedExpensesDesc totalKilometers bihKilometers diffKilometers firstCalculation secondCalculation returnTaxBih createdAt user modifiedAt").then((invoices)=>{
@@ -66,7 +64,6 @@ exports.invoiceList = [
  * @returns {Object}
  */
 exports.invoiceSearch = [
-	auth,
 	function (req,res) {
 
 		const searchTerm = req.body.searchTerm;
@@ -99,7 +96,6 @@ exports.invoiceSearch = [
  * @returns {Object}
  */
 exports.invoiceDetail = [
-	auth,
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.successResponseWithData(res, "Operation success", {});
@@ -132,7 +128,6 @@ exports.invoiceDetail = [
  * @returns {Object}
  */
 exports.invoiceStore = [
-	auth,
 	body("invoiceDateStart", "invoiceDateStart must not be empty.").isLength({ min: 1 }).trim(),
 	body("invoiceDateReturn", "invoiceDateReturn must not be empty.").isLength({ min: 1 }).trim(),
 	body("invoiceVehicle", "invoiceVehicle must not be empty.").isLength({ min: 1 }).trim(),
@@ -203,7 +198,6 @@ exports.invoiceStore = [
  * @returns {Object}
  */
 exports.invoiceUpdate = [
-	auth,
 	body("invoiceDateStart", "invoiceDateStart must not be empty.").isLength({ min: 1 }).trim(),
 	body("invoiceDateReturn", "invoiceDateReturn must not be empty.").isLength({ min: 1 }).trim(),
 	body("invoiceVehicle", "invoiceVehicle must not be empty.").isLength({ min: 1 }).trim(),
@@ -267,7 +261,6 @@ exports.invoiceUpdate = [
 ];
 
 exports.invoiceUpdateExp = [
-	auth,
 	body("invoiceInitialExpenses", "invoiceInitialExpenses must not be empty.").isLength({ min: 1 }).trim(),
 	body("invoiceUnexpectedExpenses", "invoiceUnexpectedExpenses must not be empty.").isLength({ min: 1 }).trim(),
 	body("invoiceExpCro", "invoiceExpCro must not be empty.").isLength({ min: 1 }).trim(),
@@ -323,7 +316,6 @@ exports.invoiceUpdateExp = [
 ];
 
 exports.invoiceUpdateTax = [
-	auth,
 	body("totalKilometers", "totalKilometers must not be empty.").isLength({ min: 1 }).trim(),
 	body("bihKilometers", "bihKilometers must not be empty.").isLength({ min: 1 }).trim(),
 	body("diffKilometers", "diffKilometers must not be empty.").isLength({ min: 1 }).trim(),
@@ -383,7 +375,6 @@ exports.invoiceUpdateTax = [
  * @returns {Object}
  */
 exports.invoiceDelete = [
-	auth,
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
@@ -411,13 +402,13 @@ exports.invoiceDelete = [
 ];
 
 exports.invoicePrintTax = [
-	auth,
 	async function (req,res) {
 		try {
 			var dataBinding = {
 				isWatermark: true,
 				drivers: req.body.invoice.invoiceDrivers.map((driver) => driver.name).join(", "),
 				showExpenses: req.body.showExpenses,
+				showTax: req.body.showTax,
 				invoice: req.body.invoice,
 				bihTickets: req.body.bihTickets,
 				deTickets: req.body.deTickets,

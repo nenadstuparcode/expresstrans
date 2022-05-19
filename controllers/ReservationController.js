@@ -1,7 +1,6 @@
 const Reservation = require("../models/ReservationModel");
 const { body,validationResult } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
-const auth = require("../middlewares/jwt");
 var mongoose = require("mongoose");
 mongoose.set("useFindAndModify", false);
 
@@ -23,7 +22,6 @@ function ReservationData(data) {
  * @returns {Object}
  */
 exports.reservationList = [
-	auth,
 	function (req, res) {
 		try {
 			Reservation.find({},"_id reservationOnName reservationPhone reservationDate reservationTime reservationNote ticketBusLineId modifiedAt createdAt").then((reservations)=>{
@@ -46,7 +44,6 @@ exports.reservationList = [
  * @returns {Object}
  */
 exports.reservationSearch = [
-	auth,
 	function (req,res) {
 
 		const searchTerm = req.body.searchTerm;
@@ -79,7 +76,6 @@ exports.reservationSearch = [
  * @returns {Object}
  */
 exports.reservationDetail = [
-	auth,
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.successResponseWithData(res, "Operation success", {});
@@ -163,7 +159,6 @@ exports.reservationStore = [
  * @returns {Object}
  */
 exports.reservationUpdate = [
-	auth,
 	body("reservationOnName", "reservationOnName must not be empty.").isLength({ min: 1 }).trim(),
 	body("reservationTime", "reservationTime must not be empty.").isLength({ min: 1 }).trim(),
 	body("reservationDate", "reservationDate must not be empty.").isLength({ min: 1 }).trim(),
@@ -220,7 +215,6 @@ exports.reservationUpdate = [
  * @returns {Object}
  */
 exports.reservationDelete = [
-	auth,
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
@@ -248,7 +242,6 @@ exports.reservationDelete = [
 ];
 
 exports.reservationsSearchDate = [
-	auth,
 	function (req,res) {
 		const pageNumber = req.body.pageNumber;
 		const resultPerPage = req.body.resultPerPage;
