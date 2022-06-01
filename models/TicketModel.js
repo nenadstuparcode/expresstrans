@@ -18,6 +18,7 @@ var TicketSchema = new Schema({
 	ticketId: { type: String },
 	ticketQR: { type: String },
 	ticketPrice: { type: Number },
+	ticketDisabled: { type: Boolean, default: false },
 }, {timestamps: true});
 
 module.exports = mongoose.model("Ticket", TicketSchema);

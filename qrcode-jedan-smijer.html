@@ -152,6 +152,19 @@
                font-size: 12px;
                text-align: center;
            }
+           .ticket-disabled {
+               font-size: 24px;
+               font-weight: bold;
+               color: #c44e4e;
+               border: 3px solid #c44e4e;
+               position: absolute;
+               width: 98%;
+               top: 50%;
+               transform: translateY(-50%);
+               text-align: center;
+               z-index: 99999999999999;
+               background-color: #ffffffba;
+           }
 
        </style>
    </head>
@@ -159,6 +172,11 @@
    <div>
        <div class="invoice-box">
            <div class="invoice-data">
+               {{#if ticketData.ticketDisabled}}
+               <div class="ticket-disabled">
+                   Stornirano
+               </div>
+               {{/if}}
                {{#if ticketData}}
                <div class="main-ticket">
                     <span class="main-ticket-id">
