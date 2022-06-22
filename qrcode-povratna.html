@@ -154,6 +154,12 @@
                background-color: #ffffffba;
            }
 
+           .ticket-discount {
+               position: absolute;
+               left: 27px;
+               top: 165px;
+           }
+
        </style>
    </head>
    <body>
@@ -167,6 +173,13 @@
                {{/if}}
                {{#if ticketData}}
                <div class="main-ticket">
+
+                   {{#if ticketData.hasDiscount }}
+                   <span class="ticket-discount">
+                        {{ ticketData.ticketDiscount }} %
+                    </span>
+                   {{/if}}
+
                     <span class="main-ticket-id">
                         {{#if ticketData.isTicketInternet}}
                         {{ ticketData.ticketId }}

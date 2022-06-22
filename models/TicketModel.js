@@ -18,6 +18,7 @@ var TicketSchema = new Schema({
 	ticketId: { type: String },
 	ticketQR: { type: String },
 	ticketPrice: { type: Number },
+	ticketDiscount: { type: Number, default: 0 },
 	ticketDisabled: { type: Boolean, default: false },
 }, {timestamps: true});
 
