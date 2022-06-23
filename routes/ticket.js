@@ -16,6 +16,7 @@ router.post("/report", TicketController.reportSearch);
 router.post("/report-print", TicketController.ticketReportClassic);
 router.post("/invoice", TicketController.ticketByInvoiceId);
 router.post("/ticket-type", TicketController.ticketsSearchDate);
+router.post("/ticket-import", TicketController.ticketsImport);
 
 
 module.exports = router;

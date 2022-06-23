@@ -16,6 +16,8 @@ const handlebars = require("handlebars");
 mongoose.set("useFindAndModify", false);
 var moment = require("moment-timezone");
 
+var xlsx = require("node-xlsx");
+
 // Ticket Schema
 function TicketData(data) {
 	this._id = data._id;
@@ -815,6 +817,19 @@ exports.ticketReportClassic = [
 			res.end(pdfBuffer);
 		} catch (err) {
 			console.log("ERROR:", err);
+		}
+	}
+];
+
+exports.ticketsImport = [
+	function (req,res) {
+		try {
+			const workSheetsFromFile = xlsx.parse(process.cwd() + "/public/rezervacije.xlsx");
+
+			const data = workSheetsFromFile.find((item) => item.name === "Računi 2022");
+			return apiResponse.successResponseWithData(res, "Operation", data);
+		} catch (err) {
+			return apiResponse.successResponse(res, "Greska");
 		}
 	}
 ];
