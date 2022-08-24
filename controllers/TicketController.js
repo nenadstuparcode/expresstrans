@@ -36,6 +36,7 @@ function TicketData(data) {
 	this.createdAt = data.createdAt;
 	this.ticketClassicId = data.ticketClassicId;
 	this.ticketInvoiceNumber = data.ticketInvoiceNumber;
+	this.ticketInvoicePublicId = data.ticketInvoicePublicId;
 	this.ticketPrice = data.ticketPrice;
 	this.ticketDiscount = data.ticketDiscount;
 	this.ticketDisabled = data.ticketDisabled;
@@ -61,7 +62,7 @@ function BusLineData(data) {
 exports.ticketList = [
 	function (req, res) {
 		try {
-			Ticket.find("_id ticketDisabled ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketClassicId ticketInvoiceNumber ticketQR ticketDiscount ticketPrice createdAt modifiedAt").then((tickets)=>{
+			Ticket.find("_id ticketDisabled ticketOnName ticketInvoicePublicId ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketClassicId ticketInvoiceNumber ticketQR ticketDiscount ticketPrice createdAt modifiedAt").then((tickets)=>{
 				if(tickets.length > 0) {
 					return apiResponse.successResponseWithData(res, "Operation success", tickets);
 				} else {
@@ -82,7 +83,7 @@ exports.ticketByInvoiceId = [
 		Ticket.find({ ticketInvoiceNumber: invoiceNr }).count((err, count) => {
 			res.count = count;
 			try {
-				Ticket.find({ ticketInvoiceNumber: invoiceNr, $or:[ {ticketType : "classic"}, {ticketType: "return"}, {ticketType: "agency"}, {ticketType: "gratis"}]},"_id ticketOnName ticketDisabled ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").sort({createdAt:1}).then((tickets)=>{
+				Ticket.find({ ticketInvoiceNumber: invoiceNr, $or:[ {ticketType : "classic"}, {ticketType: "return"}, {ticketType: "agency"}, {ticketType: "gratis"}]},"_id ticketOnName ticketInvoicePublicId ticketDisabled ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").sort({createdAt:1}).then((tickets)=>{
 					if(tickets.length > 0) {
 						return apiResponse.successResponseWithData(res, "Operation success", tickets);
 					} else {
@@ -123,7 +124,7 @@ exports.ticketsSearchDate = [
 							{ "ticketType": "internet"},
 						]
 						,
-					}, "_id ticketDisabled ticketOnName ticketPhone ticketEmail ticketDiscount ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt")
+					}, "_id ticketDisabled ticketOnName ticketPhone ticketEmail ticketInvoicePublicId ticketDiscount ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt")
 					.sort({[sortByProp]: sortOption})
 					.skip( pageNumber > 0 ? ( ( pageNumber ) * resultPerPage ) : 0 )
 					.limit( resultPerPage )
@@ -152,7 +153,7 @@ exports.ticketSearch = [
 			res.count = count;
 			try {
 				Ticket.find(
-					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},"_id ticketOnName ticketDiscount ticketDisabled ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((tickets)=>{
+					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},"_id ticketOnName ticketInvoicePublicId ticketDiscount ticketDisabled ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((tickets)=>{
 					if(tickets.length > 0){
 						return apiResponse.successResponseWithData(res, "Operation success", tickets);
 					}else{
@@ -180,7 +181,7 @@ exports.ticketDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Ticket.findOne({_id: req.params.id},"_id ticketDisabled ticketDiscount ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").then((ticket)=>{
+			Ticket.findOne({_id: req.params.id},"_id ticketDisabled ticketInvoicePublicId ticketDiscount ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").then((ticket)=>{
 				if(ticket !== null){
 					let ticketData = new TicketData(ticket);
 					return apiResponse.successResponseWithData(res, "Operation success", ticketData);
@@ -242,6 +243,7 @@ exports.ticketStore = [
 							ticketDiscount: req.body.ticketDiscount,
 							ticketStartTime: req.body.ticketStartTime,
 							ticketInvoiceNumber: req.body.ticketInvoiceNumber,
+							ticketInvoicePublicId: req.body.ticketInvoicePublicId,
 							ticketQR: urlQR,
 							ticketPrice: req.body.ticketPrice,
 							ticketId: `EXTR0${doc.count}`,
@@ -304,6 +306,7 @@ exports.ticketUpdate = [
 				ticketStartDate: req.body.ticketStartDate,
 				ticketStartTime: req.body.ticketStartTime,
 				ticketInvoiceNumber: req.body.ticketInvoiceNumber,
+				ticketInvoicePublicId: req.body.ticketInvoicePublicId,
 				ticketClassicId: req.body.ticketClassicId,
 				ticketPrice: req.body.ticketPrice,
 				ticketDiscount: req.body.ticketDiscount,
@@ -402,6 +405,7 @@ exports.ticketPrint = [
 					ticketQR: req.body.ticketQR,
 					ticketClassicId: req.body.ticketClassicId,
 					ticketInvoiceNumber: req.body.ticketInvoiceNumber,
+					ticketInvoicePublicId: req.body.ticketInvoicePublicId,
 					ticketDisabled: req.body.ticketDisabled,
 					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
 					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
@@ -475,6 +479,7 @@ exports.sendToMail = [
 					ticketRoundTrip: req.body.ticketRoundTrip,
 					ticketType: req.body.ticketType,
 					ticketInvoiceNumber: req.body.ticketInvoiceNumber,
+					ticketInvoicePublicId: req.body.ticketInvoicePublicId,
 					ticketId: req.body.ticketId,
 					ticketQR: req.body.ticketQR,
 					ticketClassicId: req.body.ticketClassicId,
@@ -562,6 +567,7 @@ exports.sendToMailCustom = [
 					ticketRoundTrip: req.body.ticketRoundTrip,
 					ticketType: req.body.ticketType,
 					ticketInvoiceNumber: req.body.ticketInvoiceNumber,
+					ticketInvoicePublicId: req.body.ticketInvoicePublicId,
 					ticketId: req.body.ticketId,
 					ticketDisabled: req.body.ticketDisabled,
 					ticketQR: req.body.ticketQR,
@@ -642,7 +648,7 @@ exports.sendToMailCustom = [
 exports.ticketQRCode = [
 	function (req, res) {
 		try {
-			Ticket.findOne({ticketId: req.params.ticketId},"_id ticketOnName ticketDiscount ticketDisabled ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketInvoiceNumber ticketClassicId ticketType ticketStartTime ticketId ticketQR ticketPrice createdAt modifiedAt").then((ticket)=>{
+			Ticket.findOne({ticketId: req.params.ticketId},"_id ticketOnName ticketInvoicePublicId ticketDiscount ticketDisabled ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketInvoiceNumber ticketClassicId ticketType ticketStartTime ticketId ticketQR ticketPrice createdAt modifiedAt").then((ticket)=>{
 				if(ticket !== null){
 
 					let ticketDataQR = new TicketData(ticket);
@@ -664,6 +670,7 @@ exports.ticketQRCode = [
 												ticketRoundTrip: ticketDataQR.ticketRoundTrip,
 												ticketType: ticketDataQR.ticketType,
 												ticketInvoiceNumber: ticketDataQR.ticketInvoiceNumber,
+												ticketInvoicePublicId: ticketDataQR.ticketInvoicePublicId,
 												ticketId: ticketDataQR.ticketId,
 												ticketQR: ticketDataQR.ticketQR,
 												ticketDisabled: ticketDataQR.ticketDisabled,
@@ -732,7 +739,7 @@ exports.reportSearch = [
 				$and : [
 					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},
 					{ "ticketStartDate" : { "$gte" : startDate, "$lt" : endDate}},
-					{ $or: [ {ticketType : "classic"}, {ticketType: "return"}, {ticketType: "agency"}] },
+					{ $or: [ {ticketType : "classic"}, {ticketType: "return"}] },
 				],
 
 			}).count((err, count) => {
@@ -743,9 +750,9 @@ exports.reportSearch = [
 						$and : [
 							{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},
 							{ "ticketStartDate" : { "$gte" : startDate, "$lt" : endDate}},
-							{ $or: [ {ticketType : "classic"}, {ticketType: "return"}, {ticketType: "agency"}] },
+							{ $or: [ {ticketType : "classic"}, {ticketType: "return"}] },
 						],
-					}, "_id ticketDisabled ticketOnName ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketClassicId ticketInvoiceNumber ticketType ticketId ticketQR ticketPrice createdAt modifiedAt")
+					}, "_id ticketDisabled ticketOnName ticketInvoicePublicId ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketClassicId ticketInvoiceNumber ticketType ticketId ticketQR ticketPrice createdAt modifiedAt")
 					.sort({[sortByProp]: sortOption})
 					.skip( pageNumber > 0 ? ( ( pageNumber ) * resultPerPage ) : 0 )
 					.limit( resultPerPage )

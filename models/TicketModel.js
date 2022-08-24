@@ -20,6 +20,7 @@ var TicketSchema = new Schema({
 	ticketPrice: { type: Number },
 	ticketDiscount: { type: Number, default: 0 },
 	ticketDisabled: { type: Boolean, default: false },
+	ticketInvoicePublicId: { type: Number, default: 0 },
 }, {timestamps: true});
 
 module.exports = mongoose.model("Ticket", TicketSchema);
