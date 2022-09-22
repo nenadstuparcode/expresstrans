@@ -2,7 +2,7 @@ const Reservation = require("../models/ReservationModel");
 const { body,validationResult } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 var mongoose = require("mongoose");
-mongoose.set("useFindAndModify", false);
+// mongoose.set("useFindAndModify", false);
 
 // Reservation Schema
 function ReservationData(data) {
@@ -50,7 +50,7 @@ exports.reservationSearch = [
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 
-		Reservation.find({ "reservationOnName" : { "$regex": searchTerm + ".*", "$options": "i"}}).count((err, count) => {
+		Reservation.find({ "reservationOnName" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
 			res.count = count;
 			try {
 				Reservation.find({"reservationOnName" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((reservations)=>{
@@ -257,7 +257,7 @@ exports.reservationsSearchDate = [
 					{ "reservationOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},
 					{ "reservationDate" : { "$gte" : startDate, "$lt" : endDate}},
 				]
-			}).count((err, count) => {
+			}).countDocuments((err, count) => {
 			res.count = count;
 			try {
 				Reservation.find(

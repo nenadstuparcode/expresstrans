@@ -2,7 +2,7 @@ const Busline = require("../models/BusLineModel");
 const { body,validationResult } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 var mongoose = require("mongoose");
-mongoose.set("useFindAndModify", false);
+// mongoose.set("useFindAndModify", false);
 
 // BusLine Schema
 function BusLineData(data) {
@@ -52,7 +52,7 @@ exports.busLineSearch = [
 				{ "lineCityStart" : { "$regex": searchTerm + ".*", "$options": "i"}},
 				{ "lineCityEnd" : { "$regex": searchTerm + ".*", "$options": "i"}},
 			]
-		}).count((err, count) => {
+		}).countDocuments((err, count) => {
 			res.count = count;
 			try {
 				Busline.find({

@@ -13,7 +13,7 @@ const path = require("path");
 const puppeteer = require("puppeteer");
 const handlebars = require("handlebars");
 
-mongoose.set("useFindAndModify", false);
+// mongoose.set("useFindAndModify", false);
 var moment = require("moment-timezone");
 
 var xlsx = require("node-xlsx");
@@ -80,7 +80,7 @@ exports.ticketByInvoiceId = [
 	function (req,res) {
 		const invoiceNr = req.body.invoiceNr;
 
-		Ticket.find({ ticketInvoiceNumber: invoiceNr }).count((err, count) => {
+		Ticket.find({ ticketInvoiceNumber: invoiceNr }).countDocuments((err, count) => {
 			res.count = count;
 			try {
 				Ticket.find({ ticketInvoiceNumber: invoiceNr, $or:[ {ticketType : "classic"}, {ticketType: "return"}, {ticketType: "agency"}, {ticketType: "gratis"}]},"_id ticketOnName ticketInvoicePublicId ticketDisabled ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").sort({createdAt:1}).then((tickets)=>{
@@ -113,7 +113,7 @@ exports.ticketsSearchDate = [
 					{ "ticketStartDate" : { "$gte" : startDate, "$lt" : endDate}},
 					{ "ticketType": "internet"},
 				]
-			}).count((err, count) => {
+			}).countDocuments((err, count) => {
 			res.count = count;
 			try {
 				Ticket.find(
@@ -149,7 +149,7 @@ exports.ticketSearch = [
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 
-		Ticket.find({ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}}).count((err, count) => {
+		Ticket.find({ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
 			res.count = count;
 			try {
 				Ticket.find(
@@ -420,9 +420,14 @@ exports.ticketPrint = [
 
 			let ticketTemplate;
 
-			req.body.ticketRoundTrip ? ticketTemplate = "povratna.html" : ticketTemplate = "jedan-smijer.html";
+			req.body.ticketRoundTrip ? ticketTemplate = "povratna.html" : ticketTemplate = "test.hbs";
 
 			var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
+
+			handlebars.registerHelper("test", (value) => {
+				return `helloooo ${value}`;
+			});
+
 			var template = handlebars.compile(templateHtml);
 			var finalHtml = encodeURIComponent(template(dataBinding));
 			var options = {
@@ -742,7 +747,7 @@ exports.reportSearch = [
 					{ $or: [ {ticketType : "classic"}, {ticketType: "return"}] },
 				],
 
-			}).count((err, count) => {
+			}).countDocuments((err, count) => {
 			res.count = count;
 			try {
 				Ticket.find(

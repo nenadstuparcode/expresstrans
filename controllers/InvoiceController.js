@@ -7,7 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const handlebars = require("handlebars");
 const puppeteer = require("puppeteer");
-mongoose.set("useFindAndModify", false);
+// mongoose.set("useFindAndModify", false);
 
 // Invoice Schema
 function InvoiceData(data) {
@@ -70,7 +70,7 @@ exports.invoiceSearch = [
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 
-		Invoice.find({ "invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}}).count((err, count) => {
+		Invoice.find({ "invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
 			res.count = count;
 			try {
 				Invoice.find({"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((invoices)=>{

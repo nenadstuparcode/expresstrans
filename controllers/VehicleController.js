@@ -3,7 +3,7 @@ const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 var mongoose = require("mongoose");
-mongoose.set("useFindAndModify", false);
+// mongoose.set("useFindAndModify", false);
 
 // Vehicle Schema
 function VehicleData(data) {
