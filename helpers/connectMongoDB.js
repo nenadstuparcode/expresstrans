@@ -3,7 +3,7 @@ const MONGODB_URL = process.env.NODE_ENV == "prod" ? process.env.MONGODB_URL_PRO
 let currentConnection;
 
 exports.connectToDatabase = function() {
-	mongoose.connect(MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true, keepAlive: true }).then((client) => {
+	mongoose.connect(MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true, keepAlive: true }).then(() => {
 		//don't show the log when it is test
 		if(process.env.NODE_ENV !== "test") {
 			console.log(`Connected to ${process.env.NODE_ENV}  %s`, MONGODB_URL);
