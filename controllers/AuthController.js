@@ -7,7 +7,6 @@ const utility = require("../helpers/utility");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mailer = require("../helpers/mailer");
-const { constants } = require("../helpers/constants");
 
 /**
  * User registration.
@@ -19,6 +18,7 @@ const { constants } = require("../helpers/constants");
  *
  * @returns {Object}
  */
+
 exports.register = [
 	// Validate fields.
 	body("firstName").isLength({ min: 1 }).trim().withMessage("First name must be specified.")

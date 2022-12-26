@@ -3,6 +3,7 @@ const VehicleController = require("../controllers/VehicleController");
 
 var router = express.Router();
 
+router.post("/search", VehicleController.vehicleSearch);
 router.get("/", VehicleController.vehicleList);
 router.get("/:id", VehicleController.vehicleDetail);
 router.post("/", VehicleController.vehicleStore);

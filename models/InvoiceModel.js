@@ -1,34 +1,54 @@
-var mongoose = require("mongoose");
+const mongoose = require("mongoose");
 
-var Schema = mongoose.Schema;
+const Schema = mongoose.Schema;
 
-const Driver = new Schema({
-	_id : false,
+const Relation = new Schema({
 	name: String,
+	priceKm: { type: Number, default: null},
+	priceEur: { type: Number, default: null },
+	priceKmTax: { type: Number, default: null},
+	kilometers: { type: Number, default: null },
 });
 
 var InvoiceSchema = new Schema({
 	invoiceNumber: { type: String },
 	invoiceDateStart: { type: Date, required: true },
 	invoiceDateReturn: { type: Date, required: true },
-	invoiceVehicle: { type: String, required: true },
-	invoiceExpCro: { type: Number, required: true },
-	invoiceExpSlo: { type: Number, required: true },
-	invoiceExpAus: { type: Number, required: true },
-	invoiceExpGer: { type: Number, required: true },
-	invoiceInitialExpenses: { type: Number, required: true },
+	invoiceVehicle: { type: String  },
+	invoiceExpCro: { type: Number },
+	invoiceExpSlo: { type: Number  },
+	invoiceExpAus: { type: Number },
+	invoiceExpGer: { type: Number },
+	invoiceInitialExpenses: { type: Number },
 	invoiceInitialExpensesDesc: { type: String },
-	invoiceUnexpectedExpenses: { type: Number, required: true },
+	invoiceUnexpectedExpenses: { type: Number },
 	invoiceUnexpectedExpensesDesc: { type: String },
-	invoiceTotalBill: { type: Number, required: true },
-	totalKilometers: { type: Number, required: true },
-	bihKilometers: { type: Number, required: true },
-	diffKilometers: { type: Number, required: true },
-	firstCalculation: { type: Number, required: true },
-	secondCalculation: { type: Number, required: true },
-	returnTaxBih: { type: Number, required: true },
-	invoiceDrivers: [Driver],
+	invoiceTotalBill: { type: Number },
+	totalKilometers: { type: Number },
+	bihKilometers: { type: Number },
+	diffKilometers: { type: Number },
+	firstCalculation: { type: Number },
+	secondCalculation: { type: Number },
+	returnTaxBih: { type: Number },
+	invoiceDrivers: [String],
 	invoicePublicId: { type: Number },
+	//New props
+	invoiceType: { type: String, default: "bus"},
+	invoiceRelations: [Relation],
+	cmr: [String],
+	deadline: { type: Number },
+	priceKm: { type: Number },
+	priceEuros: { type: Number },
+	accountNumber: { type: String },
+	invoiceTrailer: [String],
+	payed: { type: Boolean, default: false },
+	priceKmTax: { type: Number, default: null },
+	clientId: { type: Schema.ObjectId, ref: "Client", default: null },
+	// invDriver: { type: String, default: null },
+	invDriver: { type: Schema.ObjectId, ref: "Driver", default: null },
+	invTrailer: { type: Schema.ObjectId, ref: "Trailer", default: null },
+	useTotalPrice: { type: Boolean, default: false },
+
 }, {timestamps: true});
 
 module.exports = mongoose.model("Invoice", InvoiceSchema);

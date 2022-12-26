@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <style>
+
+        body {
+            margin:0;
+            padding:0;
+            font-size: 20px;
+        }
+        /*1414 x 2000*/
+        .invoice {
+            font-family: 'Play', sans-serif;
+            margin: 0;
+            /*border: 1px solid #000;*/
+            font-size: 24px;
+            color: #555;
+            width: 1414px;
+            height: 2000px;
+        }
+        .invoice-container {
+            position: relative;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            background: url('http://localhost:3000/images/template.png') no-repeat;
+            background-size: contain;
+            padding: 400px 120px 300px 120px;
+        }
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+        }
+        .invoice-header p {
+            line-height: 1;
+            margin-top: 0;
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: #000;
+        }
+        .client-name {
+            font-size: 28px;
+            margin-bottom: 30px !important;
+            font-weight: 600;
+        }
+        .invoice-number p {
+            text-align: left;
+            font-size: 50px;
+            font-weight: bold;
+            margin-top: 100px;
+            margin-bottom: 60px;
+        }
+        .table thead th {
+            border-bottom: 1px solid #000;
+        }
+        .table td, .table th {
+            padding: 3px;
+            font-size: 20px;
+            border-top: 1px solid #000;
+        }
+
+        .invoice-price-in-words {
+            font-size: 22px;
+            margin-top: 40px;
+            margin-bottom: 40px;
+            word-spacing: 0;
+        }
+        .border-bottom-dark {
+            border-bottom: 1px solid #000 !important;
+        }
+        .invoice-note {
+            font-size: 22px;
+            margin-bottom: 40px;
+        }
+        .invoice-note p {
+            margin-bottom: 0px;
+            font-size: 22px;
+        }
+        .invoice-account-and-payment {
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+        .invoice-account-and-payment p {
+            font-size: 22px;
+            line-height: 1;
+            color: #000;
+            margin-bottom: 5px;
+        }
+        tr.border-bottom-0 {
+            border: none;
+        }
+        tr.border-bottom-0 > td {
+            border: none;
+        }
+        table.width-60 {
+            width: 60%;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="invoice">
+        <div class="invoice-container">
+            <div class="invoice-header">
+                <div class="invoice-client">
+                    <p class="client-name">{{ clientData.name }}</p>
+                    <p>{{clientData.address}}</p>
+                    <p>{{clientData.zip}} {{clientData.city}}</p>
+                    <p>{{clientData.country}}</p>
+                    <p>{{clientData.pib}}</p>
+                </div>
+                <div class="invoice-info">
+                    <p>Prnjavor, {{#formatDate invoiceData.invoiceDateStart}} {{/formatDate}}</p>
+                    <p>Datum izvršene usluge: {{#formatDate invoiceData.invoiceDateReturn}}{{/formatDate}}</p>
+                    <p>Broj naloga: {{invoiceData.accountNumber}}</p>
+                    <p>Autobus:
+                        {{#getVehiclePlate invoiceData.invoiceVehicle }} {{/getVehiclePlate}}
+                    </p>
+
+                    <p>Vozač:
+                        {{#getDriverName invoiceData.invDriver}} {{/getDriverName}}
+                    </p>
+
+                    <div class="invoice-number">
+                        <p>Račun br. {{invoiceData.invoicePublicId}}</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="invoice-table">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Br.</th>
+                        <th>Relacija</th>
+                        <th style="text-align: right">Bez PDV-a</th>
+                        <th style="text-align: right">PDV %</th>
+                        <th style="text-align: right">Sa PDV-om</th>
+                        <th style="text-align: right">EUR</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-bottom-0">
+                            <td width="3%">1.</td>
+                            <td width="34">{{invoiceData.invoiceRelations.[0].name}}</td>
+                            <td width="10%" align="right">
+                                {{#priceWithoutTax invoiceData.invoiceRelations 'priceKm' 'priceKmTax' 0 'bam'}} {{/priceWithoutTax}}
+                            </td>
+                            <td width="20%" align="right">
+                                {{#relationDiff invoiceData.invoiceRelations 0 'priceKmTax' 'bam'}} {{/relationDiff}}
+                            </td>
+                            <td width="13%" align="right">
+                                {{#relationDiff invoiceData.invoiceRelations 0 'priceKm' 'bam'}} {{/relationDiff}}
+                            </td>
+                            <td width="13%" align="right">
+                                {{#relationDiff invoiceData.invoiceRelations 0 'priceEuros' 'eur'}} {{/relationDiff}}
+                            </td>
+                        </tr>
+                        <tr class="border-bottom-0">
+                            <td width="3%">2.</td>
+                            <td width="34">{{invoiceData.invoiceRelations.[1].name}}</td>
+                            <td width="10%" align="right"></td>
+                            <td width="13%" align="right"></td>
+                            <td width="20%" align="right">
+                                {{#relationDiff invoiceData.invoiceRelations 1 'priceKm' 'bam'}} {{/relationDiff}}
+                            </td>
+                            <td width="13%" align="right">
+                                {{#relationDiff invoiceData.invoiceRelations 1 'priceEuros' 'eur'}} {{/relationDiff}}
+                            </td>
+                        </tr>
+
+
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td align="right"></td>
+                        <td align="right" class="border-bottom-dark">UKUPNO ZA PLATITI:</td>
+                        <td align="right" class="border-bottom-dark">
+                            {{#convertToEUR invoiceData.priceEuros}}{{/convertToEUR}}
+                        </td>
+                    </tr>
+                    <tr class="border-bottom-0">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td align="right"></td>
+                        <td align="right">Ukupno bez PDV-a:</td>
+                        <td align="right">
+                            {{#relationsTotalKM invoiceData.invoiceRelations}} {{/relationsTotalKM}}
+                        </td>
+                    </tr>
+                    <tr class="border-bottom-0">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td align="right"></td>
+                        <td align="right">Obračun PDV-a:</td>
+                        <td align="right">
+                            {{#relationDiff invoiceData.invoiceRelations 0 'priceKmTax' 'bam'}} {{/relationDiff}}
+                        </td>
+                    </tr>
+                    <tr class="border-bottom-0">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td align="right"></td>
+                        <td align="right" class="border-bottom-dark">UKUPNO U KM:</td>
+                        <td align="right" class="border-bottom-dark">
+                            {{#convertToKM invoiceData.priceKm}}{{/convertToKM}}
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="invoice-price-in-words">
+                SLOVIMA: {{#priceToWords invoiceData.priceEuros 'EUR'}} {{/priceToWords}}
+            </div>
+            <div>
+                <table class="table width-60">
+                    <thead>
+                        <th>Obračun PDV-a:</th>
+                        <th>Osnova:</th>
+                        <th>PDV:</th>
+                        <th>Vrijednost:</th>
+                    </thead>
+                    <tbody>
+                        <td>Redovna linija - domaći saobraćaj</td>
+                        <td>
+                            {{#priceWithoutTax invoiceData.invoiceRelations 'priceKm' 'priceKmTax' 0 'bam'}} {{/priceWithoutTax}}
+                        </td>
+                        <td>
+                            {{#relationDiff invoiceData.invoiceRelations 0 'priceKmTax' 'bam'}} {{/relationDiff}}
+                        </td>
+                        <td>
+                            {{#relationDiff invoiceData.invoiceRelations 0 'priceKm' 'bam'}} {{/relationDiff}}
+                        </td>
+                    </tbody>
+                </table>
+            </div>
+            <div class="invoice-note">
+                NAPOMENA: Oslobođeno PDV-a u skladu sa članom 15. stav 2. tačka 2. Zakona o PDV-u i Pravilnika član 21. stav 4.
+            </div>
+            <div class="invoice-account-and-payment">
+                <p>Način plaćanja: Gotovinski</p>
+
+                <br>
+                <p>Žiro račun:</p>
+                <p>555-007-00222579-74 NOVA BANKA</p>
+                <p>194-106-99438001-36 PROCREDIT BANK</p>
+                <p>567-463-11000095-31 SBERBANK</p>
+
+            </div>
+
+            <div class="invoice-note">
+                <p>NAPOMENA:</p>
+                <p>Račun je plativ odmah po prijemu a najkasnije do datuma plaćanja navedenog na našem računu.
+                    Za plaćanje poslije roka zaračunavamo zakonom propisanu zateznu kamatu.
+                    Za sva pitanja vezana za fakturu nazovite: 00387 65/560-160 .
+                </p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

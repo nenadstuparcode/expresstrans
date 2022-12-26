@@ -1,8 +1,9 @@
-var express = require("express");
+const express = require("express");
 const DriverController = require("../controllers/DriverController");
 
-var router = express.Router();
+const router = express.Router();
 
+router.post("/search", DriverController.driverSearch);
 router.get("/", DriverController.driverList);
 router.get("/:id", DriverController.driverDetail);
 router.post("/", DriverController.driverStore);

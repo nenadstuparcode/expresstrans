@@ -4,19 +4,17 @@ const Counter = require("../models/CounterModel");
 const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
-var mongoose = require("mongoose");
+const mongoose = require("mongoose");
 const mailer = require("../helpers/mailer");
 const QRCode = require("qrcode");
-
 const fs = require("fs");
 const path = require("path");
 const puppeteer = require("puppeteer");
 const handlebars = require("handlebars");
+const pdfService = require("../helpers/printService");
 
 // mongoose.set("useFindAndModify", false);
-var moment = require("moment-timezone");
-
-var xlsx = require("node-xlsx");
+const moment = require("moment-timezone");
 
 // Ticket Schema
 function TicketData(data) {
@@ -196,6 +194,27 @@ exports.ticketDetail = [
 	}
 ];
 
+
+
+
+exports.ticketImportMany = [
+	function (req, res) {
+		let numberOfTickets = req.body.ticketsToStore.length || 0;
+		if(numberOfTickets > 0) {
+			try {
+				Ticket.insertMany(req.body.ticketsToStore).then((tickets) => {
+					return apiResponse.successResponseWithData(res,"Ticket add Success.", tickets);
+				}).catch((err) => {
+					return apiResponse.ErrorResponse(res, err);
+				});
+			} catch (err) {
+				//throw error in json response with status 500.
+				return apiResponse.ErrorResponse(res, err);
+			}
+		}
+	}
+];
+
 /**
  * Ticket store.
  *
@@ -205,6 +224,7 @@ exports.ticketDetail = [
  *
  * @returns {Object}
  */
+
 exports.ticketStore = [
 	body("ticketOnName", "ticketOnName must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketValid", "lineCountryStart trip must not be empty.").isLength({ min: 1 }).trim(),
@@ -252,7 +272,6 @@ exports.ticketStore = [
 						if (!errors.isEmpty()) {
 							return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 						} else {
-							//Save Bus Line.
 							ticket.save(function (err) {
 								if (err) { return apiResponse.ErrorResponse(res, err); }
 								let ticketData = new TicketData(ticket);
@@ -390,7 +409,7 @@ exports.ticketDelete = [
 exports.ticketPrint = [
 	async function (req,res) {
 		try {
-			var dataBinding = {
+			const dataBinding = {
 				isWatermark: true,
 				ticketData : {
 					ticketOnName: req.body.ticketOnName,
@@ -418,44 +437,17 @@ exports.ticketPrint = [
 				},
 			};
 
-			let ticketTemplate;
-
-			req.body.ticketRoundTrip ? ticketTemplate = "povratna.html" : ticketTemplate = "test.hbs";
-
-			var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
-
 			handlebars.registerHelper("test", (value) => {
 				return `helloooo ${value}`;
 			});
 
-			var template = handlebars.compile(templateHtml);
-			var finalHtml = encodeURIComponent(template(dataBinding));
-			var options = {
-				format: "A4",
-				headerTemplate: "<p></p>",
-				footerTemplate: "<p></p>",
-				displayHeaderFooter: false,
-				margin: {
-					top: "0px",
-					bottom: "0px"
-				},
-				printBackground: true,
-			};
+			const templateHtml = fs.readFileSync(
+				path.join(process.cwd(), req.body.ticketRoundTrip ? "povratna.hbs" : "jedan-smjer.hbs"), "utf8");
 
-			const browser = await puppeteer.launch({
-				headless: true,
-				args: ["--no-sandbox", "--use-gl=egl"],
-			});
-			const page = await browser.newPage();
-			await page.setContent(finalHtml);
-			await page.setViewport({ width: 1000, height: 420});
-			await page.goto(`data:text/html;charset=UTF-8,${finalHtml}`, {
-				waitUntil: "networkidle0"
-			});
-			const pdfBuffer = await page.pdf(options);
-
-			await page.close();
-			await browser.close();
+			const template = handlebars.compile(templateHtml);
+			const finalHtml = encodeURIComponent(template(dataBinding));
+			const options = pdfService.pdfPrintConfig;
+			const pdfBuffer = await pdfService.pdfGenerateBuffer(finalHtml, options);
 
 			res.setHeader("Content-Length",pdfBuffer.length);
 			res.setHeader("Content-type", "application/pdf");
@@ -463,7 +455,7 @@ exports.ticketPrint = [
 
 			res.end(pdfBuffer);
 		} catch (err) {
-			console.log("ERROR:", err);
+			return apiResponse.ErrorResponse(res, err);
 		}
 	}
 ];
@@ -472,7 +464,7 @@ exports.ticketPrint = [
 exports.sendToMail = [
 	async function (req, res) {
 		try {
-			var dataBinding = {
+			const dataBinding = {
 				isWatermark: true,
 				ticketData : {
 					ticketOnName: req.body.ticketOnName,
@@ -501,39 +493,13 @@ exports.sendToMail = [
 				},
 			};
 
-			let ticketTemplate;
+			const templateHtml = fs.readFileSync(
+				path.join(process.cwd(), req.body.ticketRoundTrip ? "povratna.hbs" : "jedan-smjer.hbs"), "utf8");
 
-			req.body.ticketRoundTrip ? ticketTemplate = "povratna.html" : ticketTemplate = "jedan-smijer.html";
-
-			var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
-			var template = handlebars.compile(templateHtml);
-			var finalHtml = encodeURIComponent(template(dataBinding));
-			var options = {
-				format: "A4",
-				headerTemplate: "<p></p>",
-				footerTemplate: "<p></p>",
-				displayHeaderFooter: false,
-				margin: {
-					top: "0px",
-					bottom: "0px"
-				},
-				printBackground: true,
-			};
-
-			const browser = await puppeteer.launch({
-				headless: true,
-				args: ["--no-sandbox", "--use-gl=egl"],
-			});
-			const page = await browser.newPage();
-			await page.setContent(finalHtml);
-			await page.setViewport({ width: 1366, height: 768});
-			await page.goto(`data:text/html;charset=UTF-8,${finalHtml}`, {
-				waitUntil: "networkidle0"
-			});
-			const pdfBuffer = await page.pdf(options);
-
-			await page.close();
-			await browser.close();
+			const template = handlebars.compile(templateHtml);
+			const finalHtml = encodeURIComponent(template(dataBinding));
+			const options = pdfService.pdfPrintConfig;
+			const pdfBuffer = await pdfService.pdfGenerateBuffer(finalHtml, options);
 
 			let html = "<p>Vašu kartu može preuzeti u priloženim datotekama na dnu email-a.</p><p> Ugodno putovanje želi vam Express Trans</p>";
 
@@ -546,9 +512,7 @@ exports.sendToMail = [
 				pdfBuffer
 			);
 
-			return apiResponse.successResponseWithData(res,"Karta je poslana na korisnikom email.", true);
-
-
+			return apiResponse.successResponseWithData(res,"Karta je poslana na korisnikov email.", true);
 
 		} catch (err) {
 			//throw error in json response with status 500.
@@ -588,11 +552,8 @@ exports.sendToMailCustom = [
 				},
 			};
 
-			let ticketTemplate;
-
-			req.body.ticketRoundTrip ? ticketTemplate = "povratna.html" : ticketTemplate = "jedan-smijer.html";
-
-			var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
+			const templateHtml = fs.readFileSync(
+				path.join(process.cwd(), req.body.ticketRoundTrip ? "povratna.hbs" : "jedan-smjer.hbs"), "utf8");
 			var template = handlebars.compile(templateHtml);
 			var finalHtml = encodeURIComponent(template(dataBinding));
 			var options = {
@@ -829,19 +790,8 @@ exports.ticketReportClassic = [
 			res.end(pdfBuffer);
 		} catch (err) {
 			console.log("ERROR:", err);
-		}
-	}
-];
 
-exports.ticketsImport = [
-	function (req,res) {
-		try {
-			const workSheetsFromFile = xlsx.parse(process.cwd() + "/public/rezervacije.xlsx");
-
-			const data = workSheetsFromFile.find((item) => item.name === "Računi 2022");
-			return apiResponse.successResponseWithData(res, "Operation", data);
-		} catch (err) {
-			return apiResponse.successResponse(res, "Greska");
+			return apiResponse.ErrorResponse(res, err);
 		}
 	}
 ];

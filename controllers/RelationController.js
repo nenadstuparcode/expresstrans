@@ -1,23 +1,22 @@
-const Driver = require("../models/DriverModel");
+const Relation = require("../models/RelationModel");
 const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
-var mongoose = require("mongoose");
-// mongoose.set("useFindAndModify", false);
+const mongoose = require("mongoose");
 
-// Driver Schema
-function DriverData(data) {
+// Relation Schema
+function RelationData(data) {
 	this._id = data._id;
 	this.name = data.name;
 }
 
 /**
- * Clients Search.
+ * Relation Search.
  *
  * @returns {Object}
  */
 
-exports.driverSearch = [
+exports.relationSearch = [
 	function (req,res) {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
@@ -25,13 +24,13 @@ exports.driverSearch = [
 		const sortBy = req.body.sortBy;
 		const sortOrder = req.body.sortOrder;
 
-		Driver.find({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
+		Relation.find({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
 			res.count = count;
 			try {
-				Driver.find(
-					{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((drivers)=>{
-					drivers.length > 0 ?
-						apiResponse.successResponseWithData(res, "Operation success", drivers) :
+				Relation.find(
+					{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((relations)=>{
+					relations.length > 0 ?
+						apiResponse.successResponseWithData(res, "Operation success", relations) :
 						apiResponse.successResponseWithData(res, "Operation success", []);
 				});
 			} catch (err) {
@@ -42,100 +41,98 @@ exports.driverSearch = [
 ];
 
 /**
- * Driver List.
+ * Relations List.
  *
  * @returns {Object}
  */
-exports.driverList = [
+exports.relationsList = [
 	function (req, res) {
 		try {
-			Driver.find().then((drivers)=>{
-				if(drivers.length > 0){
-					return apiResponse.successResponseWithData(res, "Operation success", drivers);
+			Relation.find().then((relations)=>{
+				if(relations.length > 0){
+					return apiResponse.successResponseWithData(res, "Operation success", relations);
 				}else{
 					return apiResponse.successResponseWithData(res, "Operation success", []);
 				}
 			});
 		} catch (err) {
-			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
 ];
 
 /**
- * Driver Detail.
+ * Relation Detail.
  *
  * @param {string}      id
  *
  * @returns {Object}
  */
-exports.driverDetail = [
+exports.relationDetail = [
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Driver.findOne({_id: req.params.id},"_id name createdAt").then((driver)=>{
-				if(driver !== null){
-					let driverData = driver;
-					return apiResponse.successResponseWithData(res, "Operation success", driverData);
+			Relation.findOne({_id: req.params.id},"_id name createdAt").then((relation)=>{
+				if(relation !== null){
+					let relationData = relation;
+					return apiResponse.successResponseWithData(res, "Operation success", relationData);
 				}else{
 					return apiResponse.successResponseWithData(res, "Operation success", {});
 				}
 			});
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
 ];
 
 /**
- * Driver store.
+ * Relation store.
  *
  * @param {string}      name
  *
  * @returns {Object}
  */
-exports.driverStore = [
+exports.relationStore = [
 	body("name", "name must not be empty.").isLength({ min: 1 }).trim(),
 	sanitizeBody("*").escape(),
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
-			var driver = new Driver({name: req.body.name});
+			var relation = new Relation({name: req.body.name});
 
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			}
 			else {
-				//Save driver.
-				driver.save(function (err) {
+				relation.save(function (err) {
 					if (err) { return apiResponse.ErrorResponse(res, err); }
-					let driverData = new DriverData(driver);
-					return apiResponse.successResponseWithData(res,"Book add Success.", driverData);
+					let relationData = new RelationData(relation);
+					return apiResponse.successResponseWithData(res,"Relation add Success.", relationData);
 				});
 			}
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
 ];
 
 /**
- * Driver update.
+ * Relation update.
  *
  * @param {string}      name
  *
  * @returns {Object}
  */
-exports.driverUpdate = [
+exports.relationUpdate = [
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
-			var driver = new Driver(
+			const relation = new Relation(
 				{
 					name: req.body.name,
 					_id:req.params.id,
@@ -149,18 +146,17 @@ exports.driverUpdate = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					Driver.findById(req.params.id, function (err, foundDriver) {
-						if(foundDriver === null){
-							return apiResponse.notFoundResponse(res,"Driver not exists with this id");
+					Relation.findById(req.params.id, function (err, foundRealtion) {
+						if(foundRealtion === null){
+							return apiResponse.notFoundResponse(res,"Relatiom not exists with this id");
 						}else{
 							//update driver.
-							Driver.findByIdAndUpdate(req.params.id, driver, {},function (err) {
+							Relation.findByIdAndUpdate(req.params.id, relation, {},function (err) {
 								if (err) {
 									return apiResponse.ErrorResponse(res, err);
-								}else{
-									let driverData = new DriverData(driver);
-									console.log(driverData);
-									return apiResponse.successResponseWithData(res,"Book update Success.", driverData);
+								} else {
+									const relationData = new RelationData(relation);
+									return apiResponse.successResponseWithData(res,"Relation update Success.", relationData);
 								}
 							});
 						}
@@ -169,41 +165,41 @@ exports.driverUpdate = [
 				}
 			}
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
 ];
 
 /**
- * Driver Delete.
+ * Relation Delete.
  *
  * @param {string}      id
  *
  * @returns {Object}
  */
-exports.driverDelete = [
+exports.relationDelete = [
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 		}
 		try {
-			Driver.findById(req.params.id, function (err, foundDriver) {
-				if(foundDriver === null){
-					return apiResponse.notFoundResponse(res,"Driver not exists with this id");
+			Relation.findById(req.params.id, function (err, foundRelation) {
+				if(foundRelation === null){
+					return apiResponse.notFoundResponse(res,"Relation not exists with this id");
 				}else{
-					//delete driver.
-					Driver.findByIdAndRemove(req.params.id,function (err) {
+					//delete relation.
+					Relation.findByIdAndRemove(req.params.id,function (err) {
 						if (err) {
 							return apiResponse.ErrorResponse(res, err);
 						}else{
-							return apiResponse.successResponse(res,"Driver delete Success.");
+							return apiResponse.successResponse(res,"Relation delete Success.");
 						}
 					});
 				}
 			});
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}

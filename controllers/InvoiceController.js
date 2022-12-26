@@ -1,12 +1,21 @@
 const Invoice = require("../models/InvoiceModel");
+const Client = require("../models/ClientModel");
+const Driver = require("../models/DriverModel");
+const Vehicle = require("../models/VehicleModel");
+const Trailer = require("../models/TrailerModel");
 const { body,validationResult } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
-var mongoose = require("mongoose");
+const mongoose = require("mongoose");
 const Counter = require("../models/CounterModel");
 const fs = require("fs");
 const path = require("path");
 const handlebars = require("handlebars");
 const puppeteer = require("puppeteer");
+const pdfService = require("../helpers/printService");
+const moment = require("moment-timezone");
+const n2words = require("n2words");
+const { format } = require("number-currency-format");
+const ObjectId = require("mongoose").Types.ObjectId;
 // mongoose.set("useFindAndModify", false);
 
 // Invoice Schema
@@ -34,6 +43,49 @@ function InvoiceData(data) {
 	this.returnTaxBih = data.returnTaxBih;
 	this.createdAt = data.createdAt;
 	this.invoicePublicId = data.invoicePublicId;
+
+	//New Props
+	this.invoiceType = data.invoiceType;
+	this.invoiceRelations = data.invoiceRelations;
+	this.cmr = data.cmr;
+	this.deadline = data.deadline;
+	this.priceKm = data.priceKm;
+	this.priceEuros = data.priceEuros;
+	this.accountNumber = data.accountNumber;
+	this.invoiceTrailer = data.invoiceTrailer;
+	this.payed = data.payed;
+	this.priceKmTax = data.priceKmTax;
+	this.clientId = data.clientId;
+	this.invDriver= data.invDriver;
+	this.invTrailer = data.invTrailer;
+	this.useTotalPrice = data.useTotalPrice;
+}
+
+const optionsEur = {
+	currency: "€",
+	spacing: true,
+	thousandSeparator: ".",
+	decimalSeparator: ",",
+	currencyPosition: "RIGHT",
+};
+
+const optionsKm = {
+	currency: "KM",
+	spacing: true,
+	thousandSeparator: ".",
+	decimalSeparator: ",",
+	currencyPosition: "RIGHT",
+};
+
+function priceToWords(price) {
+	let pr = price.toFixed(2);
+	return n2words(pr, {lang: "sr"}).replace(/\s/g, "");
+}
+
+function getPercentage(relations, index) {
+	let totalKilometers = 0;
+	relations.forEach(r => totalKilometers += r.kilometers);
+	return  totalKilometers / relations[index].kilometers;
 }
 
 /**
@@ -44,7 +96,7 @@ function InvoiceData(data) {
 exports.invoiceList = [
 	function (req, res) {
 		try {
-			Invoice.find({},"_id invoicePublicId invoiceNumber invoiceDateStart invoiceDateReturn invoiceVehicle invoiceDrivers invoiceExpCro invoiceExpSlo invoiceExpAus invoiceExpGer invoiceInitialExpenses invoiceInitialExpensesDesc invoiceUnexpectedExpenses invoiceUnexpectedExpensesDesc totalKilometers bihKilometers diffKilometers firstCalculation secondCalculation returnTaxBih createdAt user modifiedAt").then((invoices)=>{
+			Invoice.find({}).then((invoices)=>{
 				if(invoices.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", invoices);
 				}else{
@@ -63,17 +115,94 @@ exports.invoiceList = [
  *
  * @returns {Object}
  */
+
+exports.invoiceSearchV2 = [
+	(req, res) => {
+		const searchTerm = req.body.searchTerm;
+		const searchLimit = req.body.searchLimit;
+		const searchSkip = req.body.searchSkip;
+		const clientId = req.body.clientId;
+		const paymentStatus = req.body.paymentStatus || null;
+		const sort = req.body.sort || { createdAt: -1};
+
+
+		const queries = [
+			{	"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"} },
+		];
+
+		if(clientId) {
+			queries.push({"clientId": new ObjectId(clientId) });
+		}
+
+		if(paymentStatus !== null) {
+			queries.push({"payed": paymentStatus});
+		}
+
+		try {
+			Invoice.aggregate(	
+				[
+					{
+						$match: {
+							$and: queries,
+						}
+					},
+					{
+						"$facet": {
+							"data": [
+								{ "$sort":  sort },
+								{ "$skip":  searchSkip },
+								{ "$limit":  searchLimit },
+							],
+							"meta": [
+								{
+									"$group": {
+										"_id": null,
+										"count": {
+											"$sum": 1
+										},
+										"priceTotalKm": {
+											"$sum": "$priceKm"
+										},
+										"priceTotalEur": {
+											"$sum": "$priceEuros"
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"$unwind": {
+							"path": "$meta"
+						}
+					},
+				]).then((invoices)=>{
+				if(invoices.length > 0){
+					console.log(invoices);
+					return apiResponse.successResponseWithMetaData(res, "Operation success", ...invoices);
+				}else{
+					return apiResponse.successResponseWithMetaDataEmpty(res, "Nema rezultata pretrage");
+				}
+			});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
+		
+		
+	}
+];
 exports.invoiceSearch = [
 	function (req,res) {
 
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
+		const clientId = req.body.clientId;
 
-		Invoice.find({ "invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
+		Invoice.find({"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
 			res.count = count;
 			try {
-				Invoice.find({"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((invoices)=>{
+				Invoice.find({"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}},).sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((invoices)=>{
 					if(invoices.length > 0){
 						return apiResponse.successResponseWithData(res, "Operation success", invoices);
 					}else{
@@ -101,7 +230,7 @@ exports.invoiceDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Invoice.findOne({_id: req.params.id},"_id invoicePublicId invoiceNumber invoiceDateStart invoiceDateReturn invoiceVehicle invoiceDrivers invoiceExpCro invoiceExpSlo invoiceExpAus invoiceExpGer invoiceTotalBill invoiceInitialExpenses invoiceInitialExpensesDesc invoiceUnexpectedExpenses invoiceUnexpectedExpensesDesc totalKilometers bihKilometers diffKilometers firstCalculation secondCalculation returnTaxBih createdAt user modifiedAt").then((invoice)=>{
+			Invoice.findOne({_id: req.params.id}).then((invoice)=>{
 				if(invoice !== null){
 					let invoiceData = new InvoiceData(invoice);
 					return apiResponse.successResponseWithData(res, "Operation success", invoiceData);
@@ -130,10 +259,8 @@ exports.invoiceDetail = [
 exports.invoiceStore = [
 	body("invoiceDateStart", "invoiceDateStart must not be empty.").isLength({ min: 1 }).trim(),
 	body("invoiceDateReturn", "invoiceDateReturn must not be empty.").isLength({ min: 1 }).trim(),
-	body("invoiceVehicle", "invoiceVehicle must not be empty.").isLength({ min: 1 }).trim(),
 	(req, res) => {
 		try {
-
 			Counter.findOneAndUpdate({name: "invoiceCounter"}, {$inc: {count: 1}}, {new: true}, (err, doc) => {
 				if (err) {
 					console.log("Something wrong when updating data!");
@@ -142,27 +269,44 @@ exports.invoiceStore = [
 
 					var invoice = new Invoice({
 						invoiceNumber: doc.count,
-						invoiceDateStart: req.body.invoiceDateStart,
-						invoiceDateReturn: req.body.invoiceDateReturn,
-						invoiceVehicle: req.body.invoiceVehicle,
-						invoiceExpCro: req.body.invoiceExpCro,
-						invoiceExpSlo: req.body.invoiceExpSlo,
-						invoiceExpAus: req.body.invoiceExpAus,
-						invoiceExpGer: req.body.invoiceExpGer,
-						invoiceInitialExpenses: req.body.invoiceInitialExpenses,
-						invoiceInitialExpensesDesc: req.body.invoiceInitialExpensesDesc,
-						invoiceUnexpectedExpenses: req.body.invoiceUnexpectedExpenses,
-						invoiceUnexpectedExpensesDesc: req.body.invoiceUnexpectedExpensesDesc,
-						invoiceTotalBill: req.body.invoiceTotalBill,
-						totalKilometers: req.body.totalKilometers,
-						bihKilometers: req.body.bihKilometers,
-						diffKilometers: req.body.diffKilometers,
-						firstCalculation: req.body.firstCalculation,
-						secondCalculation: req.body.secondCalculation,
-						returnTaxBih: req.body.returnTaxBih,
-						invoiceDrivers: [...req.body.invoiceDrivers],
-						invoicePublicId: req.body.invoicePublicId,
+						invoiceDateStart: req.body.invoiceDateStart, // ok
+						invoiceDateReturn: req.body.invoiceDateReturn, // ok
+						invoiceVehicle: req.body.invoiceVehicle, // ok
+						invoiceExpCro: req.body.invoiceExpCro, // optional
+						invoiceExpSlo: req.body.invoiceExpSlo, // optional
+						invoiceExpAus: req.body.invoiceExpAus, // optional
+						invoiceExpGer: req.body.invoiceExpGer, // optional
+						invoiceInitialExpenses: req.body.invoiceInitialExpenses, // ok
+						invoiceInitialExpensesDesc: req.body.invoiceInitialExpensesDesc, // optional
+						invoiceUnexpectedExpenses: req.body.invoiceUnexpectedExpenses, // optional
+						invoiceUnexpectedExpensesDesc: req.body.invoiceUnexpectedExpensesDesc, // optional
+						invoiceTotalBill: req.body.invoiceTotalBill, // optional
+						totalKilometers: req.body.totalKilometers, // optional
+						bihKilometers: req.body.bihKilometers, // optional
+						diffKilometers: req.body.diffKilometers, // optional
+						firstCalculation: req.body.firstCalculation, // optional
+						secondCalculation: req.body.secondCalculation, // optional
+						returnTaxBih: req.body.returnTaxBih, // optional
+						invoiceDrivers: [...req.body.invoiceDrivers], // ok
+						invoicePublicId: doc.count, // ok
+						//New Props
+						invoiceType : req.body.invoiceType, // ok
+						invoiceRelations : [...req.body.invoiceRelations], // ok
+						cmr : [...req.body.cmr], // ok
+						deadline: req.body.deadline, // ok
+						priceKm: req.body.priceKm, // ok
+						priceEuros: req.body.priceEuros, // ok
+						accountNumber: req.body.accountNumber, // ok
+						invoiceTrailer: [...req.body.invoiceTrailer], // ok
+						payed: req.body.payed, // ok
+						priceKmTax: req.body.priceKmTax, // ok
+						clientId: req.body.clientId, // ok
+						invDriver: req.body.invDriver, // ok
+						invTrailer: req.body.invTrailer, // ok
+						useTotalPrice: req.body.useTotalPrice, // ok
 					});
+
+
 
 
 					if (!errors.isEmpty()) {
@@ -171,6 +315,8 @@ exports.invoiceStore = [
 						//Save Invoice.
 						invoice.save(function (err) {
 							if (err) {
+								console.log(err);
+
 								return apiResponse.ErrorResponse(res, err);
 							}
 							let invoiceData = new InvoiceData(invoice);
@@ -200,11 +346,10 @@ exports.invoiceStore = [
 exports.invoiceUpdate = [
 	body("invoiceDateStart", "invoiceDateStart must not be empty.").isLength({ min: 1 }).trim(),
 	body("invoiceDateReturn", "invoiceDateReturn must not be empty.").isLength({ min: 1 }).trim(),
-	body("invoiceVehicle", "invoiceVehicle must not be empty.").isLength({ min: 1 }).trim(),
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
-			var invoice = new Invoice({
+			let invoice = new Invoice({
 				invoiceNumber: req.body.invoiceNumber,
 				invoiceDateStart: req.body.invoiceDateStart,
 				invoiceDateReturn: req.body.invoiceDateReturn,
@@ -227,6 +372,22 @@ exports.invoiceUpdate = [
 				invoiceDrivers: [...req.body.invoiceDrivers],
 				invoicePublicId: req.body.invoicePublicId,
 				_id: req.params.id,
+
+				//New Props
+				invoiceType : req.body.invoiceType,
+				invoiceRelations : [...req.body.invoiceRelations],
+				cmr : [...req.body.cmr],
+				deadline: req.body.deadline,
+				priceKm: req.body.priceKm,
+				priceEuros: req.body.priceEuros,
+				accountNumber: req.body.accountNumber,
+				invoiceTrailer: [...req.body.invoiceTrailer],
+				payed: req.body.payed,
+				priceKmTax: req.body.priceKmTax,
+				clientId: req.body.clientId,
+				invDriver: req.body.invDriver, // ok
+				invTrailer: req.body.invTrailer, // ok
+				useTotalPrice: req.body.useTotalPrice, // ok
 			});
 
 			if (!errors.isEmpty()) {
@@ -243,6 +404,7 @@ exports.invoiceUpdate = [
 							//update Invoice.
 							Invoice.findByIdAndUpdate(req.params.id, invoice, {},function (err) {
 								if (err) {
+									console.log(err);
 									return apiResponse.ErrorResponse(res, err);
 								}else{
 									let invoiceData = new InvoiceData(invoice);
@@ -254,7 +416,8 @@ exports.invoiceUpdate = [
 				}
 			}
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
+			console.log(err);
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -398,6 +561,200 @@ exports.invoiceDelete = [
 			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
+	}
+];
+
+exports.invoicePdfPrint = [
+	async function (req,res) {
+	    try {
+			let cd = {};
+			let id = {};
+			let drivers = [];
+			let vehicles = [];
+			let trailers = [];
+
+			await Driver.find({}, "_id name").lean().then((foundDrivers) => {
+				if(foundDrivers === null) return;
+				drivers = [...foundDrivers];
+			}).catch(err => console.log(err));
+
+			await Trailer.find({}).lean().then((foundTrailers) => {
+				if(foundTrailers === null) return;
+				trailers = foundTrailers;
+			}).catch(err => console.log(err));
+
+			await Vehicle.find({}).lean().then((foundVehicles) => {
+				if(foundVehicles === null) return;
+				vehicles = foundVehicles;
+			}).catch(err => console.log(err));
+
+			await Client.findOne({_id: new ObjectId(req.body.clientId)}).lean().then((foundClient) => {
+				if(foundClient === null) return;
+				cd = foundClient;
+			}).catch(err => console.log(err));
+
+			await Invoice.findOne({_id: new ObjectId(req.body.invoiceId)}).lean().then((foundInvoice) => {
+				if(foundInvoice === null) return;
+				id = foundInvoice;
+			}).catch(err => console.log(err));
+
+			const dataBinding = {
+				isWatermark: true,
+				printOption: req.body.printOption,
+				clientData: cd,
+				invoiceData: id,
+				signed: req.body.signed,
+			};
+
+			try {
+				if(dataBinding.clientData && dataBinding.invoiceData) {
+
+					handlebars.registerHelper("formatDate", (date) => {
+						return moment(date).tz("Europe/Sarajevo").format("DD.MM.YYYY");
+					});
+
+					handlebars.registerHelper("priceToWordsKM", (relations) => {
+						let total = 0;
+						relations.map(r => total += r.priceKm);
+
+						return `${priceToWords(total)} KM`;
+					});
+
+					handlebars.registerHelper("priceToWordsEUR", (relations) => {
+						let total = 0;
+						relations.map(r => total += r.priceEur);
+
+						return `${priceToWords(total)} EUR`;
+					});
+
+					handlebars.registerHelper("priceToWords", (price, curr) => {
+						return `${priceToWords(price)} ${curr}`;
+					});
+
+					handlebars.registerHelper("deadline", (startdate, value) => {
+						return moment(startdate, "DD.MM.YYYY").add(value, "days").format("DD.MM.YYYY");
+					});
+
+					handlebars.registerHelper("getDriverName", (id) => {
+						return drivers.find(driver => driver._id.toString() === id)?.name;
+					});
+
+					handlebars.registerHelper("getVehiclePlate", (id) => {
+						return vehicles.find(vehicle => vehicle._id.toString() === id)?.plateNumber;
+					});
+
+					handlebars.registerHelper("getTrailerName", (id) => {
+						return trailers.find(trailer => trailer._id.toString() === id)?.name;
+					});
+
+					handlebars.registerHelper("formatStringArray", (array) => {
+						return array.join(", ");
+					});
+
+					handlebars.registerHelper("calculateTotalKM", (relations) => {
+						let total = 0;
+						relations.forEach(r => total += r.priceKm);
+						return format(total, optionsKm);
+					});
+
+					handlebars.registerHelper("inc", (value) => {
+						return parseInt(value) + 1;
+					});
+
+					handlebars.registerHelper("sum", (value1, value2) => {
+						return value1 + value2;
+					});
+
+					handlebars.registerHelper("calculateTotalEUR", (relations) => {
+						let total = 0;
+						relations.forEach(r => total += r.priceEur);
+						return format(total, optionsEur);
+					});
+
+					handlebars.registerHelper("convertToEUR", (value) => {
+						if(value) {
+							return format(value, optionsEur);
+						} else {
+							return value;
+						}
+					});
+
+					handlebars.registerHelper("convertToKM", (value) => {
+						if(value) {
+							return format(value, optionsKm);
+						} else {
+							return value;
+						}
+					});
+
+					handlebars.registerHelper("taxTotal", (relations) => {
+						let total = 0;
+						relations.map(r => total += (r.priceKmTax));
+						return format(total, optionsKm);
+					});
+
+					handlebars.registerHelper("relationDiff", (relations, index, prop, currency) => {
+						let curr = currency === "eur" ? optionsEur : optionsKm;
+						return format(dataBinding.invoiceData[prop] / getPercentage(relations, index), curr);
+					});
+
+					handlebars.registerHelper("priceWithoutTax", (relations, prop1, prop2, index, currency) => {
+						let curr = currency === "eur" ? optionsEur : optionsKm;
+
+						let diff = (dataBinding.invoiceData[prop1] / getPercentage(relations, index) - dataBinding.invoiceData[prop2] / getPercentage(relations, index));
+						return format(diff, curr);
+					});
+
+					handlebars.registerHelper("priceWithoutTax2", (r) => {
+						return format(r.priceKm - r.priceKmTax, optionsKm);
+					});
+
+					handlebars.registerHelper("relationsSum", (relations, prop, currency) => {
+						let curr = currency === "eur" ? optionsEur : optionsKm;
+						let total = 0;
+						relations.forEach(r => total += r[prop]);
+						return format(total, curr);
+					});
+
+					handlebars.registerHelper("relationsTotalKM", (relations) => {
+						let diff = (dataBinding.invoiceData["priceKmTax"] / getPercentage(relations, 0));
+						let total =  dataBinding.invoiceData.priceKm - diff;
+						return format(total, optionsKm);
+					});
+
+					handlebars.registerHelper("getRelationPrice", (relations, prop, index, currency) => {
+						let curr = currency === "eur" ? optionsEur : optionsKm;
+						let diff = (dataBinding.invoiceData[prop] / getPercentage(relations,index));
+
+						return format(diff, curr);
+
+					});
+
+					const templateHtml = fs.readFileSync(
+						path.join(process.cwd(), `option-${dataBinding.printOption}.hbs`), "utf8");
+
+					const template = await handlebars.compile(templateHtml);
+					const finalHtml = encodeURIComponent(template(dataBinding));
+					const options = pdfService.pdfPrintConfig2;
+					const pdfBuffer = await pdfService.pdfGenerateBuffer2(finalHtml, options);
+
+					res.setHeader("Content-Length",pdfBuffer.length);
+					res.setHeader("Content-type", "application/pdf");
+					res.setHeader("Content-Disposition", "attachment; filename=karta.pdf");
+
+					res.end(pdfBuffer);
+				} else {
+					return apiResponse.ErrorResponse(res, new Error("no invoice data"));
+				}
+
+
+			} catch (err) {
+				return apiResponse.ErrorResponse(res, new Error("test"));
+			}
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, new Error("test2"));
+		}
+
 	}
 ];
 

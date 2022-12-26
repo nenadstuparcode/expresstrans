@@ -16,6 +16,31 @@ exports.successResponseWithData = function (res, msg, data) {
 	return res.status(200).json(resData);
 };
 
+exports.successResponseWithMetaData = function (res, msg, data) {
+	let resData = {
+		status: 1,
+		message: msg,
+		data: [data.data],
+		meta: [data.meta],
+	};
+
+	let response = { ...resData, ...data};
+	return res.status(200).json(response);
+};
+
+exports.successResponseWithMetaDataEmpty = function (res,msg) {
+	let resData = {
+		status: 1,
+		message: msg,
+		data: [],
+		meta: {
+			count: 0,
+		},
+	};
+
+	return res.status(200).json(resData);
+};
+
 exports.successResponseWithPdf = function (res,msg, data) {
 	var resData = {
 		status: 1,
@@ -25,7 +50,7 @@ exports.successResponseWithPdf = function (res,msg, data) {
 	};
 
 	return res.status(200).json(resData);
-}
+};
 
 exports.ErrorResponse = function (res, msg) {
 	var data = {

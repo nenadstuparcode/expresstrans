@@ -1,23 +1,16 @@
-const Driver = require("../models/DriverModel");
+const Trailer = require("../models/TrailerModel");
 const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 var mongoose = require("mongoose");
-// mongoose.set("useFindAndModify", false);
 
-// Driver Schema
-function DriverData(data) {
+// Trailer Schema
+function TrailerData(data) {
 	this._id = data._id;
 	this.name = data.name;
 }
 
-/**
- * Clients Search.
- *
- * @returns {Object}
- */
-
-exports.driverSearch = [
+exports.trailerSearch = [
 	function (req,res) {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
@@ -25,13 +18,13 @@ exports.driverSearch = [
 		const sortBy = req.body.sortBy;
 		const sortOrder = req.body.sortOrder;
 
-		Driver.find({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
+		Trailer.find({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
 			res.count = count;
 			try {
-				Driver.find(
-					{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((drivers)=>{
-					drivers.length > 0 ?
-						apiResponse.successResponseWithData(res, "Operation success", drivers) :
+				Trailer.find(
+					{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((trailers)=>{
+					trailers.length > 0 ?
+						apiResponse.successResponseWithData(res, "Operation success", trailers) :
 						apiResponse.successResponseWithData(res, "Operation success", []);
 				});
 			} catch (err) {
@@ -42,100 +35,100 @@ exports.driverSearch = [
 ];
 
 /**
- * Driver List.
+ * Trailer List.
  *
  * @returns {Object}
  */
-exports.driverList = [
+exports.trailerList = [
 	function (req, res) {
 		try {
-			Driver.find().then((drivers)=>{
-				if(drivers.length > 0){
-					return apiResponse.successResponseWithData(res, "Operation success", drivers);
+			Trailer.find().then((trailers)=>{
+				if(trailers.length > 0){
+					return apiResponse.successResponseWithData(res, "Operation success", trailers);
 				}else{
 					return apiResponse.successResponseWithData(res, "Operation success", []);
 				}
 			});
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
 ];
 
 /**
- * Driver Detail.
+ * Trailer Detail.
  *
  * @param {string}      id
  *
  * @returns {Object}
  */
-exports.driverDetail = [
+exports.trailerDetail = [
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Driver.findOne({_id: req.params.id},"_id name createdAt").then((driver)=>{
-				if(driver !== null){
-					let driverData = driver;
-					return apiResponse.successResponseWithData(res, "Operation success", driverData);
+			Trailer.findOne({_id: req.params.id}).then((trailer)=>{
+				if(trailer !== null){
+					let trailerData = trailer;
+					return apiResponse.successResponseWithData(res, "Operation success", trailerData);
 				}else{
 					return apiResponse.successResponseWithData(res, "Operation success", {});
 				}
 			});
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
 ];
 
 /**
- * Driver store.
+ * Trailer store.
  *
  * @param {string}      name
  *
  * @returns {Object}
  */
-exports.driverStore = [
+exports.trailerStore = [
 	body("name", "name must not be empty.").isLength({ min: 1 }).trim(),
 	sanitizeBody("*").escape(),
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
-			var driver = new Driver({name: req.body.name});
+			const trailer = new Trailer({name: req.body.name});
 
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			}
 			else {
-				//Save driver.
-				driver.save(function (err) {
+				//Save trailer.
+				trailer.save(function (err) {
 					if (err) { return apiResponse.ErrorResponse(res, err); }
-					let driverData = new DriverData(driver);
-					return apiResponse.successResponseWithData(res,"Book add Success.", driverData);
+					let trailerData = new TrailerData(trailer);
+					return apiResponse.successResponseWithData(res,"Book add Success.", trailerData);
 				});
 			}
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
 ];
 
 /**
- * Driver update.
+ * Trailer update.
  *
  * @param {string}      name
  *
  * @returns {Object}
  */
-exports.driverUpdate = [
+exports.trailerUpdate = [
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
-			var driver = new Driver(
+			const trailer = new Trailer(
 				{
 					name: req.body.name,
 					_id:req.params.id,
@@ -149,18 +142,18 @@ exports.driverUpdate = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					Driver.findById(req.params.id, function (err, foundDriver) {
-						if(foundDriver === null){
-							return apiResponse.notFoundResponse(res,"Driver not exists with this id");
+					Trailer.findById(req.params.id, function (err, foundTrailer) {
+						if(foundTrailer === null){
+							return apiResponse.notFoundResponse(res,"Trailer not exists with this id");
 						}else{
-							//update driver.
-							Driver.findByIdAndUpdate(req.params.id, driver, {},function (err) {
+							//update trailer.
+							Trailer.findByIdAndUpdate(req.params.id, trailer, {},function (err) {
 								if (err) {
 									return apiResponse.ErrorResponse(res, err);
 								}else{
-									let driverData = new DriverData(driver);
-									console.log(driverData);
-									return apiResponse.successResponseWithData(res,"Book update Success.", driverData);
+									let trailerData = new TrailerData(trailer);
+									console.log(trailerData);
+									return apiResponse.successResponseWithData(res,"Trailer update Success.", trailerData);
 								}
 							});
 						}
@@ -169,41 +162,41 @@ exports.driverUpdate = [
 				}
 			}
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
 ];
 
 /**
- * Driver Delete.
+ * Trailer Delete.
  *
  * @param {string}      id
  *
  * @returns {Object}
  */
-exports.driverDelete = [
+exports.trailerDelete = [
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 		}
 		try {
-			Driver.findById(req.params.id, function (err, foundDriver) {
-				if(foundDriver === null){
-					return apiResponse.notFoundResponse(res,"Driver not exists with this id");
+			Trailer.findById(req.params.id, function (err, foundTrailer) {
+				if(foundTrailer === null){
+					return apiResponse.notFoundResponse(res,"Trailer not exists with this id");
 				}else{
-					//delete driver.
-					Driver.findByIdAndRemove(req.params.id,function (err) {
+					//delete trailer.
+					Trailer.findByIdAndRemove(req.params.id,function (err) {
 						if (err) {
 							return apiResponse.ErrorResponse(res, err);
 						}else{
-							return apiResponse.successResponse(res,"Driver delete Success.");
+							return apiResponse.successResponse(res,"Trailer delete Success.");
 						}
 					});
 				}
 			});
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}

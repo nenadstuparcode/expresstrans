@@ -1,13 +1,38 @@
-<html>
+<html lang="de">
 
 <head>
   <title>Express Trans API</title>
   <link rel="stylesheet" href="/stylesheets/style.css">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.2/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/min/locales.min.js"></script>
 </head>
 
 <body>
   <h1>Express Trans API HomePage</h1>
   <p>Author: <a href="mailto:nenadstupar8@gmail.com">@Nenad Stupar</a></p>
-</body>
 
+  <div class="conatiner mt-5">
+    <div class="row">
+      <div class="col-md-3"></div>
+      <div class="col-md-3">
+        <input class="form-control" type="file" id="input" accept=".xls,.xlsx"  >
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary" id="button">Importuj</button>
+      </div>
+      <div class="col-md-12">
+        <pre id="jsondata"></pre>
+      </div>
+
+      <div class="col-md-12">
+        <label for="date">Datum:</label>
+        <input type="date" id="date" name="date">
+      </div>
+<!--      momentObj.format("YYYY-MM-DD HH:mm:ss")-->
+    </div>
+  </div>
+</body>
+<script src="./scripts/excel.js"></script>
 </html>
