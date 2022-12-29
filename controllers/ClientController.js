@@ -37,10 +37,17 @@ exports.clientSearch = [
 			res.count = count;
 
 			try {
-				// {"payed": false}
-				Invoice.find({payed: false}).lean().then((notPaidInvoices) => {
+				Invoice.find(
+					{
+						$and: [
+							{payed: false},
+							{active: true},
+						]
+					}
 
-					let unpaidInvoices = [...notPaidInvoices.map(n => n.clientId )];
+				).lean().then((notPaidInvoices) => {
+
+					let unpaidInvoices = [...notPaidInvoices.map(n => n.clientId.toString() )];
 
 					Client.find(
 						{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort(sortProp).skip(searchSkip).limit(searchLimit).lean().then((clients)=>{

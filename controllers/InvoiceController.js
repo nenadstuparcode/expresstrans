@@ -58,7 +58,7 @@ function InvoiceData(data) {
 	this.clientId = data.clientId;
 	this.invDriver= data.invDriver;
 	this.invTrailer = data.invTrailer;
-	this.useTotalPrice = data.useTotalPrice;
+	this.active = data.active;
 }
 
 const optionsEur = {
@@ -88,6 +88,355 @@ function getPercentage(relations, index) {
 	return  totalKilometers / relations[index].kilometers;
 }
 
+
+
+
+exports.invoiceReportByClients = [
+       async (req, res) => {
+
+		try {
+			await Client.find({}).lean().then((foundClients) => {
+				if(foundClients === null) return;
+				let clients = foundClients;
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								$or: [
+									{ "active" : null },
+									{ "active" : true },
+								],
+							}
+						},
+						{
+							$group: {
+								_id: '$clientId',
+								invoices: {$push: '$$ROOT'}
+							}
+						}
+					]
+				).then(async (data) => {
+
+					let dataBinding = {
+						headline: 'Kartica kupaca',
+						invoiceData: [ ...data.map(d => {
+							return {
+								...d,
+								name: clients.find(c => c._id.toString() === d._id.toString())?.name || '',
+								}
+							})
+						]
+					};
+
+					if(dataBinding) {
+
+						handlebars.registerHelper("formatDate", (date) => {
+							return moment(date).tz("Europe/Sarajevo").format("DD.MM.YYYY");
+						});
+						handlebars.registerHelper("convertToEUR", (value) => {
+							if(value) {
+								return format(value, optionsEur);
+							} else {
+								return '';
+							}
+						});
+						handlebars.registerHelper("convertToKM", (value) => {
+							if(value) {
+								return format(value, optionsKm);
+							} else {
+								return '';
+							}
+						});
+						handlebars.registerHelper("calculateTotal", (invoices,prop, currency) => {
+							let total = 0;
+							invoices.forEach(i => total += (i[prop] ? i[prop] : 0));
+							return format(total, currency === "bam" ? optionsKm : optionsEur);
+						})
+						const templateHtml = fs.readFileSync(
+							path.join(process.cwd(), `template-clients.hbs`), "utf8");
+
+						const template = await handlebars.compile(templateHtml);
+						const finalHtml = encodeURIComponent(template(dataBinding));
+						const options = await pdfService.pdfPrintConfig2;
+						const pdfBuffer = await pdfService.pdfGenerateBuffer2(finalHtml, options);
+
+						res.setHeader("Content-Length",pdfBuffer.length);
+						res.setHeader("Content-type", "application/pdf");
+						res.setHeader("Content-Disposition", "attachment; filename=karta.pdf");
+
+						res.end(pdfBuffer);
+					}
+				}).catch(err =>  apiResponse.ErrorResponse(res, err))
+			}).catch(err => console.log(err));
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
+	}
+]
+exports.invoiceReportNotPaid = [
+	async (req, res) => {
+
+		try {
+			await Client.find({}).lean().then((foundClients) => {
+				if(foundClients === null) return;
+				let clients = foundClients;
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								$or: [
+									{ "active" : null },
+									{ "active" : true },
+								],
+								$and: [
+									{ "payed" : false },
+								],
+							}
+						},
+						{
+							$group: {
+								_id: '$clientId',
+								invoices: {$push: '$$ROOT'}
+							}
+						}
+					]
+				).then(async (data) => {
+
+					let dataBinding = {
+						headline: 'Neplaćene po kupcima',
+						invoiceData: [ ...data.map(d => {
+							return {
+								...d,
+								name: clients.find(c => c._id.toString() === d._id.toString())?.name || '---',
+							}
+						})
+						]
+					};
+
+					if(dataBinding) {
+
+						handlebars.registerHelper("formatDate", (date) => {
+							return moment(date).tz("Europe/Sarajevo").format("DD.MM.YYYY");
+						});
+						handlebars.registerHelper("convertToEUR", (value) => {
+							if(value) {
+								return format(value, optionsEur);
+							} else {
+								return '';
+							}
+						});
+						handlebars.registerHelper("convertToKM", (value) => {
+							if(value) {
+								return format(value, optionsKm);
+							} else {
+								return '';
+							}
+						});
+						handlebars.registerHelper("calculateTotal", (invoices,prop, currency) => {
+							let total = 0;
+							invoices.forEach(i => total += (i[prop] ? i[prop] : 0));
+							return format(total, currency === "bam" ? optionsKm : optionsEur);
+						})
+						const templateHtml = fs.readFileSync(
+							path.join(process.cwd(), `template-clients.hbs`), "utf8");
+
+						const template = await handlebars.compile(templateHtml);
+						const finalHtml = encodeURIComponent(template(dataBinding));
+						const options = await pdfService.pdfPrintConfig2;
+						const pdfBuffer = await pdfService.pdfGenerateBuffer2(finalHtml, options);
+
+						res.setHeader("Content-Length",pdfBuffer.length);
+						res.setHeader("Content-type", "application/pdf");
+						res.setHeader("Content-Disposition", "attachment; filename=karta.pdf");
+
+						res.end(pdfBuffer);
+					}
+				}).catch(err =>  apiResponse.ErrorResponse(res, err))
+			}).catch(err => console.log(err));
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
+	}
+]
+exports.invoiceReportAllInvoices = [
+	async (req, res) => {
+
+		try {
+			await Client.find({}).lean().then((foundClients) => {
+				if(foundClients === null) return;
+				let clients = foundClients;
+				Invoice.aggregate(
+					[
+						{
+							$match: {
+								$or: [
+									{ "active" : null },
+									{ "active" : true },
+								],
+							}
+						},
+					]
+				).then(async (data) => {
+
+					let dataBinding = {
+						headline: 'Sve Fakture',
+						invoiceData: data,
+					};
+
+					if(dataBinding.invoiceData) {
+
+						handlebars.registerHelper("formatDate", (date) => {
+							return moment(date).tz("Europe/Sarajevo").format("DD.MM.YYYY");
+						});
+						handlebars.registerHelper("convertToEUR", (value) => {
+							if(value) {
+								return format(value, optionsEur);
+							} else {
+								return '';
+							}
+						});
+						handlebars.registerHelper("convertToKM", (value) => {
+							if(value) {
+								return format(value, optionsKm);
+							} else {
+								return '';
+							}
+						});
+						handlebars.registerHelper("calculateTotal", (invoices,prop, currency) => {
+							let total = 0;
+							invoices.forEach(i => total += (i[prop] ? i[prop] : 0));
+							return format(total, currency === "bam" ? optionsKm : optionsEur);
+						})
+						const templateHtml = fs.readFileSync(
+							path.join(process.cwd(), `template-invoices.hbs`), "utf8");
+
+						const template = await handlebars.compile(templateHtml);
+						const finalHtml = encodeURIComponent(template(dataBinding));
+						const options = await pdfService.pdfPrintConfig2;
+						const pdfBuffer = await pdfService.pdfGenerateBuffer2(finalHtml, options);
+
+						res.setHeader("Content-Length",pdfBuffer.length);
+						res.setHeader("Content-type", "application/pdf");
+						res.setHeader("Content-Disposition", "attachment; filename=karta.pdf");
+
+						res.end(pdfBuffer);
+					}
+				}).catch(err =>  apiResponse.ErrorResponse(res, err))
+			}).catch(err => console.log(err));
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
+	}
+]
+
+exports.invoiceReportByMonth = [
+	async (req, res) => {
+	const months = [
+		"Januar",
+		"Februar",
+		"Mart",
+		"April",
+		"Maj",
+		"Jun",
+		"Jul",
+		"August",
+		"Septembar",
+		"Oktobar",
+		"Novembar",
+		"Decembar",
+	]
+		try {
+			Invoice.aggregate(
+				[
+					{
+						$match: {
+							$or: [
+								{ "active" : null },
+								{ "active" : true },
+							],
+						}
+					},
+					{
+						$group: {
+							_id: {
+								year: { $year: "$invoiceDateStart" },
+								month: { $month: "$invoiceDateStart" }
+							},
+							total_cost_Km: { $sum: "$priceKm" },
+							total_cost_Eur: { $sum: "$priceEuros" },
+							invoices: {$push: '$$ROOT'}
+						}
+					}
+				]
+			).then(async (data) => {
+
+				console.log(data);
+				// _id: {
+				// 	month:12
+				// 	year: 2022
+				// }
+				// total_cost_Km
+				// total_cost_Eur
+				// invoices
+
+				let dataBinding = {
+					headline: 'Fakture po mjesecima',
+					invoiceData: data.map(d => {
+						return {
+							...d,
+							_id: {
+								...d._id,
+								name: months[d._id.month - 1],
+							}
+						}
+					}),
+				};
+
+				console.log(dataBinding);
+
+				if(dataBinding) {
+
+					handlebars.registerHelper("formatDate", (date) => {
+						return moment(date).tz("Europe/Sarajevo").format("DD.MM.YYYY");
+					});
+					handlebars.registerHelper("convertToEUR", (value) => {
+						if(value) {
+							return format(value, optionsEur);
+						} else {
+							return '';
+						}
+					});
+					handlebars.registerHelper("convertToKM", (value) => {
+						if(value) {
+							return format(value, optionsKm);
+						} else {
+							return '';
+						}
+					});
+					handlebars.registerHelper("calculateTotal", (invoices,prop, currency) => {
+						let total = 0;
+						invoices.forEach(i => total += (i[prop] ? i[prop] : 0));
+						return format(total, currency === "bam" ? optionsKm : optionsEur);
+					})
+					const templateHtml = fs.readFileSync(
+						path.join(process.cwd(), `template-invoice-months.hbs`), "utf8");
+
+					const template = await handlebars.compile(templateHtml);
+					const finalHtml = encodeURIComponent(template(dataBinding));
+					const options = await pdfService.pdfPrintConfig2;
+					const pdfBuffer = await pdfService.pdfGenerateBuffer2(finalHtml, options);
+
+					res.setHeader("Content-Length",pdfBuffer.length);
+					res.setHeader("Content-type", "application/pdf");
+					res.setHeader("Content-Disposition", "attachment; filename=karta.pdf");
+
+					res.end(pdfBuffer);
+				}
+			}).catch(err =>  apiResponse.ErrorResponse(res, err))
+	} catch (err) {
+	}
+	}
+]
 /**
  * Invoice List.
  *
@@ -124,18 +473,26 @@ exports.invoiceSearchV2 = [
 		const clientId = req.body.clientId;
 		const paymentStatus = req.body.paymentStatus || null;
 		const sort = req.body.sort || { createdAt: -1};
-
+		const start = req.body?.start || null;
+		const end = req.body?.end || null;
 
 		const queries = [
 			{	"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"} },
 		];
-
 		if(clientId) {
 			queries.push({"clientId": new ObjectId(clientId) });
 		}
 
 		if(paymentStatus !== null) {
 			queries.push({"payed": paymentStatus});
+		}
+
+		if(start) {
+			queries.push({'invoiceDateStart':  { '$gte': new Date(start)}});
+		}
+
+		if(end) {
+			queries.push({'invoiceDateStart': { '$lt': new Date(end)}});
 		}
 
 		try {
@@ -161,10 +518,10 @@ exports.invoiceSearchV2 = [
 											"$sum": 1
 										},
 										"priceTotalKm": {
-											"$sum": "$priceKm"
+											"$sum": {$cond: [{ $eq: [ "$active", true ] }, '$priceKm', 0]},
 										},
 										"priceTotalEur": {
-											"$sum": "$priceEuros"
+											"$sum": {$cond: [{ $eq: [ "$active", true ] }, '$priceEuros', 0]},
 										}
 									}
 								}
@@ -178,7 +535,6 @@ exports.invoiceSearchV2 = [
 					},
 				]).then((invoices)=>{
 				if(invoices.length > 0){
-					console.log(invoices);
 					return apiResponse.successResponseWithMetaData(res, "Operation success", ...invoices);
 				}else{
 					return apiResponse.successResponseWithMetaDataEmpty(res, "Nema rezultata pretrage");
@@ -303,7 +659,7 @@ exports.invoiceStore = [
 						clientId: req.body.clientId, // ok
 						invDriver: req.body.invDriver, // ok
 						invTrailer: req.body.invTrailer, // ok
-						useTotalPrice: req.body.useTotalPrice, // ok
+						active: req.body.active, // ok
 					});
 
 
@@ -387,7 +743,7 @@ exports.invoiceUpdate = [
 				clientId: req.body.clientId,
 				invDriver: req.body.invDriver, // ok
 				invTrailer: req.body.invTrailer, // ok
-				useTotalPrice: req.body.useTotalPrice, // ok
+				active: req.body.active, // ok
 			});
 
 			if (!errors.isEmpty()) {
@@ -598,6 +954,7 @@ exports.invoicePdfPrint = [
 				id = foundInvoice;
 			}).catch(err => console.log(err));
 
+
 			const dataBinding = {
 				isWatermark: true,
 				printOption: req.body.printOption,
@@ -636,15 +993,15 @@ exports.invoicePdfPrint = [
 					});
 
 					handlebars.registerHelper("getDriverName", (id) => {
-						return drivers.find(driver => driver._id.toString() === id)?.name;
+						return drivers.find(driver => driver._id.toString() === id.toString())?.name || '';
 					});
 
 					handlebars.registerHelper("getVehiclePlate", (id) => {
-						return vehicles.find(vehicle => vehicle._id.toString() === id)?.plateNumber;
+						return vehicles.find(vehicle => vehicle._id.toString() === id.toString())?.plateNumber || '';
 					});
 
 					handlebars.registerHelper("getTrailerName", (id) => {
-						return trailers.find(trailer => trailer._id.toString() === id)?.name;
+						return trailers.find(trailer => trailer._id.toString() === id.toString())?.name || '';
 					});
 
 					handlebars.registerHelper("formatStringArray", (array) => {

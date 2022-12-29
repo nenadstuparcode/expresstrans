@@ -9,10 +9,10 @@ const apiResponse = require("../helpers/apiResponse");
 exports.counterList = [
 	function (req, res) {
 		try {
-			Counter.find().then((counters)=>{
-				if(counters.length > 0){
+			Counter.find().then((counters) => {
+				if(counters.length > 0) {
 					return apiResponse.successResponseWithData(res, "Operation success", counters);
-				}else{
+				} else {
 					return apiResponse.successResponseWithData(res, "Operation success", []);
 				}
 			});

@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <style>
+
+        body {
+            margin:0;
+            padding:0;
+            font-size: 20px;
+        }
+        /*1414 x 2000*/
+        .invoice {
+            font-family: 'Play', sans-serif;
+            margin: 0;
+            /*border: 1px solid #000;*/
+            font-size: 24px;
+            color: #000;
+            width: 1414px;
+            height: 2000px;
+        }
+        .invoice-container {
+            position: relative;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            /*background: url('http://localhost:3000/images/template.png') no-repeat;*/
+            background-size: contain;
+            padding: 120px 120px 120px 120px;
+        }
+        .invoice-container-signed {
+            position: relative;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            background: url('http://localhost:3000/images/template-signed.png') no-repeat;
+            background-size: contain;
+            padding: 400px 120px 300px 120px;
+        }
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+        }
+        .invoice-header p {
+            line-height: 1;
+            margin-top: 0;
+            font-size: 22px;
+            margin-bottom: 10px;
+            color: #000;
+        }
+
+        .client-name {
+            font-size: 28px;
+            margin-bottom: 30px !important;
+            font-weight: 600;
+        }
+        .invoice-number p {
+            text-align: left;
+            font-size: 50px;
+            font-weight: bold;
+            margin-top: 100px;
+            margin-bottom: 60px;
+        }
+        .table {
+            margin-top: 0;
+        }
+
+        .table thead th {
+            border-bottom: 1px solid #000;
+        }
+        .table td, .table th {
+            padding: 3px;
+            font-size: 16px;
+            border-top: 1px solid #000;
+            overflow-x: hidden;
+            max-height: 26px !important;
+            border: 1px solid #000;
+        }
+
+        .invoice-price-in-words {
+            font-size: 22px;
+            margin-top: 40px;
+            margin-bottom: 40px;
+            word-spacing: 0;
+        }
+        .border-bottom-dark {
+            border-bottom: 1px solid #000;
+        }
+        .invoice-note {
+            font-size: 22px;
+            margin-bottom: 40px;
+        }
+        .invoice-note p {
+            margin-bottom: 0px;
+            font-size: 22px;
+        }
+        .invoice-account-and-payment {
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+        .invoice-account-and-payment p {
+            font-size: 22px;
+            line-height: 1;
+            color: #000;
+            margin-bottom: 5px;
+        }
+        tr.no-border {
+            border: none !important;
+        }
+        td.no-border {
+            border: none !important;
+        }
+        .relation {
+            font-size: 14px;
+            line-height: 1.1;
+            font-weight: 400;
+            color: #000;
+        }
+        .client-name-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top:30px;
+            margin-bottom: 0;
+            width: 100%;
+            background: #c9c9c9;
+            text-align: center;
+            min-height: 35px;
+            font-size: 22px;
+            border: 1px solid #000;
+            border-top:2px solid #000;
+            border-bottom: unset;
+        }
+        .headline-report {
+            margin: 30px 0;
+            width: 100%;
+            min-height: 35px;
+            font-size: 26px;
+            text-align: center;
+            font-style: italic;
+        }
+    </style>
+    <style>
+        /* The container */
+        .ch-container {
+            display: inline;
+            position: relative;
+            padding-left: 35px;
+            margin-bottom: 12px;
+            margin-left: auto;
+            margin-right: auto;
+            cursor: pointer;
+            font-size: 18px;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Hide the browser's default checkbox */
+        .ch-container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        /* Create a custom checkbox */
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 25px;
+            width: 25px;
+            background-color: #fff;
+            border: 2px solid #000;
+        }
+
+        /* On mouse-over, add a grey background color */
+        .ch-container:hover input ~ .checkmark {
+            background-color: #fff;
+        }
+
+        /* When the checkbox is checked, add a blue background */
+        .ch-container input:checked ~ .checkmark {
+            background-color: #fff;
+        }
+
+        /* Create the checkmark/indicator (hidden when not checked) */
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        /* Show the checkmark when checked */
+        .ch-container input:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        /* Style the checkmark/indicator */
+        .ch-container .checkmark:after {
+            left: 9px;
+            top: 5px;
+            width: 5px;
+            height: 10px;
+            border: solid #000;
+            border-width: 0 3px 3px 0;
+            -webkit-transform: rotate(45deg);
+            -ms-transform: rotate(45deg);
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+<body>
+<div class="invoice">
+    <div class="invoice-container">
+        <h2 class="headline-report">{{headline}}</h2>
+        {{#if invoiceData}}
+            {{#each invoiceData}}
+                <h2 class="client-name-header">{{ this.name }}</h2>
+                <div class="invoice-table">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th width="5%">Br.</th>
+                            <th width="10%">Datum</th>
+                            <th width="40%">Relacije</th>
+                            <th width="10%" style="text-align: center">Iznos KM</th>
+                            <th width="10%" style="text-align: center">Iznos EUR</th>
+                            <th width="20%" style="text-align: center">Vozač</th>
+                            <th width="5%" style="text-align: center">Plaćanje</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {{#each this.invoices}}
+                            <tr>
+                                <td>{{this.invoicePublicId}}</td>
+                                <td>{{#formatDate this.invoiceDateStart}} {{/formatDate}}</td>
+                                <td>
+                                    {{#each this.invoiceRelations}}
+                                        <p class="relation">{{this.name}}</p>
+                                    {{/each}}
+                                </td>
+                                <td style="text-align: right">{{#convertToKM this.priceKm}}{{/convertToKM}}</td>
+                                <td style="text-align: right">{{#convertToEUR this.priceEuros}}{{/convertToEUR}}</td>
+                                <td style="text-align: center">{{this.invoiceDrivers}}</td>
+                                <td style="text-align: center">
+                                    {{#if this.payed}}
+                                        <label class="ch-container">
+                                            <input type="checkbox" checked>
+                                            <span class="checkmark"></span>
+                                        </label>
+                                    {{else}}
+                                        <label class="ch-container">
+                                            <input type="checkbox">
+                                            <span class="checkmark"></span>
+                                        </label>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                        {{/each}}
+                            <tr class="no-border">
+                                <td class="no-border"></td>
+                                <td class="no-border"></td>
+                                <td style="text-align: right">UKUPNO</td>
+                                <td style="text-align: right; font-weight: bold;">{{#calculateTotal this.invoices 'priceKm' 'bam'}}{{/calculateTotal}}</td>
+                                <td style="text-align: right; font-weight: bold;">{{#calculateTotal this.invoices 'priceEuros' 'eur'}}{{/calculateTotal}}</td>
+                                <td class="no-border"></td>
+                                <td class="no-border"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            {{/each}}
+        {{/if}}
+    </div>
+</div>
+
+</body>
+</html>

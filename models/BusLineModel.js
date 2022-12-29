@@ -1,14 +1,12 @@
-var mongoose = require("mongoose");
-
-var Schema = mongoose.Schema;
-
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 const LineDay = new Schema({
 	_id : false,
 	day: Number,
 	time: String,
 });
 
-var BusLineSchema = new Schema({
+const BusLineSchema = new Schema({
 	lineCityStart: { type: String, required: true },
 	lineCityEnd: { type: String, required: true },
 	linePriceOneWay: { type: Number, required: true },

@@ -1,8 +1,6 @@
-var mongoose = require("mongoose");
-
-var Schema = mongoose.Schema;
-
-var VehicleSchema = new Schema({
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
+const VehicleSchema = new Schema({
 	plateNumber: {type: String, required: true},
 }, {timestamps: true});
 

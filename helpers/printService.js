@@ -13,12 +13,9 @@ exports.pdfPrintConfig = {
 
 exports.pdfPrintConfig2 = {
 	format: "A4",
-	headerTemplate: "<p></p>",
-	footerTemplate: "<p></p>",
-	displayHeaderFooter: false,
-	margin: {
-		top: "0px",
-		bottom: "0px"
+	padding: {
+		top: "30px",
+		bottom: "30px"
 	},
 	printBackground: true,
 };

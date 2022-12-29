@@ -1,8 +1,6 @@
-var mongoose = require("mongoose");
-
-var Schema = mongoose.Schema;
-
-var TicketSchema = new Schema({
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
+const TicketSchema = new Schema({
 	ticketOnName: {type: String, required: true},
 	ticketPhone: {type: String},
 	ticketEmail: {type: String},

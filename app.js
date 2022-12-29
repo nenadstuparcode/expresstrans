@@ -1,24 +1,24 @@
-var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
+const express = require("express");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const logger = require("morgan");
 require("dotenv").config();
-var indexRouter = require("./routes/index");
-var apiRouter = require("./routes/api");
-var apiResponse = require("./helpers/apiResponse");
-var cors = require("cors");
-var mongoose = require("mongoose");
+const indexRouter = require("./routes/index");
+const apiRouter = require("./routes/api");
+const apiResponse = require("./helpers/apiResponse");
+const cors = require("cors");
+const mongoose = require("mongoose");
 const mongoConnect = require("./helpers/connectMongoDB");
 mongoConnect.connectToDatabase();
 
-var db = mongoose.connection;
+const db = mongoose.connection;
 
 db.on("error", (err) => {
 	console.log(`Connection error ${err}`);
 	mongoConnect.connectToDatabase();
 });
 
-var app = express();
+const app = express();
 
 //don't show the log when it is test
 if(process.env.NODE_ENV !== "test") {

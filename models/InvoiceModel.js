@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
-
 const Schema = mongoose.Schema;
-
 const Relation = new Schema({
 	name: String,
 	priceKm: { type: Number, default: null},
@@ -9,8 +7,7 @@ const Relation = new Schema({
 	priceKmTax: { type: Number, default: null},
 	kilometers: { type: Number, default: null },
 });
-
-var InvoiceSchema = new Schema({
+const InvoiceSchema = new Schema({
 	invoiceNumber: { type: String },
 	invoiceDateStart: { type: Date, required: true },
 	invoiceDateReturn: { type: Date, required: true },
@@ -44,10 +41,9 @@ var InvoiceSchema = new Schema({
 	payed: { type: Boolean, default: false },
 	priceKmTax: { type: Number, default: null },
 	clientId: { type: Schema.ObjectId, ref: "Client", default: null },
-	// invDriver: { type: String, default: null },
 	invDriver: { type: Schema.ObjectId, ref: "Driver", default: null },
 	invTrailer: { type: Schema.ObjectId, ref: "Trailer", default: null },
-	useTotalPrice: { type: Boolean, default: false },
+	active: { type: Boolean, default: true },
 
 }, {timestamps: true});
 

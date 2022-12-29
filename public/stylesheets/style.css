@@ -1,8 +1,120 @@
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  margin:0;
+  padding:0;
+  font-size: 20px;
+  letter-spacing: -1px;
+}
+/*1414 x 2000*/
+.invoice {
+  font-family: 'Play', sans-serif;
+  margin: 0;
+  /*border: 1px solid #000;*/
+  font-size: 24px;
+  color: #000;
+  width: 1414px;
+  height: 2000px;
+}
+.invoice-container {
+  position: relative;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: url('http://localhost:3000/images/template.png') no-repeat;
+  background-size: contain;
+  padding: 400px 120px 300px 120px;
+}
+.invoice-container-signed {
+  position: relative;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: url('http://localhost:3000/images/template-signed.png') no-repeat;
+  background-size: contain;
+  padding: 400px 120px 300px 120px;
 }
 
-a {
-  color: #00B7FF;
+.invoice-header {
+  display: flex;
+  justify-content: space-between;
+}
+.invoice-header p {
+  line-height: 1;
+  margin-top: 0;
+  font-size: 22px;
+  margin-bottom: 10px;
+  color: #000;
+}
+
+.client-name {
+  font-size: 28px;
+  margin-bottom: 30px !important;
+  font-weight: 600;
+}
+.invoice-number p {
+  text-align: left;
+  font-size: 50px;
+  font-weight: bold;
+  margin-top: 100px;
+  margin-bottom: 60px;
+}
+.table thead th {
+  border-bottom: 1px solid #000;
+}
+.table td, .table th {
+  padding: 3px;
+  font-size: 20px;
+  border-top: 1px solid #000;
+}
+
+.invoice-price-in-words {
+  font-size: 22px;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  word-spacing: 0;
+}
+.border-bottom-dark {
+  border-bottom: 1px solid #000;
+}
+.invoice-note {
+  font-size: 22px;
+  margin-bottom: 40px;
+}
+.invoice-note p {
+  margin-bottom: 0px;
+  font-size: 22px;
+}
+
+.invoice-account-and-payment {
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.invoice-account-and-payment p {
+  font-size: 22px;
+  line-height: 1;
+  color: #000;
+  margin-bottom: 5px;
+}
+
+tr.border-bottom-0 {
+  border: none;
+}
+tr.border-bottom-0 > td {
+  border: none;
+}
+table.width-60 {
+  width: 60%;
+}
+.container-full {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 30px;
+}
+.col-50 {
+  width: 50%;
+}
+.international-payment p {
+  line-height: 1.1;
+  margin-bottom: 5px;
 }
