@@ -453,8 +453,8 @@ exports.invoiceReportByMonth = [
 							total_cost_Km: { $sum: "$priceKm" },
 							total_cost_Eur: { $sum: "$priceEuros" },
 							invoices: {$push: '$$ROOT'}
-						}
-					}
+						},
+					},
 				]
 			).then(async (data) => {
 
@@ -470,6 +470,10 @@ exports.invoiceReportByMonth = [
 						}
 					}),
 				};
+
+				dataBinding.invoiceData.sort(function(a, b) {
+					return a['_id']['month'] - b['_id']['month'];
+				});
 
 				if(dataBinding) {
 
