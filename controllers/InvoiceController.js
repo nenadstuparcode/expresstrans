@@ -101,32 +101,70 @@ exports.invoiceReportByClients = [
 				Invoice.aggregate(
 					[
 						{
-							$match: {
-								$or: [
-									{ "active" : null },
-									{ "active" : true },
+							"$facet": {
+								"invoiceData": [
+									{
+										$match: {
+											$or: [
+												{ "active" : null },
+												{ "active" : true },
+											],
+										}
+									},
+									{
+										$group: {
+											_id: '$clientId',
+											invoices: { $push: '$$ROOT' }
+										}
+									}
 								],
+								"invoiceTotals": [
+									{
+										"$group": {
+											"_id": null,
+											"count": {
+												"$sum": 1
+											},
+											"priceTotalKm": {
+												"$sum": {$cond: [{ $eq: [ "$active", true ] }, '$priceKm', 0]},
+											},
+											"priceTotalEur": {
+												"$sum": {$cond: [{ $eq: [ "$active", true ] }, '$priceEuros', 0]},
+											}
+										}
+									}
+								]
 							}
 						},
 						{
-							$group: {
-								_id: '$clientId',
-								invoices: {$push: '$$ROOT'}
+							$unwind : "$invoiceTotals"
+						},
+						{
+							$project: {
+								"data": {
+									"invoiceData": "$invoiceData",
+									"invoiceTotals": "$invoiceTotals",
+								}
 							}
-						}
+						},
+						{$unwind: "$data"},
+						{$replaceRoot: { newRoot: "$data" }}
 					]
 				).then(async (data) => {
-
+					let newData = data[0];
 					let dataBinding = {
 						headline: 'Kartica kupaca',
-						invoiceData: [ ...data.map(d => {
+						invoiceData: [ ...newData.invoiceData.map(d => {
 							return {
 								...d,
 								name: clients.find(c => c._id.toString() === d._id.toString())?.name || '',
 								}
 							})
-						]
+						],
+						priceTotalKm: newData.invoiceTotals.priceTotalKm,
+						priceTotalEur: newData.invoiceTotals.priceTotalEur,
 					};
+
 
 					if(dataBinding) {
 
@@ -172,7 +210,8 @@ exports.invoiceReportByClients = [
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
-]
+];
+
 exports.invoiceReportNotPaid = [
 	async (req, res) => {
 
@@ -183,34 +222,83 @@ exports.invoiceReportNotPaid = [
 				Invoice.aggregate(
 					[
 						{
-							$match: {
-								$or: [
-									{ "active" : null },
-									{ "active" : true },
+							"$facet": {
+								"invoiceData": [
+									{
+										$match: {
+											$or: [
+												{ "active" : null },
+												{ "active" : true },
+											],
+											$and: [
+												{ "payed" : false },
+											],
+										}
+									},
+									{
+										$group: {
+											_id: '$clientId',
+											invoices: { $push: '$$ROOT' }
+										}
+									}
 								],
-								$and: [
-									{ "payed" : false },
-								],
+								"invoiceTotals": [
+									{
+										$match: {
+											$or: [
+												{ "active" : null },
+												{ "active" : true },
+											],
+											$and: [
+												{ "payed" : false },
+											],
+										}
+									},
+									{
+										"$group": {
+											"_id": null,
+											"count": {
+												"$sum": 1
+											},
+											"priceTotalKm": {
+												"$sum": {$cond: [{ $eq: [ "$active", true ] }, '$priceKm', 0]},
+											},
+											"priceTotalEur": {
+												"$sum": {$cond: [{ $eq: [ "$active", true ] }, '$priceEuros', 0]},
+											}
+										}
+									}
+								]
 							}
 						},
 						{
-							$group: {
-								_id: '$clientId',
-								invoices: {$push: '$$ROOT'}
+							$unwind : "$invoiceTotals"
+						},
+						{
+							$project: {
+								"data": {
+									"invoiceData": "$invoiceData",
+									"invoiceTotals": "$invoiceTotals",
+								}
 							}
-						}
-					]
+						},
+						{$unwind: "$data"},
+						{$replaceRoot: { newRoot: "$data" }}
+					],
 				).then(async (data) => {
 
+					let newData = data[0];
 					let dataBinding = {
 						headline: 'Neplaćene po kupcima',
-						invoiceData: [ ...data.map(d => {
+						invoiceData: [ ...newData.invoiceData.map(d => {
 							return {
 								...d,
 								name: clients.find(c => c._id.toString() === d._id.toString())?.name || '---',
 							}
 						})
-						]
+						],
+						priceTotalKm: newData.invoiceTotals.priceTotalKm,
+						priceTotalEur: newData.invoiceTotals.priceTotalEur,
 					};
 
 					if(dataBinding) {
@@ -370,15 +458,6 @@ exports.invoiceReportByMonth = [
 				]
 			).then(async (data) => {
 
-				console.log(data);
-				// _id: {
-				// 	month:12
-				// 	year: 2022
-				// }
-				// total_cost_Km
-				// total_cost_Eur
-				// invoices
-
 				let dataBinding = {
 					headline: 'Fakture po mjesecima',
 					invoiceData: data.map(d => {
@@ -391,8 +470,6 @@ exports.invoiceReportByMonth = [
 						}
 					}),
 				};
-
-				console.log(dataBinding);
 
 				if(dataBinding) {
 
@@ -533,7 +610,7 @@ exports.invoiceSearchV2 = [
 							"path": "$meta"
 						}
 					},
-				]).then((invoices)=>{
+				]).then((invoices) => {
 				if(invoices.length > 0){
 					return apiResponse.successResponseWithMetaData(res, "Operation success", ...invoices);
 				}else{

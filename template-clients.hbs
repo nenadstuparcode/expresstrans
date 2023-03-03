@@ -280,7 +280,36 @@
                         </tbody>
                     </table>
                 </div>
+
             {{/each}}
+
+            <h2 class="client-name-header">Total</h2>
+            <div class="invoice-table>">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th width="5%"></th>
+                        <th width="10%"></th>
+                        <th style="text-align: right;" width="40%"></th>
+                        <th width="10%" style="text-align: center">Total KM</th>
+                        <th width="10%" style="text-align: center">Total EUR</th>
+                        <th width="20%" style="text-align: center"></th>
+                        <th width="5%" style="text-align: center"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <th width="5%"></th>
+                        <th width="10%"></th>
+                        <th style="text-align: right;" width="40%">Ukupno:</th>
+                        <th width="10%" style="text-align: center">{{#convertToKM priceTotalKm}}{{/convertToKM}}</th>
+                        <th width="10%" style="text-align: center">{{#convertToEUR priceTotalEur}}{{/convertToEUR}}</th>
+                        <th width="20%" style="text-align: center"></th>
+                        <th width="5%" style="text-align: center"></th>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         {{/if}}
     </div>
 </div>
