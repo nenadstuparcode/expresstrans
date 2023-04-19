@@ -151,13 +151,16 @@ exports.invoiceReportByClients = [
 						{$replaceRoot: { newRoot: "$data" }}
 					]
 				).then(async (data) => {
+					console.log(data[0].invoiceData);
 					let newData = data[0];
+					// console.log(clients);
 					let dataBinding = {
 						headline: 'Kartica kupaca',
 						invoiceData: [ ...newData.invoiceData.map(d => {
+							console.log(d);
 							return {
 								...d,
-								name: clients.find(c => c._id.toString() === d._id.toString())?.name || '',
+								name: clients.find(c => c._id._id.equals(d._id))?.name || '',
 								}
 							})
 						],
@@ -165,6 +168,7 @@ exports.invoiceReportByClients = [
 						priceTotalEur: newData.invoiceTotals.priceTotalEur,
 					};
 
+					console.log(dataBinding)
 
 					if(dataBinding) {
 
@@ -204,10 +208,13 @@ exports.invoiceReportByClients = [
 
 						res.end(pdfBuffer);
 					}
-				}).catch(err =>  apiResponse.ErrorResponse(res, err))
+				}).catch(err => {
+					console.log(err);
+					apiResponse.ErrorResponse(res, ' oooo jooooj')
+				})
 			}).catch(err => console.log(err));
 		} catch (err) {
-			return apiResponse.ErrorResponse(res, err);
+			return apiResponse.ErrorResponse(res, 'oooo joj');
 		}
 	}
 ];
@@ -725,7 +732,7 @@ exports.invoiceStore = [
 						secondCalculation: req.body.secondCalculation, // optional
 						returnTaxBih: req.body.returnTaxBih, // optional
 						invoiceDrivers: [...req.body.invoiceDrivers], // ok
-						invoicePublicId: doc.count, // ok
+						invoicePublicId: req.body.invoicePublicId, // ok
 						//New Props
 						invoiceType : req.body.invoiceType, // ok
 						invoiceRelations : [...req.body.invoiceRelations], // ok
@@ -870,7 +877,7 @@ exports.invoiceUpdateExp = [
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
-			var invoice = new Invoice({
+			const invoice = {
 				invoiceExpCro: req.body.invoiceExpCro,
 				invoiceExpSlo: req.body.invoiceExpSlo,
 				invoiceExpAus: req.body.invoiceExpAus,
@@ -880,9 +887,7 @@ exports.invoiceUpdateExp = [
 				invoiceUnexpectedExpenses: req.body.invoiceUnexpectedExpenses,
 				invoiceUnexpectedExpensesDesc: req.body.invoiceUnexpectedExpensesDesc,
 				invoiceTotalBill: req.body.invoiceTotalBill,
-				invoiceDrivers: [...req.body.invoiceDrivers],
-				_id: req.params.id,
-			});
+			};
 
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
@@ -925,16 +930,14 @@ exports.invoiceUpdateTax = [
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
-			var invoice = new Invoice({
+			const invoice = {
 				totalKilometers: req.body.totalKilometers,
 				bihKilometers: req.body.bihKilometers,
 				diffKilometers: req.body.diffKilometers,
 				firstCalculation: req.body.firstCalculation,
 				secondCalculation: req.body.secondCalculation,
 				returnTaxBih: req.body.returnTaxBih,
-				invoiceDrivers: [...req.body.invoiceDrivers],
-				_id: req.params.id,
-			});
+			};
 
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
