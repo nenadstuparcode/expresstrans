@@ -732,7 +732,7 @@ exports.invoiceStore = [
 						secondCalculation: req.body.secondCalculation, // optional
 						returnTaxBih: req.body.returnTaxBih, // optional
 						invoiceDrivers: [...req.body.invoiceDrivers], // ok
-						invoicePublicId: req.body.invoicePublicId, // ok
+						invoicePublicId: doc.count,
 						//New Props
 						invoiceType : req.body.invoiceType, // ok
 						invoiceRelations : [...req.body.invoiceRelations], // ok
