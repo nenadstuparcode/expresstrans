@@ -237,7 +237,8 @@ exports.invoiceReportNotPaid = [
 												{ "active" : null },
 												{ "active" : true },
 											],
-											$and: [
+											$or: [
+												{ "payed" : null },
 												{ "payed" : false },
 											],
 										}

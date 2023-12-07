@@ -776,7 +776,8 @@ exports.ticketReportClassic = [
 			await page.setContent(finalHtml);
 			await page.setViewport({ width: 1000, height: 420});
 			await page.goto(`data:text/html;charset=UTF-8,${finalHtml}`, {
-				waitUntil: "networkidle0"
+				waitUntil: "networkidle0",
+				timeout: 50000,
 			});
 			const pdfBuffer = await page.pdf(options);
 
