@@ -1,5 +1,5 @@
 exports.successResponse = function (res, msg) {
-	var data = {
+	const data = {
 		status: 1,
 		message: msg
 	};
@@ -7,7 +7,7 @@ exports.successResponse = function (res, msg) {
 };
 
 exports.successResponseWithData = function (res, msg, data) {
-	var resData = {
+	const resData = {
 		status: 1,
 		message: msg,
 		data: data,
@@ -17,19 +17,19 @@ exports.successResponseWithData = function (res, msg, data) {
 };
 
 exports.successResponseWithMetaData = function (res, msg, data) {
-	let resData = {
+	const resData = {
 		status: 1,
 		message: msg,
 		data: [data.data],
 		meta: [data.meta],
 	};
 
-	let response = { ...resData, ...data};
+	const response = { ...resData, ...data};
 	return res.status(200).json(response);
 };
 
 exports.successResponseWithMetaDataEmpty = function (res,msg) {
-	let resData = {
+	const resData = {
 		status: 1,
 		message: msg,
 		data: [],
@@ -42,7 +42,7 @@ exports.successResponseWithMetaDataEmpty = function (res,msg) {
 };
 
 exports.successResponseWithPdf = function (res,msg, data) {
-	var resData = {
+	const resData = {
 		status: 1,
 		message: msg,
 		data: data,
@@ -53,7 +53,7 @@ exports.successResponseWithPdf = function (res,msg, data) {
 };
 
 exports.ErrorResponse = function (res, msg) {
-	var data = {
+	const data = {
 		status: 0,
 		message: msg,
 	};
@@ -61,7 +61,7 @@ exports.ErrorResponse = function (res, msg) {
 };
 
 exports.notFoundResponse = function (res, msg) {
-	var data = {
+	const data = {
 		status: 0,
 		message: msg,
 	};
@@ -69,7 +69,7 @@ exports.notFoundResponse = function (res, msg) {
 };
 
 exports.validationErrorWithData = function (res, msg, data) {
-	var resData = {
+	const resData = {
 		status: 0,
 		message: msg,
 		data: data
@@ -78,7 +78,7 @@ exports.validationErrorWithData = function (res, msg, data) {
 };
 
 exports.unauthorizedResponse = function (res, msg) {
-	var data = {
+	const data = {
 		status: 0,
 		message: msg,
 	};

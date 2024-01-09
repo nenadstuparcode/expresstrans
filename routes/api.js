@@ -11,6 +11,7 @@ const clientRouter = require("./client");
 const trailerRouter = require("./trailer");
 const counterRouter = require("./counter");
 const relationRouter = require("./relation");
+const databaseConnectionRouter = require("./databaseConnection");
 
 const app = express();
 
@@ -26,5 +27,6 @@ app.use("/client/", clientRouter);
 app.use("/trailer/", trailerRouter);
 app.use("/counter/", counterRouter);
 app.use("/relation/", relationRouter);
+app.use("/db/", databaseConnectionRouter);
 
 module.exports = app;

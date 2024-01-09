@@ -57,6 +57,7 @@ function BusLineData(data) {
  *
  * @returns {Object}
  */
+
 exports.ticketList = [
 	function (req, res) {
 		try {
