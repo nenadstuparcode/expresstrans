@@ -672,10 +672,10 @@ exports.invoiceSearch = [
 exports.invoiceDetail = [
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
-			return apiResponse.successResponseWithData(res, "Operation success", {});
+			return apiResponse.ErrorResponse(res, "Not valid id");
 		}
 		try {
-			Invoice.findOne({_id: req.params.id}).then((invoice)=>{
+			Invoice.findOne({id: req.params.id}).then((invoice)=>{
 				if(invoice !== null){
 					let invoiceData = new InvoiceData(invoice);
 					return apiResponse.successResponseWithData(res, "Operation success", invoiceData);
@@ -1029,12 +1029,12 @@ exports.invoicePdfPrint = [
 				vehicles = foundVehicles;
 			}).catch(err => console.log(err));
 
-			await Client.findOne({_id: new ObjectId(req.body.clientId)}).lean().then((foundClient) => {
+			await Client.findOne({id: new ObjectId(req.body.clientId)}).lean().then((foundClient) => {
 				if(foundClient === null) return;
 				cd = foundClient;
 			}).catch(err => console.log(err));
 
-			await Invoice.findOne({_id: new ObjectId(req.body.invoiceId)}).lean().then((foundInvoice) => {
+			await Invoice.findOne({id: new ObjectId(req.body.invoiceId)}).lean().then((foundInvoice) => {
 				if(foundInvoice === null) return;
 				id = foundInvoice;
 			}).catch(err => console.log(err));

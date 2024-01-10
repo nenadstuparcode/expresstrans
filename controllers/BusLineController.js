@@ -88,7 +88,7 @@ exports.busLineDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Busline.findOne({_id: req.params.id},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart bihKilometers deKilometers lineArray createdAt modifiedAt").then((busLine)=>{
+			Busline.findOne({id: req.params.id},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart bihKilometers deKilometers lineArray createdAt modifiedAt").then((busLine)=>{
 				if(busLine !== null){
 					let busLineData = new BusLineData(busLine);
 					return apiResponse.successResponseWithData(res, "Operation success", busLineData);

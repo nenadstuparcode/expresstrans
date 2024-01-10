@@ -69,7 +69,7 @@ exports.trailerDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Trailer.findOne({_id: req.params.id}).then((trailer)=>{
+			Trailer.findOne({id: req.params.id}).then((trailer)=>{
 				if(trailer !== null){
 					let trailerData = trailer;
 					return apiResponse.successResponseWithData(res, "Operation success", trailerData);

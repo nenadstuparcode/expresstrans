@@ -73,10 +73,10 @@ exports.driverList = [
 exports.driverDetail = [
 	function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
-			return apiResponse.successResponseWithData(res, "Operation success", {});
+			return apiResponse.ErrorResponse(res, "Id not valid");
 		}
 		try {
-			Driver.findOne({_id: req.params.id},"_id name createdAt").then((driver)=>{
+			Driver.findOne({id: req.params.id},"_id name createdAt").then((driver)=>{
 				if(driver !== null){
 					let driverData = driver;
 					return apiResponse.successResponseWithData(res, "Operation success", driverData);
