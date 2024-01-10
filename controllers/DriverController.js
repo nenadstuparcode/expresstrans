@@ -76,7 +76,7 @@ exports.driverDetail = [
 			return apiResponse.ErrorResponse(res, "Id not valid");
 		}
 		try {
-			Driver.findOne({id: req.params.id},"_id name createdAt").then((driver)=>{
+			Driver.findOne({_id: req.params.id},"_id name createdAt").then((driver)=>{
 				if(driver !== null){
 					let driverData = driver;
 					return apiResponse.successResponseWithData(res, "Operation success", driverData);

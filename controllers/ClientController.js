@@ -107,13 +107,11 @@ exports.clientList = [
  */
 exports.clientDetail = [
 	function (req, res) {
-
-		const clientID = req.params.id;
-		if(!mongoose.Types.ObjectId.isValid(clientID)) {
+		if(!mongoose.Types.ObjectId.isValid(req.params.id)) {
 			return apiResponse.ErrorResponse(res, "Client id not good");
 		}
 		try {
-			Client.findOne({id: clientID}).then((client)=> {
+			Client.findOne({_id: req.params.id}).then((client)=> {
 				console.log(client);
 				client != null ?
 					apiResponse.successResponseWithData(res, "Operation success", client) :

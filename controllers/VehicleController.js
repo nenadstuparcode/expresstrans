@@ -69,7 +69,7 @@ exports.vehicleDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Vehicle.findOne({id: req.params.id},"_id plateNumber createdAt").then((vehicle)=>{
+			Vehicle.findOne({_id: req.params.id},"_id plateNumber createdAt").then((vehicle)=>{
 				if(vehicle !== null){
 					let vehicleData = vehicle;
 					return apiResponse.successResponseWithData(res, "Operation success", vehicleData);

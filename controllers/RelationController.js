@@ -74,7 +74,7 @@ exports.relationDetail = [
 			return apiResponse.ErrorResponse(res, "Not valid id");
 		}
 		try {
-			Relation.findOne({id: req.params.id},"_id name createdAt").then((relation)=>{
+			Relation.findOne({_id: req.params.id},"_id name createdAt").then((relation)=>{
 				if(relation !== null){
 					let relationData = relation;
 					return apiResponse.successResponseWithData(res, "Operation success", relationData);

@@ -16,6 +16,8 @@ const pdfService = require("../helpers/printService");
 // mongoose.set("useFindAndModify", false);
 const moment = require("moment-timezone");
 
+
+const ticketDatabase = `etrans${new Date().getFullYear()}}`;
 // Ticket Schema
 function TicketData(data) {
 	this._id = data._id;
@@ -180,7 +182,7 @@ exports.ticketDetail = [
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Ticket.findOne({id: req.params.id},"_id ticketDisabled ticketInvoicePublicId ticketDiscount ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").then((ticket)=>{
+			Ticket.findOne({_id: req.params.id},"_id ticketDisabled ticketInvoicePublicId ticketDiscount ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").then((ticket)=>{
 				if(ticket !== null){
 					let ticketData = new TicketData(ticket);
 					return apiResponse.successResponseWithData(res, "Operation success", ticketData);
@@ -620,7 +622,7 @@ exports.ticketQRCode = [
 
 					let ticketDataQR = new TicketData(ticket);
 					try {
-						Busline.findOne({id: ticketDataQR.ticketBusLineId},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt").then((busLine)=>{
+						Busline.findOne({_id: ticketDataQR.ticketBusLineId},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt").then((busLine)=>{
 							if(busLine !== null){
 								ticketDataQR.busLineData = new BusLineData(busLine);
 								try {
