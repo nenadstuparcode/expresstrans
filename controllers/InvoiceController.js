@@ -151,13 +151,10 @@ exports.invoiceReportByClients = [
 						{$replaceRoot: { newRoot: "$data" }}
 					]
 				).then(async (data) => {
-					console.log(data[0].invoiceData);
 					let newData = data[0];
-					// console.log(clients);
 					let dataBinding = {
 						headline: 'Kartica kupaca',
 						invoiceData: [ ...newData.invoiceData.map(d => {
-							console.log(d);
 							return {
 								...d,
 								name: clients.find(c => c._id._id.equals(d._id))?.name || '',
@@ -167,8 +164,6 @@ exports.invoiceReportByClients = [
 						priceTotalKm: newData.invoiceTotals.priceTotalKm,
 						priceTotalEur: newData.invoiceTotals.priceTotalEur,
 					};
-
-					console.log(dataBinding)
 
 					if(dataBinding) {
 
@@ -358,9 +353,10 @@ exports.invoiceReportAllInvoices = [
 	async (req, res) => {
 
 		try {
-			await Client.find({}).lean().then((foundClients) => {
+			await Client.find().lean().then((foundClients) => {
 				if(foundClients === null) return;
 				let clients = foundClients;
+
 				Invoice.aggregate(
 					[
 						{
@@ -376,7 +372,10 @@ exports.invoiceReportAllInvoices = [
 
 					let dataBinding = {
 						headline: 'Sve Fakture',
-						invoiceData: data,
+						invoiceData: data.map(inv => ({
+							...inv,
+							clientName: clients.find(cl => String(cl._id) === String(inv.clientId)).name,
+						})),
 					};
 
 					if(dataBinding.invoiceData) {
@@ -440,9 +439,10 @@ exports.invoiceReportByMonth = [
 		"Oktobar",
 		"Novembar",
 		"Decembar",
-	]
+	];
+	const clients = await Client.find({});
 		try {
-			Invoice.aggregate(
+			await Invoice.aggregate(
 				[
 					{
 						$match: {
@@ -474,7 +474,11 @@ exports.invoiceReportByMonth = [
 							_id: {
 								...d._id,
 								name: months[d._id.month - 1],
-							}
+							},
+							invoices: d.invoices.map(inv => ({
+								...inv,
+								clientName: clients.find(cl => String(cl._id) === String(inv.clientId))?.name
+							}))
 						}
 					}),
 				};
@@ -712,7 +716,7 @@ exports.invoiceStore = [
 				} else {
 					const errors = validationResult(req);
 
-					var invoice = new Invoice({
+					const invoice = new Invoice({
 						invoiceNumber: doc.count,
 						invoiceDateStart: req.body.invoiceDateStart, // ok
 						invoiceDateReturn: req.body.invoiceDateReturn, // ok

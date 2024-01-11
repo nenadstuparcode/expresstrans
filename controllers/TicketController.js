@@ -1,7 +1,7 @@
 const Ticket = require("../models/TicketModel");
 const Busline = require("../models/BusLineModel");
 const Counter = require("../models/CounterModel");
-const { body,validationResult } = require("express-validator");
+const { body, validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 const mongoose = require("mongoose");
@@ -16,8 +16,7 @@ const pdfService = require("../helpers/printService");
 // mongoose.set("useFindAndModify", false);
 const moment = require("moment-timezone");
 
-
-const ticketDatabase = `etrans${new Date().getFullYear()}}`;
+// const ticketDatabase = `etrans${new Date().getFullYear()}}`;
 // Ticket Schema
 function TicketData(data) {
 	this._id = data._id;
@@ -63,110 +62,156 @@ function BusLineData(data) {
 exports.ticketList = [
 	function (req, res) {
 		try {
-			Ticket.find("_id ticketDisabled ticketOnName ticketInvoicePublicId ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketClassicId ticketInvoiceNumber ticketQR ticketDiscount ticketPrice createdAt modifiedAt").then((tickets)=>{
-				if(tickets.length > 0) {
-					return apiResponse.successResponseWithData(res, "Operation success", tickets);
-				} else {
-					return apiResponse.successResponseWithData(res, "Operation success", []);
-				}
+			Ticket.find().then((tickets) => {
+				return apiResponse.successResponseWithData(
+					res,
+					"Operation success",
+					tickets.length > 0 ? tickets : []
+				);
 			});
 		} catch (err) {
-			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
-	}
+	},
 ];
 
 exports.ticketByInvoiceId = [
-	function (req,res) {
+	function (req, res) {
 		const invoiceNr = req.body.invoiceNr;
 
-		Ticket.find({ ticketInvoiceNumber: invoiceNr }).countDocuments((err, count) => {
-			res.count = count;
-			try {
-				Ticket.find({ ticketInvoiceNumber: invoiceNr, $or:[ {ticketType : "classic"}, {ticketType: "return"}, {ticketType: "agency"}, {ticketType: "gratis"}]},"_id ticketOnName ticketInvoicePublicId ticketDisabled ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").sort({createdAt:1}).then((tickets)=>{
-					if(tickets.length > 0) {
-						return apiResponse.successResponseWithData(res, "Operation success", tickets);
-					} else {
-						return apiResponse.successResponseWithData(res, "Operation success", []);
-					}
-				});
-			} catch (err) {
-				return apiResponse.ErrorResponse(res, err);
+		Ticket.find({ ticketInvoiceNumber: invoiceNr }).countDocuments(
+			(err, count) => {
+				res.count = count;
+				try {
+					Ticket.find(
+						{
+							ticketInvoiceNumber: invoiceNr,
+							$or: [
+								{ ticketType: "classic" },
+								{ ticketType: "return" },
+								{ ticketType: "agency" },
+								{ ticketType: "gratis" },
+							],
+						},
+						"_id ticketOnName ticketInvoicePublicId ticketDisabled ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt"
+					)
+						.sort({ createdAt: 1 })
+						.then((tickets) => {
+							if (tickets.length > 0) {
+								return apiResponse.successResponseWithData(
+									res,
+									"Operation success",
+									tickets
+								);
+							} else {
+								return apiResponse.successResponseWithData(
+									res,
+									"Operation success",
+									[]
+								);
+							}
+						});
+				} catch (err) {
+					return apiResponse.ErrorResponse(res, err);
+				}
 			}
-		});
-	}
+		);
+	},
 ];
 exports.ticketsSearchDate = [
-	function (req,res) {
+	function (req, res) {
 		const pageNumber = req.body.pageNumber;
 		const resultPerPage = req.body.resultPerPage;
 		const searchTerm = req.body.searchTerm;
 		const startDate = req.body.startDate;
 		const endDate = req.body.endDate;
-		const sortByProp = req.body.sortByProp ? req.body.sortByProp : "ticketOnName";
+		const sortByProp = req.body.sortByProp
+			? req.body.sortByProp
+			: "ticketOnName";
 		const sortOption = req.body.sortOption ? req.body.sortOption : -1;
 
-		Ticket.find(
-			{
-				$and : [
-					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},
-					{ "ticketStartDate" : { "$gte" : startDate, "$lt" : endDate}},
-					{ "ticketType": "internet"},
-				]
-			}).countDocuments((err, count) => {
+		Ticket.find({
+			$and: [
+				{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
+				{ ticketStartDate: { $gte: startDate, $lt: endDate } },
+				{ ticketType: "internet" },
+			],
+		}).countDocuments((err, count) => {
 			res.count = count;
 			try {
 				Ticket.find(
 					{
-						$and : [
-							{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},
-							{ "ticketStartDate" : { "$gte" : startDate, "$lt" : endDate}},
-							{ "ticketType": "internet"},
-						]
-						,
-					}, "_id ticketDisabled ticketOnName ticketPhone ticketEmail ticketInvoicePublicId ticketDiscount ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt")
-					.sort({[sortByProp]: sortOption})
-					.skip( pageNumber > 0 ? ( ( pageNumber ) * resultPerPage ) : 0 )
-					.limit( resultPerPage )
-					.then((tickets)=>{
-						if(tickets.length > 0){
-							return apiResponse.successResponseWithData(res, "Operation success", tickets);
-						}else{
-							return apiResponse.successResponseWithData(res, "Operation success", []);
+						$and: [
+							{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
+							{ ticketStartDate: { $gte: startDate, $lt: endDate } },
+							{ ticketType: "internet" },
+						],
+					},
+					"_id ticketDisabled ticketOnName ticketPhone ticketEmail ticketInvoicePublicId ticketDiscount ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt"
+				)
+					.sort({ [sortByProp]: sortOption })
+					.skip(pageNumber > 0 ? pageNumber * resultPerPage : 0)
+					.limit(resultPerPage)
+					.then((tickets) => {
+						if (tickets.length > 0) {
+							return apiResponse.successResponseWithData(
+								res,
+								"Operation success",
+								tickets
+							);
+						} else {
+							return apiResponse.successResponseWithData(
+								res,
+								"Operation success",
+								[]
+							);
 						}
 					});
 			} catch (err) {
 				return apiResponse.ErrorResponse(res, err);
 			}
 		});
-	}
-
+	},
 ];
 
 exports.ticketSearch = [
-	function (req,res) {
+	function (req, res) {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 
-		Ticket.find({ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
+		Ticket.find({
+			ticketOnName: { $regex: searchTerm + ".*", $options: "i" },
+		}).countDocuments((err, count) => {
 			res.count = count;
 			try {
 				Ticket.find(
-					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},"_id ticketOnName ticketInvoicePublicId ticketDiscount ticketDisabled ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((tickets)=>{
-					if(tickets.length > 0){
-						return apiResponse.successResponseWithData(res, "Operation success", tickets);
-					}else{
-						return apiResponse.successResponseWithData(res, "Operation success", []);
-					}
-				});
+					{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
+					"_id ticketOnName ticketInvoicePublicId ticketDiscount ticketDisabled ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt"
+				)
+					.sort({ createdAt: -1 })
+					.skip(searchSkip)
+					.limit(searchLimit)
+					.then((tickets) => {
+						if (tickets.length > 0) {
+							return apiResponse.successResponseWithData(
+								res,
+								"Operation success",
+								tickets
+							);
+						} else {
+							return apiResponse.successResponseWithData(
+								res,
+								"Operation success",
+								[]
+							);
+						}
+					});
 			} catch (err) {
 				return apiResponse.ErrorResponse(res, err);
 			}
 		});
-	}
-
+	},
 ];
 
 /**
@@ -178,44 +223,58 @@ exports.ticketSearch = [
  */
 exports.ticketDetail = [
 	function (req, res) {
-		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
+		if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Ticket.findOne({_id: req.params.id},"_id ticketDisabled ticketInvoicePublicId ticketDiscount ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt").then((ticket)=>{
-				if(ticket !== null){
+			Ticket.findOne(
+				{ _id: req.params.id },
+				"_id ticketDisabled ticketInvoicePublicId ticketDiscount ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt"
+			).then((ticket) => {
+				if (ticket !== null) {
 					let ticketData = new TicketData(ticket);
-					return apiResponse.successResponseWithData(res, "Operation success", ticketData);
-				}else{
-					return apiResponse.successResponseWithData(res, "Operation success", {});
+					return apiResponse.successResponseWithData(
+						res,
+						"Operation success",
+						ticketData
+					);
+				} else {
+					return apiResponse.successResponseWithData(
+						res,
+						"Operation success",
+						{}
+					);
 				}
 			});
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
-	}
+	},
 ];
-
-
-
 
 exports.ticketImportMany = [
 	function (req, res) {
 		let numberOfTickets = req.body.ticketsToStore.length || 0;
-		if(numberOfTickets > 0) {
+		if (numberOfTickets > 0) {
 			try {
-				Ticket.insertMany(req.body.ticketsToStore).then((tickets) => {
-					return apiResponse.successResponseWithData(res,"Ticket add Success.", tickets);
-				}).catch((err) => {
-					return apiResponse.ErrorResponse(res, err);
-				});
+				Ticket.insertMany(req.body.ticketsToStore)
+					.then((tickets) => {
+						return apiResponse.successResponseWithData(
+							res,
+							"Ticket add Success.",
+							tickets
+						);
+					})
+					.catch((err) => {
+						return apiResponse.ErrorResponse(res, err);
+					});
 			} catch (err) {
 				//throw error in json response with status 500.
 				return apiResponse.ErrorResponse(res, err);
 			}
 		}
-	}
+	},
 ];
 
 /**
@@ -229,68 +288,101 @@ exports.ticketImportMany = [
  */
 
 exports.ticketStore = [
-	body("ticketOnName", "ticketOnName must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketValid", "lineCountryStart trip must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketBusLineId", "ticketBusLineId must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketRoundTrip", "ticketRoundTrip must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketStartDate", "ticketStartDate must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketStartTime", "ticketStartTime must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketType", "ticketType must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketPrice", "ticketPrice must not be empty.").isLength({ min: 1 }).trim(),
+	body("ticketOnName", "ticketOnName must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketValid", "lineCountryStart trip must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketBusLineId", "ticketBusLineId must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketRoundTrip", "ticketRoundTrip must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketStartDate", "ticketStartDate must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketStartTime", "ticketStartTime must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketType", "ticketType must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketPrice", "ticketPrice must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
 	sanitizeBody("*").escape(),
 	(req, res) => {
 		try {
-			Counter.findOneAndUpdate({name: "ticketCounter"}, {$inc: {count: 1}}, {new: true}, (err, doc) => {
-				if (err) {
-					console.log("Something wrong when updating data!");
-				}
+			Counter.findOneAndUpdate(
+				{ name: "ticketCounter" },
+				{ $inc: { count: 1 } },
+				{ new: true },
+				(err, doc) => {
+					if (err) {
+						console.log("Something wrong when updating data!");
+					}
 
-				// eslint-disable-next-line no-unused-vars
+					// eslint-disable-next-line no-unused-vars
 
-				//app.express-trans.online
-				QRCode.toDataURL(`https://app.express-trans.online/api/ticket/scan/EXTR0${doc.count}`)
-					.then(urlQR => {
-						const errors = validationResult(req);
-						var ticket = new Ticket({
-							ticketOnName: req.body.ticketOnName,
-							ticketPhone: req.body.ticketPhone,
-							ticketEmail: req.body.ticketEmail,
-							ticketNote: req.body.ticketNote,
-							ticketValid: req.body.ticketValid,
-							ticketBusLineId: req.body.ticketBusLineId,
-							ticketRoundTrip: req.body.ticketRoundTrip,
-							ticketClassicId: req.body.ticketClassicId,
-							ticketStartDate: req.body.ticketStartDate,
-							ticketDisabled: req.body.ticketDisabled,
-							ticketType: req.body.ticketType,
-							ticketDiscount: req.body.ticketDiscount,
-							ticketStartTime: req.body.ticketStartTime,
-							ticketInvoiceNumber: req.body.ticketInvoiceNumber,
-							ticketInvoicePublicId: req.body.ticketInvoicePublicId,
-							ticketQR: urlQR,
-							ticketPrice: req.body.ticketPrice,
-							ticketId: `EXTR0${doc.count}`,
-						});
-
-						if (!errors.isEmpty()) {
-							return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
-						} else {
-							ticket.save(function (err) {
-								if (err) { return apiResponse.ErrorResponse(res, err); }
-								let ticketData = new TicketData(ticket);
-								return apiResponse.successResponseWithData(res,"Ticket add Success.", ticketData);
+					//app.express-trans.online
+					QRCode.toDataURL(
+						`https://app.express-trans.online/api/ticket/scan/EXTR0${doc.count}`
+					)
+						.then((urlQR) => {
+							const errors = validationResult(req);
+							var ticket = new Ticket({
+								ticketOnName: req.body.ticketOnName,
+								ticketPhone: req.body.ticketPhone,
+								ticketEmail: req.body.ticketEmail,
+								ticketNote: req.body.ticketNote,
+								ticketValid: req.body.ticketValid,
+								ticketBusLineId: req.body.ticketBusLineId,
+								ticketRoundTrip: req.body.ticketRoundTrip,
+								ticketClassicId: req.body.ticketClassicId,
+								ticketStartDate: req.body.ticketStartDate,
+								ticketDisabled: req.body.ticketDisabled,
+								ticketType: req.body.ticketType,
+								ticketDiscount: req.body.ticketDiscount,
+								ticketStartTime: req.body.ticketStartTime,
+								ticketInvoiceNumber: req.body.ticketInvoiceNumber,
+								ticketInvoicePublicId: req.body.ticketInvoicePublicId,
+								ticketQR: urlQR,
+								ticketPrice: req.body.ticketPrice,
+								ticketId: `EXTR0${doc.count}`,
 							});
-						}
-					})
-					.catch(err => {
-						console.error(err);
-					});
-			});
+
+							if (!errors.isEmpty()) {
+								return apiResponse.validationErrorWithData(
+									res,
+									"Validation Error.",
+									errors.array()
+								);
+							} else {
+								ticket.save(function (err) {
+									if (err) {
+										return apiResponse.ErrorResponse(res, err);
+									}
+									let ticketData = new TicketData(ticket);
+									return apiResponse.successResponseWithData(
+										res,
+										"Ticket add Success.",
+										ticketData
+									);
+								});
+							}
+						})
+						.catch((err) => {
+							console.error(err);
+						});
+				}
+			);
 		} catch (err) {
 			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
-	}
+	},
 ];
 
 /**
@@ -303,14 +395,30 @@ exports.ticketStore = [
  * @returns {Object}
  */
 exports.ticketUpdate = [
-	body("ticketOnName", "ticketOnName must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketValid", "lineCountryStart trip must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketBusLineId", "ticketBusLineId must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketRoundTrip", "ticketRoundTrip must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketStartDate", "ticketStartDate must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketStartTime", "ticketStartTime must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketType", "ticketType must not be empty.").isLength({ min: 1 }).trim(),
-	body("ticketPrice", "ticketPrice must not be empty.").isLength({ min: 1 }).trim(),
+	body("ticketOnName", "ticketOnName must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketValid", "lineCountryStart trip must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketBusLineId", "ticketBusLineId must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketRoundTrip", "ticketRoundTrip must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketStartDate", "ticketStartDate must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketStartTime", "ticketStartTime must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketType", "ticketType must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
+	body("ticketPrice", "ticketPrice must not be empty.")
+		.isLength({ min: 1 })
+		.trim(),
 	sanitizeBody("*").escape(),
 	(req, res) => {
 		try {
@@ -333,38 +441,57 @@ exports.ticketUpdate = [
 				ticketPrice: req.body.ticketPrice,
 				ticketDiscount: req.body.ticketDiscount,
 				ticketDisabled: req.body.ticketDisabled,
-				_id:req.params.id
+				_id: req.params.id,
 			});
 
 			if (!errors.isEmpty()) {
-				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
-			}
-			else {
-				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
-					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
-				}else{
+				return apiResponse.validationErrorWithData(
+					res,
+					"Validation Error.",
+					errors.array()
+				);
+			} else {
+				if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+					return apiResponse.validationErrorWithData(
+						res,
+						"Invalid Error.",
+						"Invalid ID"
+					);
+				} else {
 					Ticket.findById(req.params.id, function (err, foundTicket) {
-						if(foundTicket === null){
-							return apiResponse.notFoundResponse(res,"Ticket not exists with this id");
-						}else{
+						if (foundTicket === null) {
+							return apiResponse.notFoundResponse(
+								res,
+								"Ticket not exists with this id"
+							);
+						} else {
 							//update BusLine.
-							Ticket.findByIdAndUpdate(req.params.id, ticket, {},function (err) {
-								if (err) {
-									return apiResponse.ErrorResponse(res, err);
-								}else{
-									let ticketData = new TicketData(ticket);
-									return apiResponse.successResponseWithData(res,"Ticket update Success.", ticketData);
+							Ticket.findByIdAndUpdate(
+								req.params.id,
+								ticket,
+								{},
+								function (err) {
+									if (err) {
+										return apiResponse.ErrorResponse(res, err);
+									} else {
+										let ticketData = new TicketData(ticket);
+										return apiResponse.successResponseWithData(
+											res,
+											"Ticket update Success.",
+											ticketData
+										);
+									}
 								}
-							});
+							);
 						}
 					});
 				}
 			}
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
-	}
+	},
 ];
 
 /**
@@ -376,29 +503,39 @@ exports.ticketUpdate = [
  */
 exports.ticketDelete = [
 	function (req, res) {
-		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
-			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
+		if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+			return apiResponse.validationErrorWithData(
+				res,
+				"Invalid Error.",
+				"Invalid ID"
+			);
 		}
 		try {
 			Ticket.findById(req.params.id, function (err, foundTicket) {
-				if(foundTicket === null){
-					return apiResponse.notFoundResponse(res,"Ticket not exists with this id");
-				}else{
+				if (foundTicket === null) {
+					return apiResponse.notFoundResponse(
+						res,
+						"Ticket not exists with this id"
+					);
+				} else {
 					//delete BusLine.
-					Ticket.findByIdAndRemove(req.params.id,function (err) {
+					Ticket.findByIdAndRemove(req.params.id, function (err) {
 						if (err) {
 							return apiResponse.ErrorResponse(res, err);
-						}else{
-							return apiResponse.successResponseWithData(res,"Ticket delete Success.");
+						} else {
+							return apiResponse.successResponseWithData(
+								res,
+								"Ticket delete Success."
+							);
 						}
 					});
 				}
 			});
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
-	}
+	},
 ];
 
 /**
@@ -410,66 +547,65 @@ exports.ticketDelete = [
  */
 
 exports.ticketPrint = [
-	async function (req,res) {
-		try {
+	async function (req, res) {
+		const ticket = await Ticket.findOne({ _id: req.body._id }).lean();
+
+		if(ticket) {
 			const dataBinding = {
 				isWatermark: true,
-				ticketData : {
-					ticketOnName: req.body.ticketOnName,
-					ticketPhone: req.body.ticketPhone,
-					ticketEmail: req.body.ticketEmail,
-					ticketNote: req.body.ticketNote,
-					ticketValid: req.body.ticketValid,
-					ticketBusLineId: req.body.ticketBusLineId,
-					ticketRoundTrip: req.body.ticketRoundTrip,
-					ticketType: req.body.ticketType,
-					ticketId: req.body.ticketId,
-					ticketQR: req.body.ticketQR,
-					ticketClassicId: req.body.ticketClassicId,
-					ticketInvoiceNumber: req.body.ticketInvoiceNumber,
-					ticketInvoicePublicId: req.body.ticketInvoicePublicId,
-					ticketDisabled: req.body.ticketDisabled,
-					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
-					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
-					busLineData: req.body.busLineData,
-					ticketPrice: req.body.ticketPrice,
-					ticketDiscount: req.body.ticketDiscount,
-					isTicketInternet: req.body.ticketType === "internet",
-					isTicketReturn: req.body.ticketType === "return",
-					hasDiscount: req.body.ticketDiscount !== null && req.body.ticketDiscount > 0,
+				ticketData: {
+					...ticket,
+					ticketBusLineId: ticket.ticketBusLineId.toString(),
+					isTicketInternet: ticket.ticketType === "internet",
+					busLineData: await Busline.findOne({"_id": ticket.ticketBusLineId.toString()}).lean(),
+					isTicketReturn: ticket.ticketType === "return",
+					hasDiscount:
+						ticket.ticketDiscount !== null && ticket.ticketDiscount > 0,
+					ticketStartDate: moment(ticket.ticketStartDate)
+						.tz("Europe/Sarajevo")
+						.format("DD.MM.YYYY"),
+					ticketStartTime: moment(ticket.ticketStartTime)
+						.tz("Europe/Sarajevo")
+						.format("HH:mm"),
 				},
 			};
 
-			handlebars.registerHelper("test", (value) => {
-				return `helloooo ${value}`;
-			});
-
-			const templateHtml = fs.readFileSync(
-				path.join(process.cwd(), req.body.ticketRoundTrip ? "povratna.hbs" : "jedan-smjer.hbs"), "utf8");
+			const templateHtml = await fs.readFileSync(
+				path.join(
+					process.cwd(),
+					req.body.ticketRoundTrip ? "povratna.hbs" : "jedan-smjer.hbs"
+				),
+				"utf8"
+			);
 
 			const template = handlebars.compile(templateHtml);
 			const finalHtml = encodeURIComponent(template(dataBinding));
 			const options = pdfService.pdfPrintConfig;
-			const pdfBuffer = await pdfService.pdfGenerateBuffer(finalHtml, options);
+			const pdfBuffer = await pdfService.pdfGenerateBuffer(
+				finalHtml,
+				options
+			);
 
-			res.setHeader("Content-Length",pdfBuffer.length);
+			res.setHeader("Content-Length", pdfBuffer.length);
 			res.setHeader("Content-type", "application/pdf");
-			res.setHeader("Content-Disposition", "attachment; filename=karta.pdf");
+			res.setHeader(
+				"Content-Disposition",
+				"attachment; filename=karta.pdf"
+			);
 
 			res.end(pdfBuffer);
-		} catch (err) {
-			return apiResponse.ErrorResponse(res, err);
+		} else {
+			return apiResponse.ErrorResponse(res, "Not Found");
 		}
-	}
+	},
 ];
-
 
 exports.sendToMail = [
 	async function (req, res) {
 		try {
 			const dataBinding = {
 				isWatermark: true,
-				ticketData : {
+				ticketData: {
 					ticketOnName: req.body.ticketOnName,
 					ticketPhone: req.body.ticketPhone,
 					ticketEmail: req.body.ticketEmail,
@@ -484,27 +620,37 @@ exports.sendToMail = [
 					ticketQR: req.body.ticketQR,
 					ticketClassicId: req.body.ticketClassicId,
 					ticketDisabled: req.body.ticketDisabled,
-					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
-					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
+					ticketStartDate: moment(req.body.ticketStartDate)
+						.tz("Europe/Sarajevo")
+						.format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime)
+						.tz("Europe/Sarajevo")
+						.format("HH:mm"),
 					busLineData: req.body.busLineData,
 					ticketPrice: req.body.ticketPrice,
 					ticketDiscount: req.body.ticketDiscount,
 					isTicketInternet: req.body.ticketType === "internet",
 					isTicketReturn: req.body.ticketType === "return",
-					hasDiscount: req.body.ticketDiscount !== null && req.body.ticketDiscount > 0,
-
+					hasDiscount:
+            req.body.ticketDiscount !== null && req.body.ticketDiscount > 0,
 				},
 			};
 
 			const templateHtml = fs.readFileSync(
-				path.join(process.cwd(), req.body.ticketRoundTrip ? "povratna.hbs" : "jedan-smjer.hbs"), "utf8");
+				path.join(
+					process.cwd(),
+					req.body.ticketRoundTrip ? "povratna.hbs" : "jedan-smjer.hbs"
+				),
+				"utf8"
+			);
 
 			const template = handlebars.compile(templateHtml);
 			const finalHtml = encodeURIComponent(template(dataBinding));
 			const options = pdfService.pdfPrintConfig;
 			const pdfBuffer = await pdfService.pdfGenerateBuffer(finalHtml, options);
 
-			let html = "<p>Vašu kartu može preuzeti u priloženim datotekama na dnu email-a.</p><p> Ugodno putovanje želi vam Express Trans</p>";
+			let html =
+        "<p>Vašu kartu može preuzeti u priloženim datotekama na dnu email-a.</p><p> Ugodno putovanje želi vam Express Trans</p>";
 
 			await mailer.send(
 				process.env.EMAIL_SMTP_USERNAME,
@@ -515,13 +661,16 @@ exports.sendToMail = [
 				pdfBuffer
 			);
 
-			return apiResponse.successResponseWithData(res,"Karta je poslana na korisnikov email.", true);
-
+			return apiResponse.successResponseWithData(
+				res,
+				"Karta je poslana na korisnikov email.",
+				true
+			);
 		} catch (err) {
 			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
-	}
+	},
 ];
 exports.sendToMailCustom = [
 	async function (req, res) {
@@ -529,7 +678,7 @@ exports.sendToMailCustom = [
 			var emailToSend = req.params.email;
 			var dataBinding = {
 				isWatermark: true,
-				ticketData : {
+				ticketData: {
 					ticketOnName: req.body.ticketOnName,
 					ticketPhone: req.body.ticketPhone,
 					ticketEmail: req.body.ticketEmail,
@@ -544,19 +693,29 @@ exports.sendToMailCustom = [
 					ticketDisabled: req.body.ticketDisabled,
 					ticketQR: req.body.ticketQR,
 					ticketClassicId: req.body.ticketClassicId,
-					ticketStartDate: moment(req.body.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
-					ticketStartTime: moment(req.body.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
+					ticketStartDate: moment(req.body.ticketStartDate)
+						.tz("Europe/Sarajevo")
+						.format("DD.MM.YYYY"),
+					ticketStartTime: moment(req.body.ticketStartTime)
+						.tz("Europe/Sarajevo")
+						.format("HH:mm"),
 					busLineData: req.body.busLineData,
 					ticketPrice: req.body.ticketPrice,
 					ticketDiscount: req.body.ticketDiscount,
 					isTicketInternet: req.body.ticketType === "internet",
 					isTicketReturn: req.body.ticketType === "return",
-					hasDiscount: req.body.ticketDiscount !== null && req.body.ticketDiscount > 0,
+					hasDiscount:
+            req.body.ticketDiscount !== null && req.body.ticketDiscount > 0,
 				},
 			};
 
 			const templateHtml = fs.readFileSync(
-				path.join(process.cwd(), req.body.ticketRoundTrip ? "povratna.hbs" : "jedan-smjer.hbs"), "utf8");
+				path.join(
+					process.cwd(),
+					req.body.ticketRoundTrip ? "povratna.hbs" : "jedan-smjer.hbs"
+				),
+				"utf8"
+			);
 			var template = handlebars.compile(templateHtml);
 			var finalHtml = encodeURIComponent(template(dataBinding));
 			var options = {
@@ -566,7 +725,7 @@ exports.sendToMailCustom = [
 				displayHeaderFooter: false,
 				margin: {
 					top: "0px",
-					bottom: "0px"
+					bottom: "0px",
 				},
 				printBackground: true,
 			};
@@ -577,16 +736,17 @@ exports.sendToMailCustom = [
 			});
 			const page = await browser.newPage();
 			await page.setContent(finalHtml);
-			await page.setViewport({ width: 1366, height: 768});
+			await page.setViewport({ width: 1366, height: 768 });
 			await page.goto(`data:text/html;charset=UTF-8,${finalHtml}`, {
-				waitUntil: "networkidle0"
+				waitUntil: "networkidle0",
 			});
 			const pdfBuffer = await page.pdf(options);
 
 			await page.close();
 			await browser.close();
 
-			let html = "<p>Vašu kartu može preuzeti u priloženim datotekama na dnu email-a.</p><p> Ugodno putovanje želi vam Express Trans</p>";
+			let html =
+        "<p>Vašu kartu može preuzeti u priloženim datotekama na dnu email-a.</p><p> Ugodno putovanje želi vam Express Trans</p>";
 
 			await mailer.send(
 				process.env.EMAIL_SMTP_USERNAME,
@@ -597,15 +757,16 @@ exports.sendToMailCustom = [
 				pdfBuffer
 			);
 
-			return apiResponse.successResponseWithData(res,"Karta je poslana na korisnikom email.", true);
-
-
-
+			return apiResponse.successResponseWithData(
+				res,
+				"Karta je poslana na korisnikom email.",
+				true
+			);
 		} catch (err) {
 			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
-	}
+	},
 ];
 /**
  * Ticket QR Code confirmation.
@@ -617,19 +778,24 @@ exports.sendToMailCustom = [
 exports.ticketQRCode = [
 	function (req, res) {
 		try {
-			Ticket.findOne({ticketId: req.params.ticketId},"_id ticketOnName ticketInvoicePublicId ticketDiscount ticketDisabled ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketInvoiceNumber ticketClassicId ticketType ticketStartTime ticketId ticketQR ticketPrice createdAt modifiedAt").then((ticket)=>{
-				if(ticket !== null){
-
+			Ticket.findOne(
+				{ ticketId: req.params.ticketId },
+				"_id ticketOnName ticketInvoicePublicId ticketDiscount ticketDisabled ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketInvoiceNumber ticketClassicId ticketType ticketStartTime ticketId ticketQR ticketPrice createdAt modifiedAt"
+			).then((ticket) => {
+				if (ticket !== null) {
 					let ticketDataQR = new TicketData(ticket);
 					try {
-						Busline.findOne({_id: ticketDataQR.ticketBusLineId},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt").then((busLine)=>{
-							if(busLine !== null){
+						Busline.findOne(
+							{ _id: ticketDataQR.ticketBusLineId },
+							"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt"
+						).then((busLine) => {
+							if (busLine !== null) {
 								ticketDataQR.busLineData = new BusLineData(busLine);
 								try {
 									(async () => {
 										var dataBinding = {
 											isWatermark: true,
-											ticketData : {
+											ticketData: {
 												ticketOnName: ticketDataQR.ticketOnName,
 												ticketPhone: ticketDataQR.ticketPhone,
 												ticketEmail: ticketDataQR.ticketEmail,
@@ -639,109 +805,134 @@ exports.ticketQRCode = [
 												ticketRoundTrip: ticketDataQR.ticketRoundTrip,
 												ticketType: ticketDataQR.ticketType,
 												ticketInvoiceNumber: ticketDataQR.ticketInvoiceNumber,
-												ticketInvoicePublicId: ticketDataQR.ticketInvoicePublicId,
+												ticketInvoicePublicId:
+                          ticketDataQR.ticketInvoicePublicId,
 												ticketId: ticketDataQR.ticketId,
 												ticketQR: ticketDataQR.ticketQR,
 												ticketDisabled: ticketDataQR.ticketDisabled,
 												ticketClassicId: ticketDataQR.ticketClassicId,
-												ticketStartDate: moment(ticketDataQR.ticketStartDate).tz("Europe/Sarajevo").format("DD.MM.YYYY"),
-												ticketStartTime: moment(ticketDataQR.ticketStartTime).tz("Europe/Sarajevo").format("HH:mm"),
+												ticketStartDate: moment(ticketDataQR.ticketStartDate)
+													.tz("Europe/Sarajevo")
+													.format("DD.MM.YYYY"),
+												ticketStartTime: moment(ticketDataQR.ticketStartTime)
+													.tz("Europe/Sarajevo")
+													.format("HH:mm"),
 												busLineData: ticketDataQR.busLineData,
 												ticketPrice: ticketDataQR.ticketPrice,
 												ticketDiscount: ticketDataQR.ticketDiscount,
-												isTicketInternet: ticketDataQR.ticketType === "internet",
+												isTicketInternet:
+                          ticketDataQR.ticketType === "internet",
 												isTicketReturn: ticketDataQR.ticketType === "return",
-												hasDiscount: req.body.ticketDiscount !== null && req.body.ticketDiscount > 0,
+												hasDiscount:
+                          req.body.ticketDiscount !== null &&
+                          req.body.ticketDiscount > 0,
 											},
 										};
 
 										let ticketTemplate;
 
-										dataBinding.ticketData.ticketRoundTrip ? ticketTemplate = "qrcode-povratna.html" : ticketTemplate = "qrcode-jedan-smijer.html";
+										dataBinding.ticketData.ticketRoundTrip
+											? (ticketTemplate = "qrcode-povratna.html")
+											: (ticketTemplate = "qrcode-jedan-smijer.html");
 
-										var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
+										var templateHtml = fs.readFileSync(
+											path.join(process.cwd(), ticketTemplate),
+											"utf8"
+										);
 										var template = handlebars.compile(templateHtml);
 										var finalHtml = template(dataBinding);
 										res.end(finalHtml);
-									})().catch(err => {
+									})().catch((err) => {
 										console.error(err);
 									});
-
 								} catch (err) {
 									console.log("ERROR:", err);
 								}
-							} else{
+							} else {
 								ticketDataQR.busLineData = {};
-								res.write("Karta nije validna! \n" +
-									"Slobodno nas kontaktirajte za bilo koju vrstu informacija i pitanja. Potrudićemo se da vam odgovorimo u najkraćem vremenskom roku.\n" +
-									"Pošaljite nam e-mail expresstrans@teol.net ili nas pozovite na +387 51 640 440");
+								res.write(
+									"Karta nije validna! \n" +
+                    "Slobodno nas kontaktirajte za bilo koju vrstu informacija i pitanja. Potrudićemo se da vam odgovorimo u najkraćem vremenskom roku.\n" +
+                    "Pošaljite nam e-mail expresstrans@teol.net ili nas pozovite na +387 51 640 440"
+								);
 							}
 						});
 					} catch (err) {
 						return apiResponse.ErrorResponse(res, err);
 					}
-
 				} else {
-					return apiResponse.successResponseWithData(res, "Operation success", {});
+					return apiResponse.successResponseWithData(
+						res,
+						"Operation success",
+						{}
+					);
 				}
 			});
 		} catch (err) {
 			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
-	}
+	},
 ];
 
 exports.reportSearch = [
-	function (req,res) {
-
+	function (req, res) {
 		const pageNumber = req.body.pageNumber;
 		const resultPerPage = req.body.resultPerPage;
 		const searchTerm = req.body.searchTerm;
 		const startDate = req.body.startDate;
 		const endDate = req.body.endDate;
-		const sortByProp = req.body.sortByProp ? req.body.sortByProp : "ticketOnName";
+		const sortByProp = req.body.sortByProp
+			? req.body.sortByProp
+			: "ticketOnName";
 		const sortOption = req.body.sortOption ? req.body.sortOption : -1;
 
-		Ticket.find(
-			{
-				$and : [
-					{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},
-					{ "ticketStartDate" : { "$gte" : startDate, "$lt" : endDate}},
-					{ $or: [ {ticketType : "classic"}, {ticketType: "return"}] },
-				],
-
-			}).countDocuments((err, count) => {
+		Ticket.find({
+			$and: [
+				{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
+				{ ticketStartDate: { $gte: startDate, $lt: endDate } },
+				{ $or: [{ ticketType: "classic" }, { ticketType: "return" }] },
+			],
+		}).countDocuments((err, count) => {
 			res.count = count;
 			try {
 				Ticket.find(
 					{
-						$and : [
-							{ "ticketOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},
-							{ "ticketStartDate" : { "$gte" : startDate, "$lt" : endDate}},
-							{ $or: [ {ticketType : "classic"}, {ticketType: "return"}] },
+						$and: [
+							{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
+							{ ticketStartDate: { $gte: startDate, $lt: endDate } },
+							{ $or: [{ ticketType: "classic" }, { ticketType: "return" }] },
 						],
-					}, "_id ticketDisabled ticketOnName ticketInvoicePublicId ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketClassicId ticketInvoiceNumber ticketType ticketId ticketQR ticketPrice createdAt modifiedAt")
-					.sort({[sortByProp]: sortOption})
-					.skip( pageNumber > 0 ? ( ( pageNumber ) * resultPerPage ) : 0 )
-					.limit( resultPerPage )
-					.then((tickets)=>{
-						if(tickets.length > 0){
-							return apiResponse.successResponseWithData(res, "Operation success", tickets);
-						}else{
-							return apiResponse.successResponseWithData(res, "Operation success", []);
+					},
+					"_id ticketDisabled ticketOnName ticketInvoicePublicId ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketClassicId ticketInvoiceNumber ticketType ticketId ticketQR ticketPrice createdAt modifiedAt"
+				)
+					.sort({ [sortByProp]: sortOption })
+					.skip(pageNumber > 0 ? pageNumber * resultPerPage : 0)
+					.limit(resultPerPage)
+					.then((tickets) => {
+						if (tickets.length > 0) {
+							return apiResponse.successResponseWithData(
+								res,
+								"Operation success",
+								tickets
+							);
+						} else {
+							return apiResponse.successResponseWithData(
+								res,
+								"Operation success",
+								[]
+							);
 						}
 					});
 			} catch (err) {
 				return apiResponse.ErrorResponse(res, err);
 			}
 		});
-	}
-
+	},
 ];
 
 exports.ticketReportClassic = [
-	async function (req,res) {
+	async function (req, res) {
 		try {
 			var dataBinding = {
 				isWatermark: true,
@@ -754,7 +945,10 @@ exports.ticketReportClassic = [
 
 			let ticketTemplate = "izvjestaj.html";
 
-			var templateHtml = fs.readFileSync(path.join(process.cwd(), ticketTemplate), "utf8");
+			var templateHtml = fs.readFileSync(
+				path.join(process.cwd(), ticketTemplate),
+				"utf8"
+			);
 			var template = handlebars.compile(templateHtml);
 			var finalHtml = encodeURIComponent(template(dataBinding));
 			var options = {
@@ -777,7 +971,7 @@ exports.ticketReportClassic = [
 			});
 			const page = await browser.newPage();
 			await page.setContent(finalHtml);
-			await page.setViewport({ width: 1000, height: 420});
+			await page.setViewport({ width: 1000, height: 420 });
 			await page.goto(`data:text/html;charset=UTF-8,${finalHtml}`, {
 				waitUntil: "networkidle0",
 				timeout: 50000,
@@ -787,7 +981,7 @@ exports.ticketReportClassic = [
 			await page.close();
 			await browser.close();
 
-			res.setHeader("Content-Length",pdfBuffer.length);
+			res.setHeader("Content-Length", pdfBuffer.length);
 			res.setHeader("Content-type", "application/pdf");
 			res.setHeader("Content-Disposition", "attachment; filename=karta.pdf");
 
@@ -797,5 +991,5 @@ exports.ticketReportClassic = [
 
 			return apiResponse.ErrorResponse(res, err);
 		}
-	}
+	},
 ];

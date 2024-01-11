@@ -29,7 +29,6 @@ const InvoiceSchema = new Schema({
 	returnTaxBih: { type: Number },
 	invoiceDrivers: [String],
 	invoicePublicId: { type: Number },
-	//New props
 	invoiceType: { type: String, default: "bus"},
 	invoiceRelations: [Relation],
 	cmr: [String],
@@ -44,6 +43,7 @@ const InvoiceSchema = new Schema({
 	invDriver: { type: Schema.ObjectId, ref: "Driver", default: null },
 	invTrailer: { type: Schema.ObjectId, ref: "Trailer", default: null },
 	active: { type: Boolean, default: true },
+	paidInCurrency: { type: String, default: null },
 
 }, {timestamps: true});
 

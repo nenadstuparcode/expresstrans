@@ -231,13 +231,14 @@
                     <table class="table">
                         <thead>
                         <tr>
-                            <th width="5%">Br.</th>
-                            <th width="10%">Datum</th>
-                            <th width="40%">Relacije</th>
+                            <th width="4%">Br.</th>
+                            <th width="7%">Datum</th>
+                            <th width="18">Klijent</th>
+                            <th width="36%">Relacije</th>
                             <th width="10%" style="text-align: center">Iznos KM</th>
                             <th width="10%" style="text-align: center">Iznos EUR</th>
-                            <th width="20%" style="text-align: center">Vozač</th>
-                            <th width="5%" style="text-align: center">Plaćanje</th>
+                            <th width="12%" style="text-align: center">Vozač</th>
+                            <th width="3%" style="text-align: center">Plaćanje</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -245,6 +246,7 @@
                             <tr>
                                 <td>{{this.invoicePublicId}}</td>
                                 <td>{{#formatDate this.invoiceDateStart}} {{/formatDate}}</td>
+                                <td>{{this.clientName}}</td>
                                 <td>
                                     {{#each this.invoiceRelations}}
                                         <p class="relation">{{this.name}}</p>
@@ -269,6 +271,7 @@
                             </tr>
                         {{/each}}
                         <tr class="no-border">
+                            <td class="no-border"></td>
                             <td class="no-border"></td>
                             <td class="no-border"></td>
                             <td style="text-align: right">UKUPNO</td>
