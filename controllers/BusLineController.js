@@ -42,35 +42,33 @@ exports.busLineList = [
 ];
 
 exports.busLineSearch = [
-	function (req,res) {
+	async function (req,res) {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 
-		Busline.find({
+		res.count = await Busline.count({
 			$or: [
 				{ "lineCityStart" : { "$regex": searchTerm + ".*", "$options": "i"}},
 				{ "lineCityEnd" : { "$regex": searchTerm + ".*", "$options": "i"}},
 			]
-		}).countDocuments((err, count) => {
-			res.count = count;
-			try {
-				Busline.find({
-					$or: [
-						{ "lineCityStart" : { "$regex": searchTerm + ".*", "$options": "i"}},
-						{ "lineCityEnd" : { "$regex": searchTerm + ".*", "$options": "i"}},
-					]
-				},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart bihKilometers deKilometers createdAt modifiedAt lineArray").sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((busLines)=>{
-					if(busLines.length > 0){
-						return apiResponse.successResponseWithData(res, "Operation success", busLines);
-					}else{
-						return apiResponse.successResponseWithData(res, "Operation success", []);
-					}
-				});
-			} catch (err) {
-				return apiResponse.ErrorResponse(res, err);
-			}
 		});
+		try {
+			Busline.find({
+				$or: [
+					{ "lineCityStart" : { "$regex": searchTerm + ".*", "$options": "i"}},
+					{ "lineCityEnd" : { "$regex": searchTerm + ".*", "$options": "i"}},
+				]
+			},"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart bihKilometers deKilometers createdAt modifiedAt lineArray").sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((busLines)=>{
+				if(busLines.length > 0){
+					return apiResponse.successResponseWithData(res, "Operation success", busLines);
+				}else{
+					return apiResponse.successResponseWithData(res, "Operation success", []);
+				}
+			});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
 	}
 
 ];

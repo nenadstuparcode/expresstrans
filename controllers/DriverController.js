@@ -18,26 +18,25 @@ function DriverData(data) {
  */
 
 exports.driverSearch = [
-	function (req,res) {
+	async function (req,res) {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 		const sortBy = req.body.sortBy;
 		const sortOrder = req.body.sortOrder;
 
-		Driver.find({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
-			res.count = count;
-			try {
-				Driver.find(
-					{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((drivers)=>{
-					drivers.length > 0 ?
-						apiResponse.successResponseWithData(res, "Operation success", drivers) :
-						apiResponse.successResponseWithData(res, "Operation success", []);
-				});
-			} catch (err) {
-				return apiResponse.ErrorResponse(res, err);
-			}
-		});
+		res.count = await Driver.count({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}});
+		try {
+			Driver.find(
+				{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((drivers)=>{
+				drivers.length > 0 ?
+					apiResponse.successResponseWithData(res, "Operation success", drivers) :
+					apiResponse.successResponseWithData(res, "Operation success", []);
+			});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
+
 	}
 ];
 

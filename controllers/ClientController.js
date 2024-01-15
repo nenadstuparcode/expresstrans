@@ -27,51 +27,49 @@ function ClientData(data) {
  */
 
 exports.clientSearch = [
-	function (req,res) {
+	async function (req,res) {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 		const sortProp = req.body.sort;
+		res.count = await Client.count({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}});
 
-		Client.find({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).count((err, count) => {
-			res.count = count;
+		try {
+			Invoice.find(
+				{
+					$and: [
+						{payed: false},
+						{active: true},
+					]
+				}
 
-			try {
-				Invoice.find(
-					{
-						$and: [
-							{payed: false},
-							{active: true},
-						]
-					}
+			).lean().then((notPaidInvoices) => {
 
-				).lean().then((notPaidInvoices) => {
+				let unpaidInvoices = [...notPaidInvoices.map(n => n.clientId.toString() )];
 
-					let unpaidInvoices = [...notPaidInvoices.map(n => n.clientId.toString() )];
+				Client.find(
+					{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort(sortProp).skip(searchSkip).limit(searchLimit).lean().then((clients)=>{
+					clients.length > 0 ?
+						apiResponse.successResponseWithData(res, "Operation success", clients.map(c => {
 
-					Client.find(
-						{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort(sortProp).skip(searchSkip).limit(searchLimit).lean().then((clients)=>{
-						clients.length > 0 ?
-							apiResponse.successResponseWithData(res, "Operation success", clients.map(c => {
+							if(unpaidInvoices.includes(c._id.toString())) {
+								console.log(notPaidInvoices.filter((i => i.clientId === c._id.toString())));
+							}
 
-								if(unpaidInvoices.includes(c._id.toString())) {
-									console.log(notPaidInvoices.filter((i => i.clientId === c._id.toString())));
-								}
-
-								return {
-									...c,
-									hasInvoiceToPay: unpaidInvoices.includes(c._id.toString()),
-								};
-							})) :
-							apiResponse.successResponseWithData(res, "Operation success", []);
-					});
+							return {
+								...c,
+								hasInvoiceToPay: unpaidInvoices.includes(c._id.toString()),
+							};
+						})) :
+						apiResponse.successResponseWithData(res, "Operation success", []);
 				});
+			});
 
 
-			} catch (err) {
-				return apiResponse.ErrorResponse(res, err);
-			}
-		});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
+
 	}
 ];
 

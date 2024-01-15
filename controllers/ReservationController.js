@@ -44,26 +44,24 @@ exports.reservationList = [
  * @returns {Object}
  */
 exports.reservationSearch = [
-	function (req,res) {
+	async function (req,res) {
 
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 
-		Reservation.find({ "reservationOnName" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
-			res.count = count;
-			try {
-				Reservation.find({"reservationOnName" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((reservations)=>{
-					if(reservations.length > 0){
-						return apiResponse.successResponseWithData(res, "Operation success", reservations);
-					}else{
-						return apiResponse.successResponseWithData(res, "Operation success", []);
-					}
-				});
-			} catch (err) {
-				return apiResponse.ErrorResponse(res, err);
-			}
-		});
+		res.count = await Reservation.count({ "reservationOnName" : { "$regex": searchTerm + ".*", "$options": "i"}})
+		try {
+			Reservation.find({"reservationOnName" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((reservations)=>{
+				if(reservations.length > 0){
+					return apiResponse.successResponseWithData(res, "Operation success", reservations);
+				}else{
+					return apiResponse.successResponseWithData(res, "Operation success", []);
+				}
+			});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
 	}
 
 ];
@@ -242,7 +240,7 @@ exports.reservationDelete = [
 ];
 
 exports.reservationsSearchDate = [
-	function (req,res) {
+	async function (req,res) {
 		const pageNumber = req.body.pageNumber;
 		const resultPerPage = req.body.resultPerPage;
 		const searchTerm = req.body.searchTerm;
@@ -251,37 +249,36 @@ exports.reservationsSearchDate = [
 		const sortByProp = req.body.sortByProp ? req.body.sortByProp : "reservationOnName";
 		const sortOption = req.body.sortOption ? req.body.sortOption : -1;
 
-		Reservation.find(
+		res.count = await Reservation.count(
 			{
 				$and : [
 					{ "reservationOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},
 					{ "reservationDate" : { "$gte" : startDate, "$lt" : endDate}},
 				]
-			}).countDocuments((err, count) => {
-			res.count = count;
-			try {
-				Reservation.find(
-					{
-						$and : [
-							{ "reservationOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},
-							{ "reservationDate" : { "$gte" : startDate, "$lt" : endDate}},
-						]
-						,
-					}, "_id reservationOnName reservationPhone reservationDate reservationTime reservationNote ticketBusLineId modifiedAt createdAt")
-					.sort({[sortByProp]: sortOption})
-					.skip( pageNumber > 0 ? ( ( pageNumber ) * resultPerPage ) : 0 )
-					.limit( resultPerPage )
-					.then((reservations)=>{
-						if(reservations.length > 0){
-							return apiResponse.successResponseWithData(res, "Operation success", reservations);
-						}else{
-							return apiResponse.successResponseWithData(res, "Operation success", []);
-						}
-					});
-			} catch (err) {
-				return apiResponse.ErrorResponse(res, err);
-			}
-		});
+			});
+		try {
+			Reservation.find(
+				{
+					$and : [
+						{ "reservationOnName" : { "$regex": searchTerm + ".*", "$options": "i"}},
+						{ "reservationDate" : { "$gte" : startDate, "$lt" : endDate}},
+					]
+					,
+				}, "_id reservationOnName reservationPhone reservationDate reservationTime reservationNote ticketBusLineId modifiedAt createdAt")
+				.sort({[sortByProp]: sortOption})
+				.skip( pageNumber > 0 ? ( ( pageNumber ) * resultPerPage ) : 0 )
+				.limit( resultPerPage )
+				.then((reservations)=>{
+					if(reservations.length > 0){
+						return apiResponse.successResponseWithData(res, "Operation success", reservations);
+					}else{
+						return apiResponse.successResponseWithData(res, "Operation success", []);
+					}
+				});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
+
 	}
 
 ];

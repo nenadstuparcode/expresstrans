@@ -11,26 +11,25 @@ function TrailerData(data) {
 }
 
 exports.trailerSearch = [
-	function (req,res) {
+	async function (req,res) {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 		const sortBy = req.body.sortBy;
 		const sortOrder = req.body.sortOrder;
 
-		Trailer.find({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
-			res.count = count;
-			try {
-				Trailer.find(
-					{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((trailers)=>{
-					trailers.length > 0 ?
-						apiResponse.successResponseWithData(res, "Operation success", trailers) :
-						apiResponse.successResponseWithData(res, "Operation success", []);
-				});
-			} catch (err) {
-				return apiResponse.ErrorResponse(res, err);
-			}
-		});
+
+		res.count = await Trailer.count({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}});
+		try {
+			Trailer.find(
+				{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((trailers)=>{
+				trailers.length > 0 ?
+					apiResponse.successResponseWithData(res, "Operation success", trailers) :
+					apiResponse.successResponseWithData(res, "Operation success", []);
+			});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
 	}
 ];
 

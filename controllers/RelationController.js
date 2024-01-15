@@ -17,26 +17,25 @@ function RelationData(data) {
  */
 
 exports.relationSearch = [
-	function (req,res) {
+	async function (req,res) {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 		const sortBy = req.body.sortBy;
 		const sortOrder = req.body.sortOrder;
 
-		Relation.find({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
-			res.count = count;
-			try {
-				Relation.find(
-					{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((relations)=>{
-					relations.length > 0 ?
-						apiResponse.successResponseWithData(res, "Operation success", relations) :
-						apiResponse.successResponseWithData(res, "Operation success", []);
-				});
-			} catch (err) {
-				return apiResponse.ErrorResponse(res, err);
-			}
-		});
+		res.count = await Relation.count({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}});
+		try {
+			Relation.find(
+				{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((relations)=>{
+				relations.length > 0 ?
+					apiResponse.successResponseWithData(res, "Operation success", relations) :
+					apiResponse.successResponseWithData(res, "Operation success", []);
+			});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
+
 	}
 ];
 

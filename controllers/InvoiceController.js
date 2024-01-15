@@ -641,27 +641,25 @@ exports.invoiceSearchV2 = [
 	}
 ];
 exports.invoiceSearch = [
-	function (req,res) {
+	async function (req,res) {
 
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 		const clientId = req.body.clientId;
 
-		Invoice.find({"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
-			res.count = count;
-			try {
-				Invoice.find({"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}},).sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((invoices)=>{
-					if(invoices.length > 0){
-						return apiResponse.successResponseWithData(res, "Operation success", invoices);
-					}else{
-						return apiResponse.successResponseWithData(res, "Operation success", []);
-					}
-				});
-			} catch (err) {
-				return apiResponse.ErrorResponse(res, err);
-			}
-		});
+		res.count = await Invoice.count({"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}});
+		try {
+			Invoice.find({"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}},).sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((invoices)=>{
+				if(invoices.length > 0){
+					return apiResponse.successResponseWithData(res, "Operation success", invoices);
+				}else{
+					return apiResponse.successResponseWithData(res, "Operation success", []);
+				}
+			});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
 	}
 
 ];

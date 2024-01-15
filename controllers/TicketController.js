@@ -76,50 +76,49 @@ exports.ticketList = [
 ];
 
 exports.ticketByInvoiceId = [
-	function (req, res) {
+	async function (req, res) {
 		const invoiceNr = req.body.invoiceNr;
 
-		Ticket.find({ ticketInvoiceNumber: invoiceNr }).countDocuments(
-			(err, count) => {
-				res.count = count;
-				try {
-					Ticket.find(
-						{
-							ticketInvoiceNumber: invoiceNr,
-							$or: [
-								{ ticketType: "classic" },
-								{ ticketType: "return" },
-								{ ticketType: "agency" },
-								{ ticketType: "gratis" },
-							],
-						},
-						"_id ticketOnName ticketInvoicePublicId ticketDisabled ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt"
-					)
-						.sort({ createdAt: 1 })
-						.then((tickets) => {
-							if (tickets.length > 0) {
-								return apiResponse.successResponseWithData(
-									res,
-									"Operation success",
-									tickets
-								);
-							} else {
-								return apiResponse.successResponseWithData(
-									res,
-									"Operation success",
-									[]
-								);
-							}
-						});
-				} catch (err) {
-					return apiResponse.ErrorResponse(res, err);
-				}
-			}
-		);
+
+		res.count = await Ticket.count({ ticketInvoiceNumber: invoiceNr });
+		try {
+			Ticket.find(
+				{
+					ticketInvoiceNumber: invoiceNr,
+					$or: [
+						{ ticketType: "classic" },
+						{ ticketType: "return" },
+						{ ticketType: "agency" },
+						{ ticketType: "gratis" },
+					],
+				},
+				"_id ticketOnName ticketInvoicePublicId ticketDisabled ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt"
+			)
+				.sort({ createdAt: 1 })
+				.then((tickets) => {
+					if (tickets.length > 0) {
+						return apiResponse.successResponseWithData(
+							res,
+							"Operation success",
+							tickets
+						);
+					} else {
+						return apiResponse.successResponseWithData(
+							res,
+							"Operation success",
+							[]
+						);
+					}
+				});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
+
 	},
 ];
+
 exports.ticketsSearchDate = [
-	function (req, res) {
+	async function (req, res) {
 		const pageNumber = req.body.pageNumber;
 		const resultPerPage = req.body.resultPerPage;
 		const searchTerm = req.body.searchTerm;
@@ -130,87 +129,85 @@ exports.ticketsSearchDate = [
 			: "ticketOnName";
 		const sortOption = req.body.sortOption ? req.body.sortOption : -1;
 
-		Ticket.find({
+
+		res.count = await Ticket.count({
 			$and: [
 				{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
 				{ ticketStartDate: { $gte: startDate, $lt: endDate } },
 				{ ticketType: "internet" },
 			],
-		}).countDocuments((err, count) => {
-			res.count = count;
-			try {
-				Ticket.find(
-					{
-						$and: [
-							{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
-							{ ticketStartDate: { $gte: startDate, $lt: endDate } },
-							{ ticketType: "internet" },
-						],
-					},
-					"_id ticketDisabled ticketOnName ticketPhone ticketEmail ticketInvoicePublicId ticketDiscount ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt"
-				)
-					.sort({ [sortByProp]: sortOption })
-					.skip(pageNumber > 0 ? pageNumber * resultPerPage : 0)
-					.limit(resultPerPage)
-					.then((tickets) => {
-						if (tickets.length > 0) {
-							return apiResponse.successResponseWithData(
-								res,
-								"Operation success",
-								tickets
-							);
-						} else {
-							return apiResponse.successResponseWithData(
-								res,
-								"Operation success",
-								[]
-							);
-						}
-					});
-			} catch (err) {
-				return apiResponse.ErrorResponse(res, err);
-			}
 		});
+
+		try {
+			Ticket.find(
+				{
+					$and: [
+						{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
+						{ ticketStartDate: { $gte: startDate, $lt: endDate } },
+						{ ticketType: "internet" },
+					],
+				},
+				"_id ticketDisabled ticketOnName ticketPhone ticketEmail ticketInvoicePublicId ticketDiscount ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt"
+			)
+				.sort({ [sortByProp]: sortOption })
+				.skip(pageNumber > 0 ? pageNumber * resultPerPage : 0)
+				.limit(resultPerPage)
+				.then((tickets) => {
+					if (tickets.length > 0) {
+						return apiResponse.successResponseWithData(
+							res,
+							"Operation success",
+							tickets
+						);
+					} else {
+						return apiResponse.successResponseWithData(
+							res,
+							"Operation success",
+							[]
+						);
+					}
+				});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
 	},
 ];
 
 exports.ticketSearch = [
-	function (req, res) {
+	async function (req, res) {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 
-		Ticket.find({
+		res.count = await Ticket.count({
 			ticketOnName: { $regex: searchTerm + ".*", $options: "i" },
-		}).countDocuments((err, count) => {
-			res.count = count;
-			try {
-				Ticket.find(
-					{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
-					"_id ticketOnName ticketInvoicePublicId ticketDiscount ticketDisabled ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt"
-				)
-					.sort({ createdAt: -1 })
-					.skip(searchSkip)
-					.limit(searchLimit)
-					.then((tickets) => {
-						if (tickets.length > 0) {
-							return apiResponse.successResponseWithData(
-								res,
-								"Operation success",
-								tickets
-							);
-						} else {
-							return apiResponse.successResponseWithData(
-								res,
-								"Operation success",
-								[]
-							);
-						}
-					});
-			} catch (err) {
-				return apiResponse.ErrorResponse(res, err);
-			}
 		});
+		try {
+			Ticket.find(
+				{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
+				"_id ticketOnName ticketInvoicePublicId ticketDiscount ticketDisabled ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt"
+			)
+				.sort({ createdAt: -1 })
+				.skip(searchSkip)
+				.limit(searchLimit)
+				.then((tickets) => {
+					if (tickets.length > 0) {
+						return apiResponse.successResponseWithData(
+							res,
+							"Operation success",
+							tickets
+						);
+					} else {
+						return apiResponse.successResponseWithData(
+							res,
+							"Operation success",
+							[]
+						);
+					}
+				});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
 	},
 ];
 
@@ -876,7 +873,7 @@ exports.ticketQRCode = [
 ];
 
 exports.reportSearch = [
-	function (req, res) {
+	async function (req, res) {
 		const pageNumber = req.body.pageNumber;
 		const resultPerPage = req.body.resultPerPage;
 		const searchTerm = req.body.searchTerm;
@@ -887,47 +884,46 @@ exports.reportSearch = [
 			: "ticketOnName";
 		const sortOption = req.body.sortOption ? req.body.sortOption : -1;
 
-		Ticket.find({
+		res.count = await Ticket.count({
 			$and: [
 				{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
 				{ ticketStartDate: { $gte: startDate, $lt: endDate } },
 				{ $or: [{ ticketType: "classic" }, { ticketType: "return" }] },
 			],
-		}).countDocuments((err, count) => {
-			res.count = count;
-			try {
-				Ticket.find(
-					{
-						$and: [
-							{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
-							{ ticketStartDate: { $gte: startDate, $lt: endDate } },
-							{ $or: [{ ticketType: "classic" }, { ticketType: "return" }] },
-						],
-					},
-					"_id ticketDisabled ticketOnName ticketInvoicePublicId ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketClassicId ticketInvoiceNumber ticketType ticketId ticketQR ticketPrice createdAt modifiedAt"
-				)
-					.sort({ [sortByProp]: sortOption })
-					.skip(pageNumber > 0 ? pageNumber * resultPerPage : 0)
-					.limit(resultPerPage)
-					.then((tickets) => {
-						if (tickets.length > 0) {
-							return apiResponse.successResponseWithData(
-								res,
-								"Operation success",
-								tickets
-							);
-						} else {
-							return apiResponse.successResponseWithData(
-								res,
-								"Operation success",
-								[]
-							);
-						}
-					});
-			} catch (err) {
-				return apiResponse.ErrorResponse(res, err);
-			}
 		});
+
+		try {
+			Ticket.find(
+				{
+					$and: [
+						{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
+						{ ticketStartDate: { $gte: startDate, $lt: endDate } },
+						{ $or: [{ ticketType: "classic" }, { ticketType: "return" }] },
+					],
+				},
+				"_id ticketDisabled ticketOnName ticketInvoicePublicId ticketDiscount ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketClassicId ticketInvoiceNumber ticketType ticketId ticketQR ticketPrice createdAt modifiedAt"
+			)
+				.sort({ [sortByProp]: sortOption })
+				.skip(pageNumber > 0 ? pageNumber * resultPerPage : 0)
+				.limit(resultPerPage)
+				.then((tickets) => {
+					if (tickets.length > 0) {
+						return apiResponse.successResponseWithData(
+							res,
+							"Operation success",
+							tickets
+						);
+					} else {
+						return apiResponse.successResponseWithData(
+							res,
+							"Operation success",
+							[]
+						);
+					}
+				});
+		} catch (err) {
+			return apiResponse.ErrorResponse(res, err);
+		}
 	},
 ];
 
