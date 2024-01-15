@@ -1,6 +1,6 @@
+const {connectToDatabase} = require("../helpers/connectMongoDB");
 const apiResponse = require("../helpers/apiResponse");
 const mongoose = require("mongoose");
-const { createConnString} = require("../helpers/connectMongoDB");
 
 
 exports.dbList = async function (req, res) {
@@ -35,29 +35,26 @@ exports.dbCurrent = [
 	}
 ];
 
+
 exports.dbConnect = [
 	async function (req, res) {
+		mongoose.disconnect();
+		connectToDatabase();
 		const dbName = req.params.name;
-
 		const data = await mongoose.connection.db.admin().command({
 			listDatabases: 1,
 		});
-
-		// eslint-disable-next-line require-atomic-updates
-		mongoose.connection = mongoose.createConnection(createConnString(dbName), {
-			useNewUrlParser: true,
-			useUnifiedTopology: true,
-		});
-
-
 		const dbExists = data.databases.some(db => db.name === dbName);
 
-		return dbExists ?
-			apiResponse.successResponseWithData(res, `Database changed to ${dbName}`, {
-				dbName: dbName,
-				connectionTime: new Date(new Date().toUTCString()),
-			}) :
-			apiResponse.ErrorResponse(res, "Database not found");
-
+		if(dbExists) {
+			return dbName && connectToDatabase(dbName) ?
+				apiResponse.successResponseWithData(res, `Database changed to ${dbName}`, {
+					dbName: dbName,
+					connectionTime: new Date(new Date().toUTCString()),
+				}) :
+				apiResponse.ErrorResponse(res, "Database not found");
+		} else {
+			apiResponse.ErrorResponse(res, "Database not exist");
+		}
 	}
 ];

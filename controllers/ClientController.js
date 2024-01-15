@@ -33,7 +33,7 @@ exports.clientSearch = [
 		const searchSkip = req.body.searchSkip;
 		const sortProp = req.body.sort;
 
-		Client.find({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).countDocuments((err, count) => {
+		Client.find({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).count((err, count) => {
 			res.count = count;
 
 			try {
