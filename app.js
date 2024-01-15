@@ -7,16 +7,9 @@ const indexRouter = require("./routes/index");
 const apiRouter = require("./routes/api");
 const apiResponse = require("./helpers/apiResponse");
 const cors = require("cors");
-const mongoose = require("mongoose");
+// const mongoose = require("mongoose");
 const mongoConnect = require("./helpers/connectMongoDB");
 mongoConnect.connectToDatabase();
-
-const db = mongoose.connection;
-
-db.on("error", (err) => {
-	console.log(`Connection error ${err}`);
-	mongoConnect.connectToDatabase();
-});
 
 const app = express();
 
