@@ -48,7 +48,8 @@ exports.dbConnect = [
     const dbExists = data.databases.some((db) => db.name === dbName);
 
     if (dbExists) {
-      return dbName && connectToDatabase(dbName)
+      connectToDatabase(dbName)
+      return dbName
         ? apiResponse.successResponseWithData(
             res,
             `Database changed to ${dbName}`,

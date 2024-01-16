@@ -17,7 +17,7 @@ exports.connectToDatabase = function(dbName) {
 
 	const connectionString = createConnectionString(dbName);
 
-	return mongoose.connect(connectionString, { useNewUrlParser: true, useUnifiedTopology: true}).then((conn) => {
+	return mongoose.connect(connectionString, { useNewUrlParser: true, useUnifiedTopology: true, maxPoolSize: 100000}).then(() => {
 		//don't show the log when it is test
 
 		if(process.env.NODE_ENV !== "test") {
