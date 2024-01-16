@@ -103,10 +103,12 @@ exports.trailerStore = [
 			}
 			else {
 				//Save trailer.
-				trailer.save(function (err) {
-					if (err) { return apiResponse.ErrorResponse(res, err); }
+				trailer.save().then(trailer => {
 					let trailerData = new TrailerData(trailer);
 					return apiResponse.successResponseWithData(res,"Book add Success.", trailerData);
+				}).catch(err => {
+					console.log(err);
+					return apiResponse.ErrorResponse(res,err);
 				});
 			}
 		} catch (err) {
@@ -124,7 +126,7 @@ exports.trailerStore = [
  * @returns {Object}
  */
 exports.trailerUpdate = [
-	(req, res) => {
+	async (req, res) => {
 		try {
 			const errors = validationResult(req);
 			const trailer = new Trailer(
@@ -141,27 +143,18 @@ exports.trailerUpdate = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					Trailer.findById(req.params.id, function (err, foundTrailer) {
-						if(foundTrailer === null){
-							return apiResponse.notFoundResponse(res,"Trailer not exists with this id");
-						}else{
-							//update trailer.
-							Trailer.findByIdAndUpdate(req.params.id, trailer, {},function (err) {
-								if (err) {
-									return apiResponse.ErrorResponse(res, err);
-								}else{
-									let trailerData = new TrailerData(trailer);
-									console.log(trailerData);
-									return apiResponse.successResponseWithData(res,"Trailer update Success.", trailerData);
-								}
-							});
-						}
+					const foundTrailer = await Trailer.findById(req.params.id);
 
-					});
+					if(foundTrailer) {
+						Trailer.findByIdAndUpdate(req.params.id, trailer, {}).then(trailer =>
+							apiResponse.successResponseWithData(res,"Trailer update Success.", new TrailerData(trailer))
+						).catch(err => apiResponse.ErrorResponse(res, err));
+					} else {
+						return apiResponse.notFoundResponse(res, "Trailer not found");
+					}
 				}
 			}
 		} catch (err) {
-			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -175,27 +168,20 @@ exports.trailerUpdate = [
  * @returns {Object}
  */
 exports.trailerDelete = [
-	function (req, res) {
+	async (req, res) => {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 		}
 		try {
-			Trailer.findById(req.params.id, function (err, foundTrailer) {
-				if(foundTrailer === null){
-					return apiResponse.notFoundResponse(res,"Trailer not exists with this id");
-				}else{
-					//delete trailer.
-					Trailer.findByIdAndRemove(req.params.id,function (err) {
-						if (err) {
-							return apiResponse.ErrorResponse(res, err);
-						}else{
-							return apiResponse.successResponse(res,"Trailer delete Success.");
-						}
-					});
-				}
-			});
+			const foundTrailer = await Trailer.findById(req.params.id);
+			if(foundTrailer) {
+				Trailer.findByIdAndRemove(req.params.id).then(() => {
+					apiResponse.successResponse(res, "Trailer delete success");
+				}).catch(err => apiResponse.ErrorResponse(res, err));
+			} else {
+				return apiResponse.notFoundResponse(res, "Trailer not found");
+			}
 		} catch (err) {
-			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}

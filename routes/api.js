@@ -1,6 +1,5 @@
 const express = require("express");
 const authRouter = require("./auth");
-const bookRouter = require("./book");
 const busLineRouter = require("./busLine");
 const ticketRouter = require("./ticket");
 const driverRouter = require("./driver");
@@ -16,7 +15,6 @@ const databaseConnectionRouter = require("./databaseConnection");
 const app = express();
 
 app.use("/auth/", authRouter);
-app.use("/book/", bookRouter);
 app.use("/busLine/", busLineRouter);
 app.use("/ticket/", ticketRouter);
 app.use("/driver/", driverRouter);

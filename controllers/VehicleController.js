@@ -2,10 +2,8 @@ const Vehicle = require("../models/VehicleModel");
 const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
-var mongoose = require("mongoose");
-// mongoose.set("useFindAndModify", false);
+const mongoose = require("mongoose");
 
-// Vehicle Schema
 function VehicleData(data) {
 	this._id = data._id;
 	this.plateNumber = data.plateNumber;
@@ -40,7 +38,7 @@ exports.vehicleSearch = [
 exports.vehicleList = [
 	function (req, res) {
 		try {
-			Vehicle.find().then((vehicles)=>{
+			Vehicle.find().then((vehicles)=> {
 				if(vehicles.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", vehicles);
 				}else{
@@ -95,21 +93,17 @@ exports.vehicleStore = [
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
-			var vehicle = new Vehicle({plateNumber: req.body.plateNumber});
+			const vehicle = new Vehicle({plateNumber: req.body.plateNumber});
 
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			}
 			else {
-				//Save vehicle.
-				vehicle.save(function (err) {
-					if (err) { return apiResponse.ErrorResponse(res, err); }
-					let vehicleData = new VehicleData(vehicle);
-					return apiResponse.successResponseWithData(res,"Book add Success.", vehicleData);
-				});
+				vehicle.save().then(vehicle =>
+					apiResponse.successResponseWithData(res,"Book add Success.", new VehicleData(vehicle))
+				).catch(err => apiResponse.ErrorResponse(res,err));
 			}
 		} catch (err) {
-			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -123,10 +117,10 @@ exports.vehicleStore = [
  * @returns {Object}
  */
 exports.vehicleUpdate = [
-	(req, res) => {
+	async (req, res) => {
 		try {
 			const errors = validationResult(req);
-			var vehicle = new Vehicle(
+			const vehicle = new Vehicle(
 				{
 					plateNumber: req.body.plateNumber,
 					_id:req.params.id,
@@ -140,27 +134,17 @@ exports.vehicleUpdate = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					Vehicle.findById(req.params.id, function (err, foundVehicle) {
-						if(foundVehicle === null){
-							return apiResponse.notFoundResponse(res,"Vehicle not exists with this id");
-						}else{
-							//update vehicle.
-							Vehicle.findByIdAndUpdate(req.params.id, vehicle, {},function (err) {
-								if (err) {
-									return apiResponse.ErrorResponse(res, err);
-								}else{
-									let vehicleData = new VehicleData(vehicle);
+					const foundVehicle = await Vehicle.findById(req.params.id);
 
-									return apiResponse.successResponseWithData(res,"Vehicle update Success.", vehicleData);
-								}
-							});
-						}
-
-					});
+					if(foundVehicle) {
+						Vehicle.findByIdAndUpdate(req.params.id, vehicle, {}).then(vehicle =>
+							apiResponse.successResponseWithData(res,"Vehicle update Success.", new VehicleData(vehicle))
+						).catch(err => apiResponse.ErrorResponse(res, err));
+					}
 				}
 			}
 		} catch (err) {
-			//throw error in json response with status 500. 
+			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -174,27 +158,15 @@ exports.vehicleUpdate = [
  * @returns {Object}
  */
 exports.vehicleDelete = [
-	function (req, res) {
+	async (req, res) => {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 		}
 		try {
-			Vehicle.findById(req.params.id, function (err, foundVehicle) {
-				if(foundVehicle === null){
-					return apiResponse.notFoundResponse(res,"Vehicle not exists with this id");
-				}else{
-					//delete vehicle.
-					Vehicle.findByIdAndRemove(req.params.id,function (err) {
-						if (err) {
-							return apiResponse.ErrorResponse(res, err);
-						}else{
-							return apiResponse.successResponse(res,"Vehicle delete Success.");
-						}
-					});
-				}
-			});
+			await Vehicle.findByIdAndRemove(req.params.id).then(() =>
+				apiResponse.successResponse(res, "Delete Success")
+			).catch(err => apiResponse.ErrorResponse(res, err));
 		} catch (err) {
-			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}

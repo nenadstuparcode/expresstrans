@@ -53,7 +53,7 @@ exports.register = [
 					// generate OTP for confirmation
 					let otp = utility.randomNumber(4);
 					// Create User object with escaped and trimmed data
-					var user = new UserModel(
+					const user = new UserModel(
 						{
 							firstName: req.body.firstName,
 							lastName: req.body.lastName,
@@ -74,8 +74,7 @@ exports.register = [
 						null,
 					).then(function(){
 						// Save user.
-						user.save(function (err) {
-							if (err) { return apiResponse.ErrorResponse(res, err); }
+						user.save().then(user => {
 							let userData = {
 								_id: user._id,
 								firstName: user.firstName,
@@ -83,7 +82,7 @@ exports.register = [
 								email: user.email
 							};
 							return apiResponse.successResponseWithData(res,"Registration Success.", userData);
-						});
+						}).catch(err => apiResponse.ErrorResponse(res, err));
 					}).catch(err => {
 						console.log(err);
 						return apiResponse.ErrorResponse(res,err);
@@ -91,7 +90,6 @@ exports.register = [
 				});
 			}
 		} catch (err) {
-			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}];
@@ -249,10 +247,9 @@ exports.resendConfirmOtp = [
 								user.isConfirmed = 0;
 								user.confirmOTP = otp;
 								// Save user.
-								user.save(function (err) {
-									if (err) { return apiResponse.ErrorResponse(res, err); }
+								user.save().then(user => {
 									return apiResponse.successResponse(res,"Confirm otp sent.");
-								});
+								}).catch(err => apiResponse.ErrorResponse(res, err));
 							});
 						}else{
 							return apiResponse.unauthorizedResponse(res, "Account already confirmed.");

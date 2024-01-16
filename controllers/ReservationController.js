@@ -32,7 +32,6 @@ exports.reservationList = [
 				}
 			});
 		} catch (err) {
-			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -106,12 +105,11 @@ exports.reservationDetail = [
  * @returns {Object}
  */
 exports.reservationStore = [
-
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
 
-			var reservation = new Reservation({
+			const reservation = new Reservation({
 				reservationOnName: req.body.reservationOnName,
 				reservationPhone: req.body.reservationPhone,
 				reservationDate: req.body.reservationDate,
@@ -127,19 +125,15 @@ exports.reservationStore = [
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			} else {
 				//Save Reservation.
-				reservation.save(function (err) {
-
-					if (err) {
-						return apiResponse.ErrorResponse(res, err);
-					}
+				reservation.save().then(reservation => {
 					let reservationData = new ReservationData(reservation);
-					console.log(reservationData);
 					return apiResponse.successResponseWithData(res, "Reservation add Success.", reservationData);
+				}).catch(err => {
+					return apiResponse.ErrorResponse(res,err);
 				});
 			}
 
 		} catch (err) {
-			//throw error in json response with status 500.
 			console.log(err);
 			return apiResponse.ErrorResponse(res, err);
 		}
@@ -161,10 +155,10 @@ exports.reservationUpdate = [
 	body("reservationTime", "reservationTime must not be empty.").isLength({ min: 1 }).trim(),
 	body("reservationDate", "reservationDate must not be empty.").isLength({ min: 1 }).trim(),
 	body("ticketBusLineId", "ticketBusLineId must not be empty.").isLength({ min: 1 }).trim(),
-	(req, res) => {
+	async (req, res) => {
 		try {
 			const errors = validationResult(req);
-			var reservation = new Reservation({
+			const reservation = new Reservation({
 				reservationOnName: req.body.reservationOnName,
 				reservationPhone: req.body.reservationPhone,
 				reservationDate: req.body.reservationDate,
@@ -181,25 +175,17 @@ exports.reservationUpdate = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					Reservation.findById(req.params.id, function (err, foundReservation) {
-						if(foundReservation === null){
-							return apiResponse.notFoundResponse(res,"Reservation not exists with this id");
-						}else{
-							//update Reservation.
-							Reservation.findByIdAndUpdate(req.params.id, reservation, {},function (err) {
-								if (err) {
-									return apiResponse.ErrorResponse(res, err);
-								}else{
-									let reservationData = new ReservationData(reservation);
-									return apiResponse.successResponseWithData(res,"Reservation Update Success.", reservationData);
-								}
-							});
-						}
-					});
+					const foundReservation = await Reservation.findById(req.params.id);
+					if(foundReservation) {
+						Reservation.findByIdAndUpdate(req.params.id, reservation, {}).then(reservation =>
+							apiResponse.successResponseWithData(res,"Reservation Update Success.", new ReservationData(reservation))
+						).catch(err => apiResponse.ErrorResponse(res, err));
+					} else {
+						return apiResponse.notFoundResponse(res, "Reservation not found");
+					}
 				}
 			}
 		} catch (err) {
-			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -213,27 +199,20 @@ exports.reservationUpdate = [
  * @returns {Object}
  */
 exports.reservationDelete = [
-	function (req, res) {
+	async (req, res) => {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 		}
 		try {
-			Reservation.findById(req.params.id, function (err, foundReservation) {
-				if(foundReservation === null){
-					return apiResponse.notFoundResponse(res,"Reservation not exists with this id");
-				}else{
-					//delete Reservation.
-					Reservation.findByIdAndRemove(req.params.id,function (err) {
-						if (err) {
-							return apiResponse.ErrorResponse(res, err);
-						}else{
-							return apiResponse.successResponse(res,"Reservation delete Success.");
-						}
-					});
-				}
-			});
+			const foundReservation = await Reservation.findById(req.params.id);
+			if(foundReservation) {
+				Reservation.findByIdAndRemove(req.params.id).then(() =>
+					apiResponse.successResponse(res, "Reservation delete suceess")
+				).catch(err => apiResponse.ErrorResponse(res, err));
+			} else {
+				return apiResponse.notFoundResponse(res, "Reservation not found");
+			}
 		} catch (err) {
-			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}

@@ -7,18 +7,17 @@ const apiResponse = require("../helpers/apiResponse");
  * @returns {Object}
  */
 exports.counterList = [
-	function (req, res) {
-		try {
-			Counter.find().then((counters) => {
-				if(counters.length > 0) {
-					return apiResponse.successResponseWithData(res, "Operation success", counters);
-				} else {
-					return apiResponse.successResponseWithData(res, "Operation success", []);
-				}
-			});
-		} catch (err) {
-			//throw error in json response with status 500. 
-			return apiResponse.ErrorResponse(res, err);
-		}
-	}
+  async (req, res) => {
+    try {
+      await Counter.find().then((counters) =>
+        apiResponse.successResponseWithData(
+          res,
+          "Operation success",
+          counters ?? []
+        )
+      );
+    } catch (err) {
+      return apiResponse.ErrorResponse(res, err);
+    }
+  },
 ];

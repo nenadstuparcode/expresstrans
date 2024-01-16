@@ -101,20 +101,18 @@ exports.relationStore = [
 	(req, res) => {
 		try {
 			const errors = validationResult(req);
-			var relation = new Relation({name: req.body.name});
+			const relation = new Relation({name: req.body.name});
 
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			}
 			else {
-				relation.save(function (err) {
-					if (err) { return apiResponse.ErrorResponse(res, err); }
+				relation.save().then(relation => {
 					let relationData = new RelationData(relation);
 					return apiResponse.successResponseWithData(res,"Relation add Success.", relationData);
-				});
+				}).catch(err => apiResponse.ErrorResponse(res,err));
 			}
 		} catch (err) {
-			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -128,7 +126,7 @@ exports.relationStore = [
  * @returns {Object}
  */
 exports.relationUpdate = [
-	(req, res) => {
+	async (req, res) => {
 		try {
 			const errors = validationResult(req);
 			const relation = new Relation(
@@ -145,26 +143,17 @@ exports.relationUpdate = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					Relation.findById(req.params.id, function (err, foundRealtion) {
-						if(foundRealtion === null){
-							return apiResponse.notFoundResponse(res,"Relatiom not exists with this id");
-						}else{
-							//update driver.
-							Relation.findByIdAndUpdate(req.params.id, relation, {},function (err) {
-								if (err) {
-									return apiResponse.ErrorResponse(res, err);
-								} else {
-									const relationData = new RelationData(relation);
-									return apiResponse.successResponseWithData(res,"Relation update Success.", relationData);
-								}
-							});
-						}
-
-					});
+					const foundRelation = await Relation.findById(req.params.id);
+					if(foundRelation) {
+						Relation.findByIdAndUpdate(req.params.id, relation, {}).then(relation =>
+							apiResponse.successResponseWithData(res,"Relation update Success.", new RelationData(relation))
+						).catch(err => apiResponse.ErrorResponse(res, err));
+					} else {
+						return apiResponse.notFoundResponse(res, "Relation not found");
+					}
 				}
 			}
 		} catch (err) {
-			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -178,27 +167,20 @@ exports.relationUpdate = [
  * @returns {Object}
  */
 exports.relationDelete = [
-	function (req, res) {
+	async (req, res) => {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 		}
 		try {
-			Relation.findById(req.params.id, function (err, foundRelation) {
-				if(foundRelation === null){
-					return apiResponse.notFoundResponse(res,"Relation not exists with this id");
-				}else{
-					//delete relation.
-					Relation.findByIdAndRemove(req.params.id,function (err) {
-						if (err) {
-							return apiResponse.ErrorResponse(res, err);
-						}else{
-							return apiResponse.successResponse(res,"Relation delete Success.");
-						}
-					});
-				}
-			});
+			const foundRelation = await Relation.findById(req.params.id);
+			if(foundRelation) {
+				Relation.findByIdAndRemove(req.params.id).then(() =>
+					apiResponse.successResponse(res, "Relation delete success")
+				).catch(err => apiResponse.ErrorResponse(res, err));
+			} else {
+				return apiResponse.notFoundResponse(res, "Relation not found");
+			}
 		} catch (err) {
-			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}

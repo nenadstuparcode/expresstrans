@@ -315,68 +315,67 @@ exports.ticketStore = [
 			Counter.findOneAndUpdate(
 				{ name: "ticketCounter" },
 				{ $inc: { count: 1 } },
-				{ new: true },
-				(err, doc) => {
-					if (err) {
-						console.log("Something wrong when updating data!");
-					}
-
-					// eslint-disable-next-line no-unused-vars
-
-					//app.express-trans.online
-					QRCode.toDataURL(
-						`https://app.express-trans.online/api/ticket/scan/EXTR0${doc.count}`
-					)
-						.then((urlQR) => {
-							const errors = validationResult(req);
-							var ticket = new Ticket({
-								ticketOnName: req.body.ticketOnName,
-								ticketPhone: req.body.ticketPhone,
-								ticketEmail: req.body.ticketEmail,
-								ticketNote: req.body.ticketNote,
-								ticketValid: req.body.ticketValid,
-								ticketBusLineId: req.body.ticketBusLineId,
-								ticketRoundTrip: req.body.ticketRoundTrip,
-								ticketClassicId: req.body.ticketClassicId,
-								ticketStartDate: req.body.ticketStartDate,
-								ticketDisabled: req.body.ticketDisabled,
-								ticketType: req.body.ticketType,
-								ticketDiscount: req.body.ticketDiscount,
-								ticketStartTime: req.body.ticketStartTime,
-								ticketInvoiceNumber: req.body.ticketInvoiceNumber,
-								ticketInvoicePublicId: req.body.ticketInvoicePublicId,
-								ticketQR: urlQR,
-								ticketPrice: req.body.ticketPrice,
-								ticketId: `EXTR0${doc.count}`,
-							});
-
-							if (!errors.isEmpty()) {
-								return apiResponse.validationErrorWithData(
-									res,
-									"Validation Error.",
-									errors.array()
-								);
-							} else {
-								ticket.save(function (err) {
-									if (err) {
-										return apiResponse.ErrorResponse(res, err);
-									}
-									let ticketData = new TicketData(ticket);
-									return apiResponse.successResponseWithData(
-										res,
-										"Ticket add Success.",
-										ticketData
-									);
-								});
-							}
-						})
-						.catch((err) => {
-							console.error(err);
+				{ new: true }).then(doc => {
+				QRCode.toDataURL(
+					`https://app.express-trans.online/api/ticket/scan/EXTR0${doc.count}`
+				)
+					.then((urlQR) => {
+						const errors = validationResult(req);
+						const ticket = new Ticket({
+							ticketOnName: req.body.ticketOnName,
+							ticketPhone: req.body.ticketPhone,
+							ticketEmail: req.body.ticketEmail,
+							ticketNote: req.body.ticketNote,
+							ticketValid: req.body.ticketValid,
+							ticketBusLineId: req.body.ticketBusLineId,
+							ticketRoundTrip: req.body.ticketRoundTrip,
+							ticketClassicId: req.body.ticketClassicId,
+							ticketStartDate: req.body.ticketStartDate,
+							ticketDisabled: req.body.ticketDisabled,
+							ticketType: req.body.ticketType,
+							ticketDiscount: req.body.ticketDiscount,
+							ticketStartTime: req.body.ticketStartTime,
+							ticketInvoiceNumber: req.body.ticketInvoiceNumber,
+							ticketInvoicePublicId: req.body.ticketInvoicePublicId,
+							ticketQR: urlQR,
+							ticketPrice: req.body.ticketPrice,
+							ticketId: `EXTR0${doc.count}`,
 						});
-				}
-			);
+
+						if (!errors.isEmpty()) {
+							return apiResponse.validationErrorWithData(
+								res,
+								"Validation Error.",
+								errors.array()
+							);
+						} else {
+							ticket.save().then(ticket => {
+								let ticketData = new TicketData(ticket);
+								return apiResponse.successResponseWithData(
+									res,
+									"Ticket add Success.",
+									ticketData
+								);
+							}).catch(err => {
+								console.log(err);
+								return apiResponse.ErrorResponse(res, "not saved error");
+							});
+						}
+					})
+					.catch((err) => {
+						console.error(err);
+						return apiResponse.ErrorResponse(res, err);
+					});
+			}).catch(err => {
+				console.error(err);
+				return apiResponse.ErrorResponse(res, err);
+			});
+
+
+
 		} catch (err) {
 			//throw error in json response with status 500.
+			console.log(err);
 			return apiResponse.ErrorResponse(res, err);
 		}
 	},
@@ -417,11 +416,11 @@ exports.ticketUpdate = [
 		.isLength({ min: 1 })
 		.trim(),
 	sanitizeBody("*").escape(),
-	(req, res) => {
+	async (req, res) => {
 		try {
 			const errors = validationResult(req);
 
-			var ticket = new Ticket({
+			const ticket = new Ticket({
 				ticketOnName: req.body.ticketOnName,
 				ticketPhone: req.body.ticketPhone,
 				ticketEmail: req.body.ticketEmail,
@@ -455,37 +454,17 @@ exports.ticketUpdate = [
 						"Invalid ID"
 					);
 				} else {
-					Ticket.findById(req.params.id, function (err, foundTicket) {
-						if (foundTicket === null) {
-							return apiResponse.notFoundResponse(
-								res,
-								"Ticket not exists with this id"
-							);
-						} else {
-							//update BusLine.
-							Ticket.findByIdAndUpdate(
-								req.params.id,
-								ticket,
-								{},
-								function (err) {
-									if (err) {
-										return apiResponse.ErrorResponse(res, err);
-									} else {
-										let ticketData = new TicketData(ticket);
-										return apiResponse.successResponseWithData(
-											res,
-											"Ticket update Success.",
-											ticketData
-										);
-									}
-								}
-							);
-						}
-					});
+					const foundTicket = await Ticket.findById(req.params.id);
+					if(foundTicket) {
+						Ticket.findByIdAndUpdate(req.params.id, ticket, {}).then(ticket =>
+							apiResponse.successResponseWithData(res, "Ticket update Success.", new TicketData(ticket))
+						).catch(err => apiResponse.ErrorResponse(res, err));
+					} else {
+						return apiResponse.notFoundResponse(res, "Ticket not found");
+					}
 				}
 			}
 		} catch (err) {
-			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	},
@@ -499,7 +478,7 @@ exports.ticketUpdate = [
  * @returns {Object}
  */
 exports.ticketDelete = [
-	function (req, res) {
+	async (req, res)=> {
 		if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
 			return apiResponse.validationErrorWithData(
 				res,
@@ -508,28 +487,15 @@ exports.ticketDelete = [
 			);
 		}
 		try {
-			Ticket.findById(req.params.id, function (err, foundTicket) {
-				if (foundTicket === null) {
-					return apiResponse.notFoundResponse(
-						res,
-						"Ticket not exists with this id"
-					);
-				} else {
-					//delete BusLine.
-					Ticket.findByIdAndRemove(req.params.id, function (err) {
-						if (err) {
-							return apiResponse.ErrorResponse(res, err);
-						} else {
-							return apiResponse.successResponseWithData(
-								res,
-								"Ticket delete Success."
-							);
-						}
-					});
-				}
-			});
+			const foundTicket = await Ticket.findById(req.params.id);
+			if(foundTicket) {
+				Ticket.findByIdAndRemove(req.params.id).then(() =>
+					apiResponse.successResponse(res, "Ticket delete success")
+				).catch(err => apiResponse.ErrorResponse(res, err));
+			} else {
+				return apiResponse.notFoundResponse(res, "Ticket not found");
+			}
 		} catch (err) {
-			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	},

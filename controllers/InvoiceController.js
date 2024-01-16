@@ -205,11 +205,11 @@ exports.invoiceReportByClients = [
 					}
 				}).catch(err => {
 					console.log(err);
-					apiResponse.ErrorResponse(res, ' oooo jooooj')
+					apiResponse.ErrorResponse(res, err)
 				})
 			}).catch(err => console.log(err));
 		} catch (err) {
-			return apiResponse.ErrorResponse(res, 'oooo joj');
+			return apiResponse.ErrorResponse(res, err);
 		}
 	}
 ];
@@ -708,68 +708,59 @@ exports.invoiceStore = [
 	body("invoiceDateReturn", "invoiceDateReturn must not be empty.").isLength({ min: 1 }).trim(),
 	(req, res) => {
 		try {
-			Counter.findOneAndUpdate({name: "invoiceCounter"}, {$inc: {count: 1}}, {new: true}, (err, doc) => {
-				if (err) {
-					console.log("Something wrong when updating data!");
+			Counter.findOneAndUpdate({name: "invoiceCounter"}, {$inc: {count: 1}}, {new: true}).then(doc => {
+				const errors = validationResult(req);
+
+				const invoice = new Invoice({
+					invoiceNumber: doc.count,
+					invoiceDateStart: req.body.invoiceDateStart, // ok
+					invoiceDateReturn: req.body.invoiceDateReturn, // ok
+					invoiceVehicle: req.body.invoiceVehicle, // ok
+					invoiceExpCro: req.body.invoiceExpCro, // optional
+					invoiceExpSlo: req.body.invoiceExpSlo, // optional
+					invoiceExpAus: req.body.invoiceExpAus, // optional
+					invoiceExpGer: req.body.invoiceExpGer, // optional
+					invoiceInitialExpenses: req.body.invoiceInitialExpenses, // ok
+					invoiceInitialExpensesDesc: req.body.invoiceInitialExpensesDesc, // optional
+					invoiceUnexpectedExpenses: req.body.invoiceUnexpectedExpenses, // optional
+					invoiceUnexpectedExpensesDesc: req.body.invoiceUnexpectedExpensesDesc, // optional
+					invoiceTotalBill: req.body.invoiceTotalBill, // optional
+					totalKilometers: req.body.totalKilometers, // optional
+					bihKilometers: req.body.bihKilometers, // optional
+					diffKilometers: req.body.diffKilometers, // optional
+					firstCalculation: req.body.firstCalculation, // optional
+					secondCalculation: req.body.secondCalculation, // optional
+					returnTaxBih: req.body.returnTaxBih, // optional
+					invoiceDrivers: [...req.body.invoiceDrivers], // ok
+					invoicePublicId: doc.count,
+					//New Props
+					invoiceType : req.body.invoiceType, // ok
+					invoiceRelations : [...req.body.invoiceRelations], // ok
+					cmr : [...req.body.cmr], // ok
+					deadline: req.body.deadline, // ok
+					priceKm: req.body.priceKm, // ok
+					priceEuros: req.body.priceEuros, // ok
+					accountNumber: req.body.accountNumber, // ok
+					invoiceTrailer: [...req.body.invoiceTrailer], // ok
+					payed: req.body.payed, // ok
+					priceKmTax: req.body.priceKmTax, // ok
+					clientId: req.body.clientId, // ok
+					invDriver: req.body.invDriver, // ok
+					invTrailer: req.body.invTrailer, // ok
+					active: req.body.active, // ok
+				});
+
+				if (!errors.isEmpty()) {
+					return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 				} else {
-					const errors = validationResult(req);
-
-					const invoice = new Invoice({
-						invoiceNumber: doc.count,
-						invoiceDateStart: req.body.invoiceDateStart, // ok
-						invoiceDateReturn: req.body.invoiceDateReturn, // ok
-						invoiceVehicle: req.body.invoiceVehicle, // ok
-						invoiceExpCro: req.body.invoiceExpCro, // optional
-						invoiceExpSlo: req.body.invoiceExpSlo, // optional
-						invoiceExpAus: req.body.invoiceExpAus, // optional
-						invoiceExpGer: req.body.invoiceExpGer, // optional
-						invoiceInitialExpenses: req.body.invoiceInitialExpenses, // ok
-						invoiceInitialExpensesDesc: req.body.invoiceInitialExpensesDesc, // optional
-						invoiceUnexpectedExpenses: req.body.invoiceUnexpectedExpenses, // optional
-						invoiceUnexpectedExpensesDesc: req.body.invoiceUnexpectedExpensesDesc, // optional
-						invoiceTotalBill: req.body.invoiceTotalBill, // optional
-						totalKilometers: req.body.totalKilometers, // optional
-						bihKilometers: req.body.bihKilometers, // optional
-						diffKilometers: req.body.diffKilometers, // optional
-						firstCalculation: req.body.firstCalculation, // optional
-						secondCalculation: req.body.secondCalculation, // optional
-						returnTaxBih: req.body.returnTaxBih, // optional
-						invoiceDrivers: [...req.body.invoiceDrivers], // ok
-						invoicePublicId: doc.count,
-						//New Props
-						invoiceType : req.body.invoiceType, // ok
-						invoiceRelations : [...req.body.invoiceRelations], // ok
-						cmr : [...req.body.cmr], // ok
-						deadline: req.body.deadline, // ok
-						priceKm: req.body.priceKm, // ok
-						priceEuros: req.body.priceEuros, // ok
-						accountNumber: req.body.accountNumber, // ok
-						invoiceTrailer: [...req.body.invoiceTrailer], // ok
-						payed: req.body.payed, // ok
-						priceKmTax: req.body.priceKmTax, // ok
-						clientId: req.body.clientId, // ok
-						invDriver: req.body.invDriver, // ok
-						invTrailer: req.body.invTrailer, // ok
-						active: req.body.active, // ok
+					//Save Invoice.
+					invoice.save().then(inv => {
+						let invoiceData = new InvoiceData(inv);
+						return apiResponse.successResponseWithData(res, "Invoice add Success.", invoiceData);
+					}).catch(err => {
+						console.log(err);
+						return apiResponse.ErrorResponse(res, err);
 					});
-
-
-
-
-					if (!errors.isEmpty()) {
-						return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
-					} else {
-						//Save Invoice.
-						invoice.save(function (err) {
-							if (err) {
-								console.log(err);
-
-								return apiResponse.ErrorResponse(res, err);
-							}
-							let invoiceData = new InvoiceData(invoice);
-							return apiResponse.successResponseWithData(res, "Invoice add Success.", invoiceData);
-						});
-					}
 				}
 			});
 
@@ -793,10 +784,10 @@ exports.invoiceStore = [
 exports.invoiceUpdate = [
 	body("invoiceDateStart", "invoiceDateStart must not be empty.").isLength({ min: 1 }).trim(),
 	body("invoiceDateReturn", "invoiceDateReturn must not be empty.").isLength({ min: 1 }).trim(),
-	(req, res) => {
+	async (req, res) => {
 		try {
 			const errors = validationResult(req);
-			let invoice = new Invoice({
+			const invoice = new Invoice({
 				invoiceNumber: req.body.invoiceNumber,
 				invoiceDateStart: req.body.invoiceDateStart,
 				invoiceDateReturn: req.body.invoiceDateReturn,
@@ -844,22 +835,13 @@ exports.invoiceUpdate = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					Invoice.findById(req.params.id, function (err, foundInvoice) {
-						if(foundInvoice === null){
-							return apiResponse.notFoundResponse(res,"Invoice not exists with this id");
-						}else{
-							//update Invoice.
-							Invoice.findByIdAndUpdate(req.params.id, invoice, {},function (err) {
-								if (err) {
-									console.log(err);
-									return apiResponse.ErrorResponse(res, err);
-								}else{
-									let invoiceData = new InvoiceData(invoice);
-									return apiResponse.successResponseWithData(res,"Invoice Update Success.", invoiceData);
-								}
-							});
-						}
-					});
+					const invoice = await Invoice.findById(req.params.id);
+
+					if(invoice) {
+						Invoice.findByIdAndUpdate(req.params.id, invoice, {}).then(invoice =>
+							apiResponse.successResponseWithData(res,"Invoice Update Success.", new InvoiceData(invoice))
+						).catch(err => apiResponse.ErrorResponse(res, err));
+					}
 				}
 			}
 		} catch (err) {
@@ -877,7 +859,7 @@ exports.invoiceUpdateExp = [
 	body("invoiceExpSlo", "invoiceExpSlo must not be empty.").isLength({ min: 1 }).trim(),
 	body("invoiceExpAus", "invoiceExpAus must not be empty.").isLength({ min: 1 }).trim(),
 	body("invoiceExpGer", "invoiceExpGer must not be empty.").isLength({ min: 1 }).trim(),
-	(req, res) => {
+	async (req, res) => {
 		try {
 			const errors = validationResult(req);
 			const invoice = {
@@ -899,25 +881,17 @@ exports.invoiceUpdateExp = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					Invoice.findById(req.params.id, function (err, foundInvoice) {
-						if(foundInvoice === null){
-							return apiResponse.notFoundResponse(res,"Invoice not exists with this id");
-						}else{
-							//update Invoice.
-							Invoice.findByIdAndUpdate(req.params.id, invoice, {},function (err) {
-								if (err) {
-									return apiResponse.ErrorResponse(res, err);
-								}else{
-									let invoiceData = new InvoiceData(invoice);
-									return apiResponse.successResponseWithData(res,"Invoice Update Success.", invoiceData);
-								}
-							});
-						}
-					});
+					const foundInvoice = await Invoice.findById(req.params.id);
+					if(foundInvoice) {
+						Invoice.findByIdAndUpdate(req.params.id, invoice, {}).then(invoice =>
+							apiResponse.successResponseWithData(res,"Invoice Update Success.", new InvoiceData(invoice))
+						).catch(err => apiResponse.ErrorResponse(res, err));
+					} else {
+						return apiResponse.notFoundResponse(res, "Invoice not found");
+					}
 				}
 			}
 		} catch (err) {
-			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -930,7 +904,7 @@ exports.invoiceUpdateTax = [
 	body("firstCalculation", "firstCalculation must not be empty.").isLength({ min: 1 }).trim(),
 	body("secondCalculation", "secondCalculation must not be empty.").isLength({ min: 1 }).trim(),
 	body("returnTaxBih", "returnTaxBih must not be empty.").isLength({ min: 1 }).trim(),
-	(req, res) => {
+	async (req, res) => {
 		try {
 			const errors = validationResult(req);
 			const invoice = {
@@ -949,25 +923,17 @@ exports.invoiceUpdateTax = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					Invoice.findById(req.params.id, function (err, foundInvoice) {
-						if(foundInvoice === null){
-							return apiResponse.notFoundResponse(res,"Invoice not exists with this id");
-						}else{
-							//update Invoice.
-							Invoice.findByIdAndUpdate(req.params.id, invoice, {},function (err) {
-								if (err) {
-									return apiResponse.ErrorResponse(res, err);
-								}else{
-									let invoiceData = new InvoiceData(invoice);
-									return apiResponse.successResponseWithData(res,"Invoice Update Success.", invoiceData);
-								}
-							});
-						}
-					});
+					const foundInvoice = await Invoice.findById(req.params.id);
+					if(foundInvoice) {
+						Invoice.findByIdAndUpdate(req.params.id, invoice, {}).then(invoice =>
+							apiResponse.successResponseWithData(res,"Invoice Update Success.", new InvoiceData(invoice))
+						).catch(err => apiResponse.ErrorResponse(res, err));
+					} else {
+						return apiResponse.notFoundResponse(res, "Invoice not found");
+					}
 				}
 			}
 		} catch (err) {
-			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -981,27 +947,20 @@ exports.invoiceUpdateTax = [
  * @returns {Object}
  */
 exports.invoiceDelete = [
-	function (req, res) {
+	async (req, res)=> {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 		}
 		try {
-			Invoice.findById(req.params.id, function (err, foundInvoice) {
-				if(foundInvoice === null){
-					return apiResponse.notFoundResponse(res,"Invoice not exists with this id");
-				}else{
-					//delete Invoice.
-					Invoice.findByIdAndRemove(req.params.id,function (err) {
-						if (err) {
-							return apiResponse.ErrorResponse(res, err);
-						}else{
-							return apiResponse.successResponse(res,"BusLine delete Success.");
-						}
-					});
-				}
-			});
+			const foundInvoice = await Invoice.findById(req.params.id);
+			if(foundInvoice) {
+				Invoice.findByIdAndRemove(req.params.id).then(() =>
+					apiResponse.successResponse(res, "Invoice delete success")
+				).catch(err => apiResponse.ErrorResponse(res, err));
+			} else {
+				return apiResponse.notFoundResponse(res, "Invoice not found");
+			}
 		} catch (err) {
-			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}

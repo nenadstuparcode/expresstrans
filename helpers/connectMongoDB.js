@@ -11,16 +11,13 @@ function createConnectionString(name) {
 
 exports.connectToDatabase = function(dbName) {
 
-
-
-
 	if(dbName === undefined) {
 		dbName = `etrans${new Date().getFullYear()}`;
 	}
 
 	const connectionString = createConnectionString(dbName);
 
-	return mongoose.connect(connectionString, { useNewUrlParser: true, useUnifiedTopology: true, keepAlive: true }).then((conn) => {
+	return mongoose.connect(connectionString, { useNewUrlParser: true, useUnifiedTopology: true}).then((conn) => {
 		//don't show the log when it is test
 
 		if(process.env.NODE_ENV !== "test") {
