@@ -137,9 +137,11 @@ exports.vehicleUpdate = [
 					const foundVehicle = await Vehicle.findById(req.params.id);
 
 					if(foundVehicle) {
-						Vehicle.findByIdAndUpdate(req.params.id, vehicle, {}).then(vehicle =>
-							apiResponse.successResponseWithData(res,"Vehicle update Success.", new VehicleData(vehicle))
+						await Vehicle.findByIdAndUpdate(req.params.id, vehicle, { new: true}).then(updatedVehicle =>
+							apiResponse.successResponseWithData(res,"Vehicle update Success.", updatedVehicle)
 						).catch(err => apiResponse.ErrorResponse(res, err));
+					} else {
+						return apiResponse.notFoundResponse(res, "Vehicle not found");
 					}
 				}
 			}

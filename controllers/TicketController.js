@@ -455,9 +455,10 @@ exports.ticketUpdate = [
 					);
 				} else {
 					const foundTicket = await Ticket.findById(req.params.id);
+
 					if(foundTicket) {
-						Ticket.findByIdAndUpdate(req.params.id, ticket, {}).then(ticket =>
-							apiResponse.successResponseWithData(res, "Ticket update Success.", new TicketData(ticket))
+						await Ticket.findByIdAndUpdate(req.params.id, ticket, {new: true}).then(updatedTicket =>
+							apiResponse.successResponseWithData(res, "Ticket update Success.", updatedTicket)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
 						return apiResponse.notFoundResponse(res, "Ticket not found");

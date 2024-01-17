@@ -146,8 +146,8 @@ exports.trailerUpdate = [
 					const foundTrailer = await Trailer.findById(req.params.id);
 
 					if(foundTrailer) {
-						Trailer.findByIdAndUpdate(req.params.id, trailer, {}).then(trailer =>
-							apiResponse.successResponseWithData(res,"Trailer update Success.", new TrailerData(trailer))
+						await Trailer.findByIdAndUpdate(req.params.id, trailer, {new: true}).then(updatedTrailer =>
+							apiResponse.successResponseWithData(res,"Trailer update Success.", updatedTrailer)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
 						return apiResponse.notFoundResponse(res, "Trailer not found");

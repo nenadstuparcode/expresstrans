@@ -175,9 +175,11 @@ exports.clientUpdate = [
 				} else {
 					const foundClient = await Client.findById(req.params.id);
 					if (foundClient) {
-						await Client.findByIdAndUpdate(req.params.id, client, {}).then(client =>
-							apiResponse.successResponseWithData(res, "Client update Success.", new ClientData(client))
+						await Client.findByIdAndUpdate(req.params.id, client, {new: true}).then(updatedClient =>
+							apiResponse.successResponseWithData(res, "Client update Success.", updatedClient)
 						).catch(err => apiResponse.ErrorResponse(res, err));
+					} else {
+						return apiResponse.notFoundResponse(res, "Client not found");
 					}
 				}
 			}

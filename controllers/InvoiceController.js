@@ -753,19 +753,13 @@ exports.invoiceStore = [
 				if (!errors.isEmpty()) {
 					return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 				} else {
-					//Save Invoice.
-					invoice.save().then(inv => {
-						let invoiceData = new InvoiceData(inv);
-						return apiResponse.successResponseWithData(res, "Invoice add Success.", invoiceData);
-					}).catch(err => {
-						console.log(err);
-						return apiResponse.ErrorResponse(res, err);
-					});
+					invoice.save().then(inv =>
+						apiResponse.successResponseWithData(res, "Invoice add Success.", inv)
+					).catch(err => apiResponse.ErrorResponse(res, err));
 				}
 			});
 
 		} catch (err) {
-			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -810,8 +804,6 @@ exports.invoiceUpdate = [
 				invoiceDrivers: [...req.body.invoiceDrivers],
 				invoicePublicId: req.body.invoicePublicId,
 				_id: req.params.id,
-
-				//New Props
 				invoiceType : req.body.invoiceType,
 				invoiceRelations : [...req.body.invoiceRelations],
 				cmr : [...req.body.cmr],
@@ -835,17 +827,18 @@ exports.invoiceUpdate = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					const invoice = await Invoice.findById(req.params.id);
+					const foundInvoice = await Invoice.findById(req.params.id);
 
-					if(invoice) {
-						Invoice.findByIdAndUpdate(req.params.id, invoice, {}).then(invoice =>
-							apiResponse.successResponseWithData(res,"Invoice Update Success.", new InvoiceData(invoice))
+					if(foundInvoice) {
+						Invoice.findByIdAndUpdate(req.params.id, invoice, { new: true }).then(updatedInvoice =>
+							apiResponse.successResponseWithData(res,"Invoice Update Success.", updatedInvoice)
 						).catch(err => apiResponse.ErrorResponse(res, err));
+					} else {
+						return apiResponse.notFoundResponse(res, "Invoice not found");
 					}
 				}
 			}
 		} catch (err) {
-			//throw error in json response with status 500.
 			console.log(err);
 			return apiResponse.ErrorResponse(res, err);
 		}
@@ -880,11 +873,12 @@ exports.invoiceUpdateExp = [
 			else {
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
-				}else{
+				} else {
 					const foundInvoice = await Invoice.findById(req.params.id);
+
 					if(foundInvoice) {
-						Invoice.findByIdAndUpdate(req.params.id, invoice, {}).then(invoice =>
-							apiResponse.successResponseWithData(res,"Invoice Update Success.", new InvoiceData(invoice))
+						await Invoice.findByIdAndUpdate(req.params.id, invoice, { new: true }).then(updatedInvoice =>
+							apiResponse.successResponseWithData(res,"Invoice Update Success.", updatedInvoice)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
 						return apiResponse.notFoundResponse(res, "Invoice not found");
@@ -922,11 +916,11 @@ exports.invoiceUpdateTax = [
 			else {
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
-				}else{
+				} else {
 					const foundInvoice = await Invoice.findById(req.params.id);
 					if(foundInvoice) {
-						Invoice.findByIdAndUpdate(req.params.id, invoice, {}).then(invoice =>
-							apiResponse.successResponseWithData(res,"Invoice Update Success.", new InvoiceData(invoice))
+						await Invoice.findByIdAndUpdate(req.params.id, invoice, {new: true}).then(updatedInvoice =>
+							apiResponse.successResponseWithData(res,"Invoice Update Success.", updatedInvoice)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
 						return apiResponse.notFoundResponse(res, "Invoice not found");

@@ -145,8 +145,8 @@ exports.relationUpdate = [
 				}else{
 					const foundRelation = await Relation.findById(req.params.id);
 					if(foundRelation) {
-						Relation.findByIdAndUpdate(req.params.id, relation, {}).then(relation =>
-							apiResponse.successResponseWithData(res,"Relation update Success.", new RelationData(relation))
+						await Relation.findByIdAndUpdate(req.params.id, relation, {new: true}).then(updatedRelation =>
+							apiResponse.successResponseWithData(res,"Relation update Success.", updatedRelation)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
 						return apiResponse.notFoundResponse(res, "Relation not found");

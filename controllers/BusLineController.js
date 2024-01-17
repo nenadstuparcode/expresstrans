@@ -203,7 +203,7 @@ exports.busLineUpdate = [
   body("bihKilometers", "Line array must not be empty").isLength({ min: 1 }),
   body("deKilometers", "Line array must not be empty").isLength({ min: 1 }),
   // sanitizeBody("*").escape(),
-  (req, res) => {
+  async (req, res) => {
     try {
       const errors = validationResult(req);
       const busLine = new Busline({
@@ -232,19 +232,18 @@ exports.busLineUpdate = [
             "Invalid ID"
           );
         } else {
-          Busline.findByIdAndUpdate(req.params.id, busLine, {})
-            .then((busLine) =>
+          await Busline.findByIdAndUpdate(req.params.id, busLine, {new: true})
+            .then((updatedBusline) =>
               apiResponse.successResponseWithData(
                 res,
                 "BusLine update Success.",
-                new BusLineData(busLine)
+                  updatedBusline
               )
             )
             .catch((err) => apiResponse.ErrorResponse(res, err));
         }
       }
     } catch (err) {
-      //throw error in json response with status 500.
       return apiResponse.ErrorResponse(res, err);
     }
   },

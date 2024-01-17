@@ -159,12 +159,12 @@ exports.driverUpdate = [
             "Invalid ID"
           );
         } else {
-          await Driver.findByIdAndUpdate(req.params.id, driver, {})
-            .then((driver) =>
+          await Driver.findByIdAndUpdate(req.params.id, driver, {new: true})
+            .then((updatedDriver) =>
               apiResponse.successResponseWithData(
                 res,
                 "Book update Success.",
-                new DriverData(driver)
+                  updatedDriver
               )
             )
             .catch((err) => apiResponse.ErrorResponse(res, err));

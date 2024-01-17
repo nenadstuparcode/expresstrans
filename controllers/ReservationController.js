@@ -174,11 +174,12 @@ exports.reservationUpdate = [
 			else {
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
-				}else{
+				} else {
 					const foundReservation = await Reservation.findById(req.params.id);
+
 					if(foundReservation) {
-						Reservation.findByIdAndUpdate(req.params.id, reservation, {}).then(reservation =>
-							apiResponse.successResponseWithData(res,"Reservation Update Success.", new ReservationData(reservation))
+						await Reservation.findByIdAndUpdate(req.params.id, reservation, {new: true}).then(updatedReservation =>
+							apiResponse.successResponseWithData(res,"Reservation Update Success.", updatedReservation)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
 						return apiResponse.notFoundResponse(res, "Reservation not found");
