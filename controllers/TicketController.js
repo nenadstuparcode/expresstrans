@@ -317,7 +317,7 @@ exports.ticketStore = [
 				{ $inc: { count: 1 } },
 				{ new: true }).then(doc => {
 				QRCode.toDataURL(
-					`https://app.express-trans.online/api/ticket/scan/EXTR0${doc.count}`
+					`https://app.dv-fm-de/api/ticket/scan/EXTR0${doc.count}`
 				)
 					.then((urlQR) => {
 						const errors = validationResult(req);
