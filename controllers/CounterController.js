@@ -1,4 +1,3 @@
-const Counter = require("../models/CounterModel");
 const apiResponse = require("../helpers/apiResponse");
 
 /**
@@ -8,8 +7,9 @@ const apiResponse = require("../helpers/apiResponse");
  */
 exports.counterList = [
   async (req, res) => {
+    const CounterModel = await getModel(req, "Counter");
     try {
-      await Counter.find().then((counters) =>
+      await CounterModel.find().then((counters) =>
         apiResponse.successResponseWithData(
           res,
           "Operation success",

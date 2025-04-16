@@ -3,8 +3,8 @@ const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 const mongoose = require("mongoose");
+const {getModel} = require("../helpers/dbManager");
 
-// Relation Schema
 function RelationData(data) {
 	this._id = data._id;
 	this.name = data.name;
@@ -18,15 +18,16 @@ function RelationData(data) {
 
 exports.relationSearch = [
 	async function (req,res) {
+		const RelationModel = await getModel(req, "Relation");
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 		const sortBy = req.body.sortBy;
 		const sortOrder = req.body.sortOrder;
 
-		res.count = await Relation.count({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}});
+		res.count = await RelationModel.count({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}});
 		try {
-			Relation.find(
+			await RelationModel.find(
 				{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((relations)=>{
 				relations.length > 0 ?
 					apiResponse.successResponseWithData(res, "Operation success", relations) :
@@ -45,12 +46,13 @@ exports.relationSearch = [
  * @returns {Object}
  */
 exports.relationsList = [
-	function (req, res) {
+	async function (req, res) {
 		try {
-			Relation.find().then((relations)=>{
+			const RelationModel = await getModel(req, "Relation");
+			await RelationModel.find().then((relations)=> {
 				if(relations.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", relations);
-				}else{
+				}else {
 					return apiResponse.successResponseWithData(res, "Operation success", []);
 				}
 			});
@@ -68,12 +70,13 @@ exports.relationsList = [
  * @returns {Object}
  */
 exports.relationDetail = [
-	function (req, res) {
+	async function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.ErrorResponse(res, "Not valid id");
 		}
 		try {
-			Relation.findOne({_id: req.params.id},"_id name createdAt").then((relation)=>{
+			const RelationModel = await getModel(req, "Relation");
+			await RelationModel.findOne({_id: req.params.id},"_id name createdAt").then((relation)=>{
 				if(relation !== null){
 					let relationData = relation;
 					return apiResponse.successResponseWithData(res, "Operation success", relationData);
@@ -98,10 +101,11 @@ exports.relationDetail = [
 exports.relationStore = [
 	body("name", "name must not be empty.").isLength({ min: 1 }).trim(),
 	sanitizeBody("*").escape(),
-	(req, res) => {
+	async (req, res) => {
 		try {
+			const RelationModel = await getModel(req, "Relation");
 			const errors = validationResult(req);
-			const relation = new Relation({name: req.body.name});
+			const relation = new RelationModel({name: req.body.name});
 
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
@@ -128,8 +132,9 @@ exports.relationStore = [
 exports.relationUpdate = [
 	async (req, res) => {
 		try {
+			const RelationModel = await getModel(req, "Relation");
 			const errors = validationResult(req);
-			const relation = new Relation(
+			const relation = new RelationModel(
 				{
 					name: req.body.name,
 					_id:req.params.id,
@@ -143,9 +148,9 @@ exports.relationUpdate = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					const foundRelation = await Relation.findById(req.params.id);
+					const foundRelation = await RelationModel.findById(req.params.id);
 					if(foundRelation) {
-						await Relation.findByIdAndUpdate(req.params.id, relation, {new: true}).then(updatedRelation =>
+						await RelationModel.findByIdAndUpdate(req.params.id, relation, {new: true}).then(updatedRelation =>
 							apiResponse.successResponseWithData(res,"Relation update Success.", updatedRelation)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
@@ -172,9 +177,10 @@ exports.relationDelete = [
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 		}
 		try {
-			const foundRelation = await Relation.findById(req.params.id);
+			const RelationModel = await getModel(req, "Relation");
+			const foundRelation = await RelationModel.findById(req.params.id);
 			if(foundRelation) {
-				Relation.findByIdAndRemove(req.params.id).then(() =>
+				await RelationModel.findByIdAndRemove(req.params.id).then(() =>
 					apiResponse.successResponse(res, "Relation delete success")
 				).catch(err => apiResponse.ErrorResponse(res, err));
 			} else {

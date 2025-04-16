@@ -9,4 +9,5 @@ const ReservationSchema = new Schema({
 	ticketBusLineId: { type: String, required: true },
 }, {timestamps: true});
 
-module.exports = mongoose.model("Reservation", ReservationSchema);
+// module.exports = mongoose.model("Reservation", ReservationSchema);
+module.exports = ReservationSchema;

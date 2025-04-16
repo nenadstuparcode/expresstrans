@@ -47,4 +47,5 @@ const InvoiceSchema = new Schema({
 
 }, {timestamps: true});
 
-module.exports = mongoose.model("Invoice", InvoiceSchema);
+// module.exports = mongoose.model("Invoice", InvoiceSchema);
+module.exports = InvoiceSchema;

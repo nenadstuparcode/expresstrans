@@ -1,7 +1,7 @@
-var express = require("express");
+const express = require("express");
 const BusLineController = require("../controllers/BusLineController");
 
-var router = express.Router();
+const router = express.Router();
 
 router.get("/", BusLineController.busLineList);
 router.get("/:id", BusLineController.busLineDetail);

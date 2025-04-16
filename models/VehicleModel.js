@@ -4,4 +4,5 @@ const VehicleSchema = new Schema({
 	plateNumber: {type: String, required: true},
 }, {timestamps: true});
 
-module.exports = mongoose.model("Vehicle", VehicleSchema);
+// module.exports = mongoose.model("Vehicle", VehicleSchema);
+module.exports = VehicleSchema;

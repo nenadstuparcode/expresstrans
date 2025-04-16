@@ -5,4 +5,5 @@ const CounterSchema = new Schema({
 	name: {type: String, required: true},
 }, {timestamps: true});
 
-module.exports = mongoose.model("Counter", CounterSchema);
+// module.exports = mongoose.model("Counter", CounterSchema);
+module.exports = CounterSchema;

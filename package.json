@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
+    "start:watch": "node ./bin/www",
     "dev:test": "NODE_ENV=dev nodemon ./bin/www",
     "dev:prod": "NODE_ENV=prod nodemon ./bin/www",
     "test": "nyc _mocha --timeout 10000 --exit --report lcovonly -- -R spec",

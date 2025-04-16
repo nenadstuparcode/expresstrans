@@ -3,6 +3,7 @@ const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 const mongoose = require("mongoose");
+const {getModel} = require("../helpers/dbManager");
 
 function VehicleData(data) {
 	this._id = data._id;
@@ -17,13 +18,12 @@ exports.vehicleSearch = [
 		const sortBy = req.body.sortBy;
 		const sortOrder = req.body.sortOrder;
 
-		res.count = await Vehicle.find({ "plateNumber" : { "$regex": searchTerm + ".*", "$options": "i"}});
+		const VehicleModel = await getModel(req, "Vehicle");
+		res.count = await VehicleModel.find({ "plateNumber" : { "$regex": searchTerm + ".*", "$options": "i"}});
 		try {
-			Vehicle.find(
+			await VehicleModel.find(
 				{ "plateNumber" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((vehicles)=>{
-				vehicles.length > 0 ?
-					apiResponse.successResponseWithData(res, "Operation success", vehicles) :
-					apiResponse.successResponseWithData(res, "Operation success", []);
+				apiResponse.successResponseWithData(res, "Operation success",vehicles.length > 0 ? vehicles : []);
 			});
 		} catch (err) {
 			return apiResponse.ErrorResponse(res, err);
@@ -36,17 +36,13 @@ exports.vehicleSearch = [
  * @returns {Object}
  */
 exports.vehicleList = [
-	function (req, res) {
+	async function (req, res) {
 		try {
-			Vehicle.find().then((vehicles)=> {
-				if(vehicles.length > 0){
-					return apiResponse.successResponseWithData(res, "Operation success", vehicles);
-				}else{
-					return apiResponse.successResponseWithData(res, "Operation success", []);
-				}
+			const VehicleModel = await getModel(req, "Vehicle");
+			await VehicleModel.find().then((vehicles)=> {
+				return apiResponse.successResponseWithData(res, "Operation success", vehicles.length > 0 ? vehicles : []);
 			});
 		} catch (err) {
-			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -60,21 +56,16 @@ exports.vehicleList = [
  * @returns {Object}
  */
 exports.vehicleDetail = [
-	function (req, res) {
+	async function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Vehicle.findOne({_id: req.params.id},"_id plateNumber createdAt").then((vehicle)=>{
-				if(vehicle !== null){
-					let vehicleData = vehicle;
-					return apiResponse.successResponseWithData(res, "Operation success", vehicleData);
-				}else{
-					return apiResponse.successResponseWithData(res, "Operation success", {});
-				}
+			const VehicleModel = await getModel(req, "Vehicle");
+			await VehicleModel.findOne({_id: req.params.id},"_id plateNumber createdAt").then((vehicle)=> {
+				return apiResponse.successResponseWithData(res, "Operation success", vehicle !== null ? vehicle : {});
 			});
 		} catch (err) {
-			//throw error in json response with status 500. 
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -90,10 +81,11 @@ exports.vehicleDetail = [
 exports.vehicleStore = [
 	body("plateNumber", "plateNumber must not be empty.").isLength({ min: 1 }).trim(),
 	sanitizeBody("*").escape(),
-	(req, res) => {
+	async (req, res) => {
 		try {
+			const VehicleModel = await getModel(req, "Vehicle");
 			const errors = validationResult(req);
-			const vehicle = new Vehicle({plateNumber: req.body.plateNumber});
+			const vehicle = new VehicleModel({plateNumber: req.body.plateNumber});
 
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
@@ -119,8 +111,9 @@ exports.vehicleStore = [
 exports.vehicleUpdate = [
 	async (req, res) => {
 		try {
+			const VehicleModel = await getModel(req, "Vehicle");
 			const errors = validationResult(req);
-			const vehicle = new Vehicle(
+			const vehicle = new VehicleModel(
 				{
 					plateNumber: req.body.plateNumber,
 					_id:req.params.id,
@@ -134,10 +127,10 @@ exports.vehicleUpdate = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					const foundVehicle = await Vehicle.findById(req.params.id);
+					const foundVehicle = await VehicleModel.findById(req.params.id);
 
 					if(foundVehicle) {
-						await Vehicle.findByIdAndUpdate(req.params.id, vehicle, { new: true}).then(updatedVehicle =>
+						await VehicleModel.findByIdAndUpdate(req.params.id, vehicle, { new: true}).then(updatedVehicle =>
 							apiResponse.successResponseWithData(res,"Vehicle update Success.", updatedVehicle)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
@@ -165,7 +158,9 @@ exports.vehicleDelete = [
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 		}
 		try {
-			await Vehicle.findByIdAndRemove(req.params.id).then(() =>
+			const VehicleModel = await getModel(req, "Vehicle");
+
+			await VehicleModel.findByIdAndRemove(req.params.id).then(() =>
 				apiResponse.successResponse(res, "Delete Success")
 			).catch(err => apiResponse.ErrorResponse(res, err));
 		} catch (err) {

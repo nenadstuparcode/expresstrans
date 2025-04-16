@@ -7,9 +7,9 @@ const indexRouter = require("./routes/index");
 const apiRouter = require("./routes/api");
 const apiResponse = require("./helpers/apiResponse");
 const cors = require("cors");
-// const mongoose = require("mongoose");
-const mongoConnect = require("./helpers/connectMongoDB");
-mongoConnect.connectToDatabase();
+// const mongoConnect = require("./helpers/connectMongoDB");
+const dbMiddleware = require("./helpers/dbMiddleware");
+// mongoConnect.connectToDatabase();
 
 const app = express();
 
@@ -24,7 +24,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 //To allow cross-origin requests
 app.use(cors());
-
+app.use(dbMiddleware);
 //Route Prefixes
 app.use("/", indexRouter);
 app.use("/api/", apiRouter);
@@ -35,7 +35,7 @@ app.all("*", function(req, res) {
 });
 
 app.use((err, req, res) => {
-	if(err.name == "UnauthorizedError"){
+	if(err.name === "UnauthorizedError") {
 		return apiResponse.unauthorizedResponse(res, err.message);
 	}
 });

@@ -21,4 +21,5 @@ const TicketSchema = new Schema({
 	ticketInvoicePublicId: { type: Number, default: 0 },
 }, {timestamps: true});
 
-module.exports = mongoose.model("Ticket", TicketSchema);
+// module.exports = mongoose.model("Ticket", TicketSchema);
+module.exports = TicketSchema;

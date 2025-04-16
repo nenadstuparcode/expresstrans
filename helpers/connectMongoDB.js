@@ -1,9 +1,7 @@
 const mongoose = require("mongoose");
-const MONGODB_URL = process.env.NODE_ENV == "prod" ? process.env.MONGODB_URL_PROD : process.env.MONGODB_URL_DEV;
+const MONGODB_URL = process.env.NODE_ENV === "prod" ? process.env.MONGODB_URL_PROD : process.env.MONGODB_URL_DEV;
 
 let dbConnection;
-
-
 
 function createConnectionString(name) {
 	return MONGODB_URL.replace("{{dbNameGoesHere}}", name);

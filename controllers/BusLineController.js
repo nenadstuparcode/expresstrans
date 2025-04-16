@@ -2,6 +2,7 @@ const Busline = require("../models/BusLineModel");
 const { body, validationResult } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 const mongoose = require("mongoose");
+const {getModel} = require("../helpers/dbManager");
 
 function BusLineData(data) {
   this.id = data._id;
@@ -25,7 +26,8 @@ function BusLineData(data) {
 exports.busLineList = [
   async (req, res) => {
     try {
-      await Busline.find().then((busLines) =>
+      const BuslineModel = await getModel(req, "Busline");
+      await BuslineModel.find().then((busLines) =>
         apiResponse.successResponseWithData(
           res,
           "Operation success",
@@ -40,18 +42,19 @@ exports.busLineList = [
 
 exports.busLineSearch = [
   async (req, res) => {
+    const BuslineModel = await getModel(req, "Busline");
     const searchTerm = req.body.searchTerm;
     const searchLimit = req.body.searchLimit;
     const searchSkip = req.body.searchSkip;
 
-    res.count = await Busline.count({
+    res.count = await BuslineModel.count({
       $or: [
         { lineCityStart: { $regex: searchTerm + ".*", $options: "i" } },
         { lineCityEnd: { $regex: searchTerm + ".*", $options: "i" } },
       ],
     });
     try {
-      await Busline.find({
+      await BuslineModel.find({
         $or: [
           { lineCityStart: { $regex: searchTerm + ".*", $options: "i" } },
           { lineCityEnd: { $regex: searchTerm + ".*", $options: "i" } },
@@ -81,12 +84,14 @@ exports.busLineSearch = [
  * @returns {Object}
  */
 exports.busLineDetail = [
-  function (req, res) {
+  async function (req, res) {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return apiResponse.successResponseWithData(res, "Operation success", {});
+      return apiResponse.successResponseWithData(res, "Operatnpion success", {});
     }
     try {
-      Busline.findOne({ _id: req.params.id }).then((busLine) =>
+      const BuslineModel = await getModel(req, "Busline");
+
+      BuslineModel.findOne({ _id: req.params.id }).then((busLine) =>
         apiResponse.successResponseWithData(
           res,
           "Operation success",
@@ -128,10 +133,11 @@ exports.busLineStore = [
   body("bihKilometers", "Line array must not be empty").isLength({ min: 1 }),
   body("deKilometers", "Line array must not be empty").isLength({ min: 1 }),
   // sanitizeBody("*").escape(),
-  (req, res) => {
+  async (req, res) => {
     try {
+      const BuslineModel = await getModel(req, "Busline");
       const errors = validationResult(req);
-      const busLine = new Busline({
+      const busLine = new BuslineModel({
         lineCityStart: req.body.lineCityStart,
         lineCityEnd: req.body.lineCityEnd,
         linePriceOneWay: req.body.linePriceOneWay,
@@ -205,8 +211,9 @@ exports.busLineUpdate = [
   // sanitizeBody("*").escape(),
   async (req, res) => {
     try {
+      const BuslineModel = await getModel(req, "Busline");
       const errors = validationResult(req);
-      const busLine = new Busline({
+      const busLine = new BuslineModel({
         lineCityStart: req.body.lineCityStart,
         lineCityEnd: req.body.lineCityEnd,
         linePriceOneWay: req.body.linePriceOneWay,
@@ -232,7 +239,7 @@ exports.busLineUpdate = [
             "Invalid ID"
           );
         } else {
-          await Busline.findByIdAndUpdate(req.params.id, busLine, {new: true})
+          await BuslineModel.findByIdAndUpdate(req.params.id, busLine, {new: true})
             .then((updatedBusline) =>
               apiResponse.successResponseWithData(
                 res,
@@ -258,6 +265,7 @@ exports.busLineUpdate = [
  */
 exports.busLineDelete = [
   async (req, res) => {
+    const BuslineModel = await getModel(req, "Busline");
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return apiResponse.validationErrorWithData(
         res,
@@ -266,9 +274,9 @@ exports.busLineDelete = [
       );
     }
     try {
-      const foundBusline = await Busline.findById(req.params.id);
+      const foundBusline = await BuslineModel.findById(req.params.id);
       if (foundBusline) {
-        Busline.findByIdAndRemove(req.params.id)
+        await BuslineModel.findByIdAndRemove(req.params.id)
           .then(() =>
             apiResponse.successResponse(res, "Busline delete success")
           )

@@ -4,4 +4,5 @@ const TrailerSchema = new Schema({
 	name: { type: String, required: true },
 }, { timestamps: true });
 
-module.exports = mongoose.model("Trailer", TrailerSchema);
+// module.exports = mongoose.model("Trailer", TrailerSchema);
+module.exports = TrailerSchema;

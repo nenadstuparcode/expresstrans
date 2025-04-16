@@ -17,4 +17,5 @@ const BusLineSchema = new Schema({
 	lineArray: [LineDay],
 }, { timestamps: true });
 
-module.exports = mongoose.model("Busline", BusLineSchema);
+// module.exports = mongoose.model("Busline", BusLineSchema);
+module.exports = BusLineSchema;

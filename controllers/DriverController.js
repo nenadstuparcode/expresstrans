@@ -3,6 +3,7 @@ const { body, validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 const mongoose = require("mongoose");
+const {getModel} = require("../helpers/dbManager");
 
 // Driver Schema
 function DriverData(data) {
@@ -18,17 +19,18 @@ function DriverData(data) {
 
 exports.driverSearch = [
   async (req, res) => {
+    const DriverModel = await getModel(req, "Driver");
     const searchTerm = req.body.searchTerm;
     const searchLimit = req.body.searchLimit;
     const searchSkip = req.body.searchSkip;
     const sortBy = req.body.sortBy;
     const sortOrder = req.body.sortOrder;
 
-    res.count = await Driver.count({
+    res.count = await DriverModel.count({
       name: { $regex: searchTerm + ".*", $options: "i" },
     });
     try {
-      await Driver.find({ name: { $regex: searchTerm + ".*", $options: "i" } })
+      await DriverModel.find({ name: { $regex: searchTerm + ".*", $options: "i" } })
         .sort({ createdAt: sortOrder })
         .skip(searchSkip)
         .limit(searchLimit)
@@ -51,9 +53,10 @@ exports.driverSearch = [
  * @returns {Object}
  */
 exports.driverList = [
-  function (req, res) {
+  async function (req, res) {
     try {
-      Driver.find().then((drivers) => {
+      const DriverModel = await getModel(req, "Driver");
+      await DriverModel.find().then((drivers) => {
         if (drivers.length > 0) {
           return apiResponse.successResponseWithData(
             res,
@@ -84,11 +87,13 @@ exports.driverList = [
  */
 exports.driverDetail = [
   async (req, res) => {
+    const DriverModel = await getModel(req, "Driver");
+
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return apiResponse.ErrorResponse(res, "Id not valid");
     }
     try {
-      await Driver.findOne({ _id: req.params.id }, "_id name createdAt").then(
+      await DriverModel.findOne({ _id: req.params.id }, "_id name createdAt").then(
         (driver) =>
 			apiResponse.successResponseWithData(res, "Operation success", driver ?? {}));
     } catch (err) {
@@ -108,9 +113,11 @@ exports.driverStore = [
   body("name", "name must not be empty.").isLength({ min: 1 }).trim(),
   sanitizeBody("*").escape(),
   async (req, res) => {
+    const DriverModel = await getModel(req, "Driver");
+
     try {
       const errors = validationResult(req);
-      const driver = new Driver({ name: req.body.name });
+      const driver = new DriverModel({ name: req.body.name });
 
       if (!errors.isEmpty()) {
         return apiResponse.validationErrorWithData(
@@ -119,7 +126,7 @@ exports.driverStore = [
           errors.array()
         );
       } else {
-        await Driver.create(driver).then((driver) =>
+        await DriverModel.create(driver).then((driver) =>
 			apiResponse.successResponseWithData(res, "Driver add Success.", new DriverData(driver))
 		).catch((err) => apiResponse.ErrorResponse(res, err));
       }
@@ -139,8 +146,9 @@ exports.driverStore = [
 exports.driverUpdate = [
   async (req, res) => {
     try {
+      const DriverModel = await getModel(req, "Driver");
       const errors = validationResult(req);
-      const driver = new Driver({
+      const driver = new DriverModel({
         name: req.body.name,
         _id: req.params.id,
       });
@@ -159,7 +167,7 @@ exports.driverUpdate = [
             "Invalid ID"
           );
         } else {
-          await Driver.findByIdAndUpdate(req.params.id, driver, {new: true})
+          await DriverModel.findByIdAndUpdate(req.params.id, driver, {new: true})
             .then((updatedDriver) =>
               apiResponse.successResponseWithData(
                 res,
@@ -185,6 +193,8 @@ exports.driverUpdate = [
  */
 exports.driverDelete = [
   async (req, res) => {
+    const DriverModel = await getModel(req, "Driver");
+
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return apiResponse.validationErrorWithData(
         res,
@@ -193,9 +203,9 @@ exports.driverDelete = [
       );
     }
     try {
-      const foundDriver = await Driver.findById(req.params.id);
+      const foundDriver = await DriverModel.findById(req.params.id);
       if (foundDriver) {
-        await Driver.findByIdAndRemove(req.params.id)
+        await DriverModel.findByIdAndRemove(req.params.id)
           .then(() => apiResponse.successResponse(res, "Driver delete success"))
           .catch((err) => apiResponse.ErrorResponse(res, err));
       } else {

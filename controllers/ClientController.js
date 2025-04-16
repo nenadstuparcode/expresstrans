@@ -4,6 +4,7 @@ const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
 const mongoose = require("mongoose");
+const {getModel} = require("../helpers/dbManager");
 function ClientData(data) {
 	this._id = data._id;
 	this.name = data.name;
@@ -25,14 +26,17 @@ function ClientData(data) {
 
 exports.clientSearch = [
 	async (req,res) => {
+		const ClientModel = await getModel(req, "Client");
+		const InvoiceModel = await getModel(req, "Invoice");
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 		const sortProp = req.body.sort;
-		res.count = await Client.count({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}});
+
+		res.count = await ClientModel.count({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}});
 
 		try {
-			Invoice.find(
+			await InvoiceModel.find(
 				{
 					$and: [
 						{payed: false},
@@ -44,7 +48,7 @@ exports.clientSearch = [
 
 				let unpaidInvoices = [...notPaidInvoices.map(n => n.clientId.toString() )];
 
-				Client.find(
+				ClientModel.find(
 					{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort(sortProp).skip(searchSkip).limit(searchLimit).lean().then((clients)=>{
 					clients.length > 0 ?
 						apiResponse.successResponseWithData(res, "Operation success", clients.map(c => {
@@ -70,8 +74,9 @@ exports.clientSearch = [
  */
 exports.clientList = [
 	async (req, res) => {
+		const ClientModel = await getModel(req, "Client");
 		try {
-			await Client.find().then(clients =>
+			await ClientModel.find().then(clients =>
 				apiResponse.successResponseWithData(res, "Operation success", clients ?? []));
 		} catch (err) {
 			return apiResponse.ErrorResponse(res, err);
@@ -88,12 +93,13 @@ exports.clientList = [
  */
 exports.clientDetail = [
 	async (req, res) => {
+		const ClientModel = await getModel(req, "Client");
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)) {
 			return apiResponse.ErrorResponse(res, "Client id not good");
 		}
 
 		try {
-	 		await Client.findOne({_id: req.params.id}).then(client =>
+	 		await ClientModel.findOne({_id: req.params.id}).then(client =>
 				apiResponse.successResponseWithData(res, "Operation success", client ?? {}));
 		} catch (err) {
 			return apiResponse.ErrorResponse(res, err);
@@ -112,8 +118,9 @@ exports.clientStore = [
 	sanitizeBody("*").escape(),
 	async (req, res) => {
 		try {
+			const ClientModel = await getModel(req, "Client");
 			const errors = validationResult(req);
-			const client = new Client({
+			const client = new ClientModel({
 				name: req.body.name,
 				info: req.body.info,
 				address: req.body.address,
@@ -149,8 +156,9 @@ exports.clientStore = [
 exports.clientUpdate = [
 	async (req, res) => {
 		try {
+			const ClientModel = await getModel(req, "Client");
 			const errors = validationResult(req);
-			const client = new Client(
+			const client = new ClientModel(
 				{
 					_id:req.params.id,
 					name: req.body.name,
@@ -166,16 +174,15 @@ exports.clientUpdate = [
 			);
 
 			if (!errors.isEmpty()) {
-				console.log("test got err");
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			}
 			else {
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				} else {
-					const foundClient = await Client.findById(req.params.id);
+					const foundClient = await ClientModel.findById(req.params.id);
 					if (foundClient) {
-						await Client.findByIdAndUpdate(req.params.id, client, {new: true}).then(updatedClient =>
+						await ClientModel.findByIdAndUpdate(req.params.id, client, {new: true}).then(updatedClient =>
 							apiResponse.successResponseWithData(res, "Client update Success.", updatedClient)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
@@ -198,13 +205,14 @@ exports.clientUpdate = [
  */
 exports.clientDelete = [
 	async (req, res)=> {
+		const ClientModel = await getModel(req, "Client");
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 		}
 		try {
-			const foundClient = await Client.findById(req.params.id);
+			const foundClient = await ClientModel.findById(req.params.id);
 			if(foundClient) {
-				Client.findByIdAndRemove(req.params.id).then(() =>
+				await ClientModel.findByIdAndRemove(req.params.id).then(() =>
 					apiResponse.successResponse(res, "Client delete success")
 				).catch(err => apiResponse.ErrorResponse(res, err));
 			} else {

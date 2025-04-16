@@ -15,9 +15,8 @@ const pdfService = require("../helpers/printService");
 
 // mongoose.set("useFindAndModify", false);
 const moment = require("moment-timezone");
+const {getModel} = require("../helpers/dbManager");
 
-// const ticketDatabase = `etrans${new Date().getFullYear()}}`;
-// Ticket Schema
 function TicketData(data) {
 	this._id = data._id;
 	this.ticketId = data.ticketId;
@@ -60,9 +59,10 @@ function BusLineData(data) {
  */
 
 exports.ticketList = [
-	function (req, res) {
+	async function (req, res) {
 		try {
-			Ticket.find().then((tickets) => {
+			const TicketModel = await getModel(req, "Ticket");
+			await TicketModel.find().then((tickets) => {
 				return apiResponse.successResponseWithData(
 					res,
 					"Operation success",
@@ -77,12 +77,12 @@ exports.ticketList = [
 
 exports.ticketByInvoiceId = [
 	async function (req, res) {
+		const TicketModel = await getModel(req, "Ticket");
 		const invoiceNr = req.body.invoiceNr;
 
-
-		res.count = await Ticket.count({ ticketInvoiceNumber: invoiceNr });
+		res.count = await TicketModel.count({ ticketInvoiceNumber: invoiceNr });
 		try {
-			Ticket.find(
+			await TicketModel.find(
 				{
 					ticketInvoiceNumber: invoiceNr,
 					$or: [
@@ -119,6 +119,7 @@ exports.ticketByInvoiceId = [
 
 exports.ticketsSearchDate = [
 	async function (req, res) {
+		const TicketModel = await getModel(req, "Ticket");
 		const pageNumber = req.body.pageNumber;
 		const resultPerPage = req.body.resultPerPage;
 		const searchTerm = req.body.searchTerm;
@@ -130,7 +131,7 @@ exports.ticketsSearchDate = [
 		const sortOption = req.body.sortOption ? req.body.sortOption : -1;
 
 
-		res.count = await Ticket.count({
+		res.count = await TicketModel.count({
 			$and: [
 				{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
 				{ ticketStartDate: { $gte: startDate, $lt: endDate } },
@@ -139,7 +140,7 @@ exports.ticketsSearchDate = [
 		});
 
 		try {
-			Ticket.find(
+			await TicketModel.find(
 				{
 					$and: [
 						{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
@@ -175,15 +176,16 @@ exports.ticketsSearchDate = [
 
 exports.ticketSearch = [
 	async function (req, res) {
+		const TicketModel = await getModel(req, "Ticket");
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 
-		res.count = await Ticket.count({
+		res.count = await TicketModel.count({
 			ticketOnName: { $regex: searchTerm + ".*", $options: "i" },
 		});
 		try {
-			Ticket.find(
+			await TicketModel.find(
 				{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
 				"_id ticketOnName ticketInvoicePublicId ticketDiscount ticketDisabled ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt"
 			)
@@ -219,12 +221,13 @@ exports.ticketSearch = [
  * @returns {Object}
  */
 exports.ticketDetail = [
-	function (req, res) {
+	async function (req, res) {
 		if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Ticket.findOne(
+			const TicketModel = await getModel(req, "Ticket");
+			await TicketModel.findOne(
 				{ _id: req.params.id },
 				"_id ticketDisabled ticketInvoicePublicId ticketDiscount ticketOnName ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketStartTime ticketId ticketInvoiceNumber ticketClassicId ticketType ticketQR ticketPrice createdAt modifiedAt"
 			).then((ticket) => {
@@ -251,11 +254,13 @@ exports.ticketDetail = [
 ];
 
 exports.ticketImportMany = [
-	function (req, res) {
+	async function (req, res) {
+		const TicketModel = await getModel(req, "Ticket");
+
 		let numberOfTickets = req.body.ticketsToStore.length || 0;
 		if (numberOfTickets > 0) {
 			try {
-				Ticket.insertMany(req.body.ticketsToStore)
+				await TicketModel.insertMany(req.body.ticketsToStore)
 					.then((tickets) => {
 						return apiResponse.successResponseWithData(
 							res,
@@ -310,9 +315,11 @@ exports.ticketStore = [
 		.isLength({ min: 1 })
 		.trim(),
 	sanitizeBody("*").escape(),
-	(req, res) => {
+	async (req, res) => {
 		try {
-			Counter.findOneAndUpdate(
+			const CounterModel = await getModel(req, "Counter");
+			const TicketModel = await getModel(req, "Ticket");
+			await CounterModel.findOneAndUpdate(
 				{ name: "ticketCounter" },
 				{ $inc: { count: 1 } },
 				{ new: true }).then(doc => {
@@ -321,7 +328,7 @@ exports.ticketStore = [
 				)
 					.then((urlQR) => {
 						const errors = validationResult(req);
-						const ticket = new Ticket({
+						const ticket = new TicketModel({
 							ticketOnName: req.body.ticketOnName,
 							ticketPhone: req.body.ticketPhone,
 							ticketEmail: req.body.ticketEmail,
@@ -418,9 +425,10 @@ exports.ticketUpdate = [
 	sanitizeBody("*").escape(),
 	async (req, res) => {
 		try {
+			const TicketModel = await getModel(req, "Ticket");
 			const errors = validationResult(req);
 
-			const ticket = new Ticket({
+			const ticket = new TicketModel({
 				ticketOnName: req.body.ticketOnName,
 				ticketPhone: req.body.ticketPhone,
 				ticketEmail: req.body.ticketEmail,
@@ -454,10 +462,10 @@ exports.ticketUpdate = [
 						"Invalid ID"
 					);
 				} else {
-					const foundTicket = await Ticket.findById(req.params.id);
+					const foundTicket = await TicketModel.findById(req.params.id);
 
 					if(foundTicket) {
-						await Ticket.findByIdAndUpdate(req.params.id, ticket, {new: true}).then(updatedTicket =>
+						await TicketModel.findByIdAndUpdate(req.params.id, ticket, {new: true}).then(updatedTicket =>
 							apiResponse.successResponseWithData(res, "Ticket update Success.", updatedTicket)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
@@ -488,9 +496,10 @@ exports.ticketDelete = [
 			);
 		}
 		try {
-			const foundTicket = await Ticket.findById(req.params.id);
+			const TicketModel = await getModel(req, "Ticket");
+			const foundTicket = await TicketModel.findById(req.params.id);
 			if(foundTicket) {
-				Ticket.findByIdAndRemove(req.params.id).then(() =>
+				await TicketModel.findByIdAndRemove(req.params.id).then(() =>
 					apiResponse.successResponse(res, "Ticket delete success")
 				).catch(err => apiResponse.ErrorResponse(res, err));
 			} else {
@@ -512,7 +521,9 @@ exports.ticketDelete = [
 
 exports.ticketPrint = [
 	async function (req, res) {
-		const ticket = await Ticket.findOne({ _id: req.body._id }).lean();
+		const TicketModel = await getModel(req, "Ticket");
+		const BuslineModel = await getModel(req, "Busline");
+		const ticket = await TicketModel.findOne({ _id: req.body._id }).lean();
 
 		if(ticket) {
 			const dataBinding = {
@@ -521,7 +532,7 @@ exports.ticketPrint = [
 					...ticket,
 					ticketBusLineId: ticket.ticketBusLineId.toString(),
 					isTicketInternet: ticket.ticketType === "internet",
-					busLineData: await Busline.findOne({"_id": ticket.ticketBusLineId.toString()}).lean(),
+					busLineData: await BuslineModel.findOne({"_id": ticket.ticketBusLineId.toString()}).lean(),
 					isTicketReturn: ticket.ticketType === "return",
 					hasDiscount:
 						ticket.ticketDiscount !== null && ticket.ticketDiscount > 0,
@@ -534,7 +545,7 @@ exports.ticketPrint = [
 				},
 			};
 
-			const templateHtml = await fs.readFileSync(
+			const templateHtml = fs.readFileSync(
 				path.join(
 					process.cwd(),
 					req.body.ticketRoundTrip ? "povratna.hbs" : "jedan-smjer.hbs"
@@ -740,16 +751,18 @@ exports.sendToMailCustom = [
  * @returns {Object}
  */
 exports.ticketQRCode = [
-	function (req, res) {
+	async function (req, res) {
 		try {
-			Ticket.findOne(
+			const TicketModel = await getModel(req, "Ticket");
+			const BuslineModel = await getModel(req, "Busline");
+			await TicketModel.findOne(
 				{ ticketId: req.params.ticketId },
 				"_id ticketOnName ticketInvoicePublicId ticketDiscount ticketDisabled ticketPhone ticketEmail ticketNote ticketValid ticketBusLineId ticketRoundTrip ticketStartDate ticketInvoiceNumber ticketClassicId ticketType ticketStartTime ticketId ticketQR ticketPrice createdAt modifiedAt"
-			).then((ticket) => {
+			).then(async (ticket) => {
 				if (ticket !== null) {
 					let ticketDataQR = new TicketData(ticket);
 					try {
-						Busline.findOne(
+						await BuslineModel.findOne(
 							{ _id: ticketDataQR.ticketBusLineId },
 							"_id lineCityStart lineCityEnd linePriceOneWay linePriceOneWay linePriceRoundTrip lineCountryStart lineArray createdAt modifiedAt"
 						).then((busLine) => {
@@ -841,6 +854,7 @@ exports.ticketQRCode = [
 
 exports.reportSearch = [
 	async function (req, res) {
+		const TicketModel = await getModel(req, "Ticket");
 		const pageNumber = req.body.pageNumber;
 		const resultPerPage = req.body.resultPerPage;
 		const searchTerm = req.body.searchTerm;
@@ -851,7 +865,7 @@ exports.reportSearch = [
 			: "ticketOnName";
 		const sortOption = req.body.sortOption ? req.body.sortOption : -1;
 
-		res.count = await Ticket.count({
+		res.count = await TicketModel.count({
 			$and: [
 				{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },
 				{ ticketStartDate: { $gte: startDate, $lt: endDate } },
@@ -860,7 +874,7 @@ exports.reportSearch = [
 		});
 
 		try {
-			Ticket.find(
+			await TicketModel.find(
 				{
 					$and: [
 						{ ticketOnName: { $regex: searchTerm + ".*", $options: "i" } },

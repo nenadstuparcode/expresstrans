@@ -2,7 +2,8 @@ const Trailer = require("../models/TrailerModel");
 const { body,validationResult } = require("express-validator");
 const { sanitizeBody } = require("express-validator");
 const apiResponse = require("../helpers/apiResponse");
-var mongoose = require("mongoose");
+const mongoose = require("mongoose");
+const {getModel} = require("../helpers/dbManager");
 
 // Trailer Schema
 function TrailerData(data) {
@@ -18,10 +19,11 @@ exports.trailerSearch = [
 		const sortBy = req.body.sortBy;
 		const sortOrder = req.body.sortOrder;
 
+		const TrailerModel = await getModel(req, "Trailer");
 
-		res.count = await Trailer.count({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}});
+		res.count = await TrailerModel.count({ "name" : { "$regex": searchTerm + ".*", "$options": "i"}});
 		try {
-			Trailer.find(
+			await TrailerModel.find(
 				{ "name" : { "$regex": searchTerm + ".*", "$options": "i"}}).sort({createdAt: sortOrder}).skip(searchSkip).limit(searchLimit).then((trailers)=>{
 				trailers.length > 0 ?
 					apiResponse.successResponseWithData(res, "Operation success", trailers) :
@@ -39,9 +41,11 @@ exports.trailerSearch = [
  * @returns {Object}
  */
 exports.trailerList = [
-	function (req, res) {
+	async function (req, res) {
 		try {
-			Trailer.find().then((trailers)=>{
+			const TrailerModel = await getModel(req, "Trailer");
+
+			await TrailerModel.find().then((trailers)=>{
 				if(trailers.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", trailers);
 				}else{
@@ -63,21 +67,17 @@ exports.trailerList = [
  * @returns {Object}
  */
 exports.trailerDetail = [
-	function (req, res) {
+	async function (req, res) {
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.successResponseWithData(res, "Operation success", {});
 		}
 		try {
-			Trailer.findOne({_id: req.params.id}).then((trailer)=>{
-				if(trailer !== null){
-					let trailerData = trailer;
-					return apiResponse.successResponseWithData(res, "Operation success", trailerData);
-				}else{
-					return apiResponse.successResponseWithData(res, "Operation success", {});
-				}
+			const TrailerModel = await getModel(req, "Trailer");
+
+			await TrailerModel.findOne({_id: req.params.id}).then((trailer) => {
+				return apiResponse.successResponseWithData(res, "Operation success", trailer !== null ? trailer : {});
 			});
 		} catch (err) {
-			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -93,16 +93,18 @@ exports.trailerDetail = [
 exports.trailerStore = [
 	body("name", "name must not be empty.").isLength({ min: 1 }).trim(),
 	sanitizeBody("*").escape(),
-	(req, res) => {
+	async (req, res) => {
 		try {
+			const TrailerModel = await getModel(req, "Trailer");
 			const errors = validationResult(req);
-			const trailer = new Trailer({name: req.body.name});
+			const trailer = new TrailerModel({
+				name: req.body.name
+			});
 
 			if (!errors.isEmpty()) {
 				return apiResponse.validationErrorWithData(res, "Validation Error.", errors.array());
 			}
 			else {
-				//Save trailer.
 				trailer.save().then(trailer => {
 					let trailerData = new TrailerData(trailer);
 					return apiResponse.successResponseWithData(res,"Book add Success.", trailerData);
@@ -112,7 +114,6 @@ exports.trailerStore = [
 				});
 			}
 		} catch (err) {
-			//throw error in json response with status 500.
 			return apiResponse.ErrorResponse(res, err);
 		}
 	}
@@ -128,8 +129,9 @@ exports.trailerStore = [
 exports.trailerUpdate = [
 	async (req, res) => {
 		try {
+			const TrailerModel = await getModel(req, "Trailer");
 			const errors = validationResult(req);
-			const trailer = new Trailer(
+			const trailer = new TrailerModel(
 				{
 					name: req.body.name,
 					_id:req.params.id,
@@ -143,10 +145,10 @@ exports.trailerUpdate = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					const foundTrailer = await Trailer.findById(req.params.id);
+					const foundTrailer = await TrailerModel.findById(req.params.id);
 
 					if(foundTrailer) {
-						await Trailer.findByIdAndUpdate(req.params.id, trailer, {new: true}).then(updatedTrailer =>
+						await TrailerModel.findByIdAndUpdate(req.params.id, trailer, {new: true}).then(updatedTrailer =>
 							apiResponse.successResponseWithData(res,"Trailer update Success.", updatedTrailer)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
@@ -173,9 +175,10 @@ exports.trailerDelete = [
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 		}
 		try {
-			const foundTrailer = await Trailer.findById(req.params.id);
+			const TrailerModel = await getModel(req, "Trailer");
+			const foundTrailer = await TrailerModel.findById(req.params.id);
 			if(foundTrailer) {
-				Trailer.findByIdAndRemove(req.params.id).then(() => {
+				await TrailerModel.findByIdAndRemove(req.params.id).then(() => {
 					apiResponse.successResponse(res, "Trailer delete success");
 				}).catch(err => apiResponse.ErrorResponse(res, err));
 			} else {

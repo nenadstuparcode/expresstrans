@@ -12,5 +12,6 @@ const ClientSchema = new Schema({
 	contact: {type: String},
 }, {timestamps: true});
 
-module.exports = mongoose.model("Client", ClientSchema);
+// module.exports = mongoose.model("Client", ClientSchema);
+module.exports = ClientSchema;
 

@@ -4,7 +4,12 @@ const mongoose = require("mongoose");
 
 exports.dbList = async (req, res) => {
 	try {
-		const data = await mongoose.connection.db.admin().command({
+		const conn = await mongoose.connect(process.env.MONGODB_CONNECTION_STRING, {
+			useNewUrlParser: true,
+			useUnifiedTopology: true,
+		});
+
+		const data = await conn.connection.db.admin().command({
 			listDatabases: 1,
 		});
 
@@ -24,7 +29,12 @@ exports.dbList = async (req, res) => {
 
 exports.dbCurrent = [
 	async (req, res) => {
-		const currentDbConection = await mongoose.connection;
+		const conn = await mongoose.connect(process.env.MONGODB_CONNECTION_STRING, {
+			useNewUrlParser: true,
+			useUnifiedTopology: true,
+		});
+
+		const currentDbConection = await conn.connection;
 		const lastConnected = new Date(new Date().toUTCString());
 		if (currentDbConection.name) {
 			return apiResponse.successResponseWithData(res, "Operation Success", {
@@ -40,8 +50,7 @@ exports.dbCurrent = [
 exports.dbUse = [
 	async (req, res) => {
 		const name = req.params.name;
-		console.log(name);
-		await mongoose.connection.useDb(name, {useCache: false});
+		await req.db.connection.useDb(name, {useCache: false});
 		const connectionData = mongoose.connection.name;
         
 		return apiResponse.successResponseWithData(res, `Database changed to ${name}`, connectionData);
@@ -50,7 +59,7 @@ exports.dbUse = [
 
 exports.dbConnect = [
 	async (req, res) => {
-		const data = await mongoose.connection.db.admin().command({
+		const data = await req.db.admin().command({
 			listDatabases: 1,
 		});
 

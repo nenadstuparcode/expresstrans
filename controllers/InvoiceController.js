@@ -15,6 +15,7 @@ const pdfService = require("../helpers/printService");
 const moment = require("moment-timezone");
 const n2words = require("n2words");
 const { format } = require("number-currency-format");
+const {getModel} = require("../helpers/dbManager");
 const ObjectId = require("mongoose").Types.ObjectId;
 // mongoose.set("useFindAndModify", false);
 
@@ -92,13 +93,15 @@ function getPercentage(relations, index) {
 
 
 exports.invoiceReportByClients = [
-       async (req, res) => {
-
+	 async (req, res) => {
+	 const InvoiceModel = await getModel(req, "Invoice");
+	 const ClientModel = await getModel(req, "Client");
 		try {
-			await Client.find({}).lean().then((foundClients) => {
+			await ClientModel.find({}).lean().then((foundClients) => {
 				if(foundClients === null) return;
 				let clients = foundClients;
-				Invoice.aggregate(
+
+				InvoiceModel.aggregate(
 					[
 						{
 							"$facet": {
@@ -216,12 +219,14 @@ exports.invoiceReportByClients = [
 
 exports.invoiceReportNotPaid = [
 	async (req, res) => {
-
 		try {
-			await Client.find({}).lean().then((foundClients) => {
+			const InvoiceModel = await getModel(req, "Invoice");
+			const ClientModel = await getModel(req, "Client");
+
+			await ClientModel.find({}).lean().then((foundClients) => {
 				if(foundClients === null) return;
 				let clients = foundClients;
-				Invoice.aggregate(
+				InvoiceModel.aggregate(
 					[
 						{
 							"$facet": {
@@ -349,15 +354,19 @@ exports.invoiceReportNotPaid = [
 		}
 	}
 ]
+
 exports.invoiceReportAllInvoices = [
 	async (req, res) => {
 
 		try {
-			await Client.find().lean().then((foundClients) => {
+			const InvoiceModel = await getModel(req, "Invoice");
+			const ClientModel = await getModel(req, "Client");
+
+			await ClientModel.find().lean().then((foundClients) => {
 				if(foundClients === null) return;
 				let clients = foundClients;
 
-				Invoice.aggregate(
+				InvoiceModel.aggregate(
 					[
 						{
 							$match: {
@@ -426,6 +435,8 @@ exports.invoiceReportAllInvoices = [
 
 exports.invoiceReportByMonth = [
 	async (req, res) => {
+		const InvoiceModel = await getModel(req, "Invoice");
+		const ClientModel = await getModel(req, "Client");
 	const months = [
 		"Januar",
 		"Februar",
@@ -440,9 +451,9 @@ exports.invoiceReportByMonth = [
 		"Novembar",
 		"Decembar",
 	];
-	const clients = await Client.find({});
+	const clients = await ClientModel.find({});
 		try {
-			await Invoice.aggregate(
+			await InvoiceModel.aggregate(
 				[
 					{
 						$match: {
@@ -536,9 +547,11 @@ exports.invoiceReportByMonth = [
  * @returns {Object}
  */
 exports.invoiceList = [
-	function (req, res) {
+	async function (req, res) {
 		try {
-			Invoice.find({}).then((invoices)=>{
+			const InvoiceModel = await getModel(req, "Invoice");
+
+			InvoiceModel.find({}).then((invoices)=>{
 				if(invoices.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", invoices);
 				}else{
@@ -559,7 +572,7 @@ exports.invoiceList = [
  */
 
 exports.invoiceSearchV2 = [
-	(req, res) => {
+	async (req, res) => {
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
@@ -589,7 +602,9 @@ exports.invoiceSearchV2 = [
 		}
 
 		try {
-			Invoice.aggregate(	
+			const InvoiceModel = await getModel(req, "Invoice");
+
+			InvoiceModel.aggregate(
 				[
 					{
 						$match: {
@@ -643,14 +658,17 @@ exports.invoiceSearchV2 = [
 exports.invoiceSearch = [
 	async function (req,res) {
 
+		const InvoiceModel = await getModel(req, "Invoice");
+		const ClientModel = await getModel(req, "Client");
+
 		const searchTerm = req.body.searchTerm;
 		const searchLimit = req.body.searchLimit;
 		const searchSkip = req.body.searchSkip;
 		const clientId = req.body.clientId;
 
-		res.count = await Invoice.count({"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}});
+		res.count = await InvoiceModel.count({"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}});
 		try {
-			Invoice.find({"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}},).sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((invoices)=>{
+			InvoiceModel.find({"invoiceNumber" : { "$regex": searchTerm + ".*", "$options": "i"}},).sort({createdAt:-1}).skip(searchSkip).limit(searchLimit).then((invoices)=>{
 				if(invoices.length > 0){
 					return apiResponse.successResponseWithData(res, "Operation success", invoices);
 				}else{
@@ -672,12 +690,15 @@ exports.invoiceSearch = [
  * @returns {Object}
  */
 exports.invoiceDetail = [
-	function (req, res) {
+	async function (req, res) {
+		const InvoiceModel = await getModel(req, "Invoice");
+		const ClientModel = await getModel(req, "Client");
+
 		if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 			return apiResponse.ErrorResponse(res, "Not valid id");
 		}
 		try {
-			Invoice.findOne({_id: req.params.id}).then((invoice)=>{
+			InvoiceModel.findOne({_id: req.params.id}).then((invoice)=>{
 				if(invoice !== null){
 					let invoiceData = new InvoiceData(invoice);
 					return apiResponse.successResponseWithData(res, "Operation success", invoiceData);
@@ -694,24 +715,18 @@ exports.invoiceDetail = [
 
 /**
  * Invoice store.
- *
- * @param {number}      invoiceNumber
- * @param {date}      invoiceDateStart
- * @param {date}      invoiceDateReturn
- * @param {string}      invoiceVehicle
- * @param {string[]}      invoiceDrivers
- *
- * @returns {Object}
  */
 exports.invoiceStore = [
 	body("invoiceDateStart", "invoiceDateStart must not be empty.").isLength({ min: 1 }).trim(),
 	body("invoiceDateReturn", "invoiceDateReturn must not be empty.").isLength({ min: 1 }).trim(),
-	(req, res) => {
+	async (req, res) => {
 		try {
-			Counter.findOneAndUpdate({name: "invoiceCounter"}, {$inc: {count: 1}}, {new: true}).then(doc => {
+			const CounterModel = await getModel(req, "Counter");
+			const InvoiceModel = await getModel(req, "Invoice");
+			CounterModel.findOneAndUpdate({name: "invoiceCounter"}, {$inc: {count: 1}}, {new: true}).then(doc => {
 				const errors = validationResult(req);
 
-				const invoice = new Invoice({
+				const invoice = new InvoiceModel({
 					invoiceNumber: doc.count,
 					invoiceDateStart: req.body.invoiceDateStart, // ok
 					invoiceDateReturn: req.body.invoiceDateReturn, // ok
@@ -780,8 +795,9 @@ exports.invoiceUpdate = [
 	body("invoiceDateReturn", "invoiceDateReturn must not be empty.").isLength({ min: 1 }).trim(),
 	async (req, res) => {
 		try {
+			const InvoiceModel = await getModel(req, "Invoice");
 			const errors = validationResult(req);
-			const invoice = new Invoice({
+			const invoice = new InvoiceModel({
 				invoiceNumber: req.body.invoiceNumber,
 				invoiceDateStart: req.body.invoiceDateStart,
 				invoiceDateReturn: req.body.invoiceDateReturn,
@@ -827,10 +843,10 @@ exports.invoiceUpdate = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				}else{
-					const foundInvoice = await Invoice.findById(req.params.id);
+					const foundInvoice = await InvoiceModel.findById(req.params.id);
 
 					if(foundInvoice) {
-						Invoice.findByIdAndUpdate(req.params.id, invoice, { new: true }).then(updatedInvoice =>
+						await InvoiceModel.findByIdAndUpdate(req.params.id, invoice, { new: true }).then(updatedInvoice =>
 							apiResponse.successResponseWithData(res,"Invoice Update Success.", updatedInvoice)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
@@ -854,6 +870,7 @@ exports.invoiceUpdateExp = [
 	body("invoiceExpGer", "invoiceExpGer must not be empty.").isLength({ min: 1 }).trim(),
 	async (req, res) => {
 		try {
+			const InvoiceModel = await getModel(req, "Invoice");
 			const errors = validationResult(req);
 			const invoice = {
 				invoiceExpCro: req.body.invoiceExpCro,
@@ -874,10 +891,10 @@ exports.invoiceUpdateExp = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				} else {
-					const foundInvoice = await Invoice.findById(req.params.id);
+					const foundInvoice = await InvoiceModel.findById(req.params.id);
 
 					if(foundInvoice) {
-						await Invoice.findByIdAndUpdate(req.params.id, invoice, { new: true }).then(updatedInvoice =>
+						await InvoiceModel.findByIdAndUpdate(req.params.id, invoice, { new: true }).then(updatedInvoice =>
 							apiResponse.successResponseWithData(res,"Invoice Update Success.", updatedInvoice)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
@@ -900,6 +917,7 @@ exports.invoiceUpdateTax = [
 	body("returnTaxBih", "returnTaxBih must not be empty.").isLength({ min: 1 }).trim(),
 	async (req, res) => {
 		try {
+			const InvoiceModel = await getModel(req, "Invoice");
 			const errors = validationResult(req);
 			const invoice = {
 				totalKilometers: req.body.totalKilometers,
@@ -917,9 +935,9 @@ exports.invoiceUpdateTax = [
 				if(!mongoose.Types.ObjectId.isValid(req.params.id)){
 					return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 				} else {
-					const foundInvoice = await Invoice.findById(req.params.id);
+					const foundInvoice = await InvoiceModel.findById(req.params.id);
 					if(foundInvoice) {
-						await Invoice.findByIdAndUpdate(req.params.id, invoice, {new: true}).then(updatedInvoice =>
+						await InvoiceModel.findByIdAndUpdate(req.params.id, invoice, {new: true}).then(updatedInvoice =>
 							apiResponse.successResponseWithData(res,"Invoice Update Success.", updatedInvoice)
 						).catch(err => apiResponse.ErrorResponse(res, err));
 					} else {
@@ -946,9 +964,10 @@ exports.invoiceDelete = [
 			return apiResponse.validationErrorWithData(res, "Invalid Error.", "Invalid ID");
 		}
 		try {
-			const foundInvoice = await Invoice.findById(req.params.id);
+			const InvoiceModel = await getModel(req, "Invoice");
+			const foundInvoice = await InvoiceModel.findById(req.params.id);
 			if(foundInvoice) {
-				Invoice.findByIdAndRemove(req.params.id).then(() =>
+				await InvoiceModel.findByIdAndRemove(req.params.id).then(() =>
 					apiResponse.successResponse(res, "Invoice delete success")
 				).catch(err => apiResponse.ErrorResponse(res, err));
 			} else {
@@ -963,33 +982,39 @@ exports.invoiceDelete = [
 exports.invoicePdfPrint = [
 	async function (req,res) {
 	    try {
+				const DriverModel = await getModel(req, "Driver");
+				const VehicleModel = await getModel(req, "Vehicle");
+				const TrailerModel = await getModel(req, "Trailer");
+				const ClientModel = await getModel(req, "Client");
+				const InvoiceModel = await getModel(req, "Invoice");
+
 			let cd = {};
 			let id = {};
 			let drivers = [];
 			let vehicles = [];
 			let trailers = [];
 
-			await Driver.find({}, "_id name").lean().then((foundDrivers) => {
+			await DriverModel.find({}, "_id name").lean().then((foundDrivers) => {
 				if(foundDrivers === null) return;
 				drivers = [...foundDrivers];
 			}).catch(err => console.log(err));
 
-			await Trailer.find({}).lean().then((foundTrailers) => {
+			await TrailerModel.find({}).lean().then((foundTrailers) => {
 				if(foundTrailers === null) return;
 				trailers = foundTrailers;
 			}).catch(err => console.log(err));
 
-			await Vehicle.find({}).lean().then((foundVehicles) => {
+			await VehicleModel.find({}).lean().then((foundVehicles) => {
 				if(foundVehicles === null) return;
 				vehicles = foundVehicles;
 			}).catch(err => console.log(err));
 
-			await Client.findOne({_id: new ObjectId(req.body.clientId)}).lean().then((foundClient) => {
+			await ClientModel.findOne({_id: new ObjectId(req.body.clientId)}).lean().then((foundClient) => {
 				if(foundClient === null) return;
 				cd = foundClient;
 			}).catch(err => console.log(err));
 
-			await Invoice.findOne({_id: new ObjectId(req.body.invoiceId)}).lean().then((foundInvoice) => {
+			await InvoiceModel.findOne({_id: new ObjectId(req.body.invoiceId)}).lean().then((foundInvoice) => {
 				if(foundInvoice === null) return;
 				id = foundInvoice;
 			}).catch(err => console.log(err));
