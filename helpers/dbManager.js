@@ -7,6 +7,7 @@ const TicketSchema = require("../models/TicketModel");
 const TrailerSchema = require("../models/TrailerModel");
 const InvoiceSchema = require("../models/InvoiceModel");
 const DriverSchema = require("../models/DriverModel");
+const ClientSchema = require("../models/ClientModel");
 const MONGODB_URL = process.env.NODE_ENV == "prod" ? process.env.MONGODB_URL_PROD : process.env.MONGODB_URL_DEV;
 const connections = new Map();
 
@@ -26,7 +27,7 @@ async function getDbConnection(dbId) {
 		maxPoolSize: 1000000,
 	});
 
-	conn.model("Client", VehicleSchema);
+	conn.model("Client", ClientSchema);
 	conn.model("Driver", DriverSchema);
 	conn.model("Busline", BusLineSchema);
 	conn.model("Invoice", InvoiceSchema);
